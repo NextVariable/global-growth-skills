@@ -1,0 +1,39 @@
+{
+  "recorded_at_utc": "2026-10-23T16:37:56.685932+00:00",
+  "platform": "macOS",
+  "destination": "fresh temporary directory",
+  "source": "five public GitHub repositories at catalog revisions",
+  "skills": [
+    {
+      "skill": "global-gtm-strategy-skill",
+      "revision": "4b345ec5743b8c82a84668d70e2c932f99fdb94f",
+      "files": 22,
+      "format_check": "passed"
+    },
+    {
+      "skill": "global-growth-content",
+      "revision": "5112b6f1efd3fa7be08a515177b147a151144f6a",
+      "files": 10,
+      "format_check": "passed"
+    },
+    {
+      "skill": "global-launch-acquisition",
+      "revision": "eb1ba226149d201593c655d774f501d373fe1432",
+      "files": 9,
+      "format_check": "passed"
+    },
+    {
+      "skill": "global-sales-retention",
+      "revision": "f96a87618ac05988bd01a5fb1494f85b3e1423c4",
+      "files": 9,
+      "format_check": "passed"
+    },
+    {
+      "skill": "global-growth-experiments",
+      "revision": "3e11b7a057301ae760ebbbeed18d15fae734012c",
+      "files": 9,
+      "format_check": "passed"
+    }
+  ],
+  "repeat_install_refused_without_changes": true
+}

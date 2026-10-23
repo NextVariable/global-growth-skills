@@ -1,0 +1,44 @@
+{
+  "execution": "actual independent sub-agent run",
+  "context": "fresh; three skill packages; no development history or grading notes",
+  "model": "inherited host model; exact build and sampling settings unavailable",
+  "data": "synthetic; no live actions",
+  "runtime_note": "Loaded third skill before the service-commitment clarification; fourth and fifth match their initial acceptance snapshots. This test checks handoff behavior, not all methods or the current complete suite.",
+  "runtime": {
+    "03": {
+      "skills/global-launch-acquisition/LICENSE": "4f18feab6cac96e3e33da744be4cd74db6b779326008bfaf2b3243ecf16811ca",
+      "skills/global-launch-acquisition/SKILL.md": "0ab29134b70ae81d20f662555b7498daf45de81e3671ffde7dda13c19de8516f",
+      "skills/global-launch-acquisition/agents/openai.yaml": "ad4bec7184357c15dd1cc744da65d906d52b4a04ec4141521d400673ecaa5ea9",
+      "skills/global-launch-acquisition/references/discovery-and-ecosystems.md": "b90daf9983408a7ab823ca7c5a3bdfc1c674c0c40c39d7a38c20a936bf018930",
+      "skills/global-launch-acquisition/references/execution-and-recovery.md": "c37629f4afb7f4487384fbea0aa92e9b121ee5bb6b42656e5a97372f96ea080c",
+      "skills/global-launch-acquisition/references/launch-and-channels.md": "ce4854e1ba3974b28359c4c5b00c4326a03012761e0cf841530982e6b5cc3702",
+      "skills/global-launch-acquisition/references/partners-and-creators.md": "8d2f78084c0fc43c3873c6c80ede089282688f32db57f89fa92350286a9d7bbc",
+      "skills/global-launch-acquisition/references/social-and-community.md": "ecd7f268d0385a022976a345b623987cdf08aa76f79c9c4c1cb12b07a367eef4",
+      "skills/global-launch-acquisition/templates/channel-handoff.md": "1b719a2cb7da565b7a144ae3d59010545f8a483f4ab486638cb56fb26c12725a"
+    },
+    "04": {
+      "skills/global-sales-retention/LICENSE": "4f18feab6cac96e3e33da744be4cd74db6b779326008bfaf2b3243ecf16811ca",
+      "skills/global-sales-retention/SKILL.md": "cfbcf3e3d44d7bbd84053371f1e9c2db946e2c104e19b0449d642faab020e2fa",
+      "skills/global-sales-retention/agents/openai.yaml": "598b124ffd420268ecb57c81347fde6b9db1b681c0a55726c5c5820e91c794bd",
+      "skills/global-sales-retention/references/activation-and-conversion.md": "3814a508bba15254428eb9cf8747d5197941ef1bc329b54aeb669d10939a003a",
+      "skills/global-sales-retention/references/deal-and-delivery.md": "6b355a86793f38ba2a94c221448f491ba39a7d99e1b5d01232a97f676fc391d2",
+      "skills/global-sales-retention/references/discovery-and-motion.md": "529e7c2478cd4216cb9365ce1d4ffdab33b0cc79ef105c424d8ecb19f3df24ea",
+      "skills/global-sales-retention/references/execution-and-handoff.md": "21c2a96e356d5a59d91865e54058dc647986178e77dfb8fd1010a8a4ea2abeee",
+      "skills/global-sales-retention/references/retention-and-expansion.md": "eeee9cd6eab30ef9fe9d8f32d2f08c0a3ea7e31a544412a73641a9034731b746",
+      "skills/global-sales-retention/templates/customer-handoff.md": "d7ce5c3e357132f71891141611a916f2c7051c60d3b1f338794a2574bf99b258"
+    },
+    "05": {
+      "skills/global-growth-experiments/LICENSE": "4f18feab6cac96e3e33da744be4cd74db6b779326008bfaf2b3243ecf16811ca",
+      "skills/global-growth-experiments/SKILL.md": "285dd2f34e2d1e752cc0511b1b540384bd672cf38d2b4549cea890e9c85de904",
+      "skills/global-growth-experiments/agents/openai.yaml": "74550c69fcb828e8cbd38eda806a23d2a6eb7a876a9eeac38fc979711bb5e8de",
+      "skills/global-growth-experiments/references/execution.md": "92293cf1107f559aea24c93e3b0679a167e0f0469dc1683618e8c512da2b8c9e",
+      "skills/global-growth-experiments/references/experiment-design.md": "e42cd8e4b446bf423eaec4f2e79135ca5c77cb771c9f0aac037e5b63e28875f4",
+      "skills/global-growth-experiments/references/learning.md": "995609afcd1271fd3795cf92797353beb54f1ff9c948c338f9f4ae592ff35428",
+      "skills/global-growth-experiments/references/measurement.md": "d2506524738090062c1aacf722642bf08cdf925559561d39194c9563f9967ab4",
+      "skills/global-growth-experiments/scripts/conversion_summary.py": "95e6d3737838456c4ea4b07939e7d917b805f6b0197734d7655ec279c94a0f45",
+      "skills/global-growth-experiments/templates/experiment.md": "4dab4026b51917145ddb3032afc5fc029f1e1243321b7a766e9260cb91e30188"
+    }
+  },
+  "input_sha256": "b5fd517941da23272f9b1ab66faba1672b76e41e08d95efd03deb82af1743b96",
+  "output_sha256": "ab1f5487bac9f57e8dae14c14b5a21b1d5b12b3cd759942f2f6ac20203f3c346"
+}
