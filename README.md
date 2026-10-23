@@ -1,70 +1,81 @@
-# 海外增长 Skills · Global Growth Skills
+![Global Growth Skills — market, content, acquisition, customers and learning](docs/assets/cover.svg)
 
-五个独立 Skill，贯穿产品出海的市场选择、内容、获客、客户增长与实验复盘。按当前问题使用一个，也可以让它们接续工作。
+# Global Growth Skills
 
-| 你现在要解决什么 | Skill | 独立仓库 |
+**海外增长的五个独立 Skill：从选市场，到讲清价值、获得客户、促成购买，再用实验决定下一步。**
+
+[![Validate](https://github.com/NextVariable/global-growth-skills/actions/workflows/validate.yml/badge.svg)](https://github.com/NextVariable/global-growth-skills/actions/workflows/validate.yml) [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent_Skills-compatible-6e56cf.svg)](https://agentskills.io/specification)
+
+[选一个 Skill](#choose-a-skill) · [整套安装](#quick-start) · [能力范围](docs/capabilities.md) · [交接示例](handoff-example.md) · [验证](validation/README.md)
+
+给出产品背景、当前问题和资源限制，拿到一个能使用的判断、成稿、操作包或复盘决定。可以只用一个，也可以接续工作；每个 Skill 都有自己的仓库、安装单元和版本。
+
+## Choose a skill
+
+| 现在要解决什么 | 独立 Skill | 一次任务的产物 |
 |---|---|---|
-| 先进入哪个市场，服务谁，为什么客户会买 | 海外市场研究与 GTM 战略 | [global-gtm-strategy-skill](https://github.com/NextVariable/global-gtm-strategy-skill) |
-| 怎样把产品价值讲清楚，制作官网、文章、社媒与视频内容 | 产品定位与增长内容 | [global-growth-content-skill](https://github.com/NextVariable/global-growth-content-skill) |
-| 怎样发布产品，把合适的用户带来 | 产品发布与渠道获客 | [global-launch-acquisition-skill](https://github.com/NextVariable/global-launch-acquisition-skill) |
-| 怎样推动购买、首次价值、续费和扩展 | 销售转化与客户增长 | [global-sales-retention-skill](https://github.com/NextVariable/global-sales-retention-skill) |
-| 下一项增长动作值不值得做，结果说明什么 | 增长实验执行与复盘 | [global-growth-experiments-skill](https://github.com/NextVariable/global-growth-experiments-skill) |
+| 进入哪个海外市场，先服务谁 | [01 · 市场研究与 GTM 战略](https://github.com/NextVariable/global-gtm-strategy-skill) | 客户选择、竞争取舍、进入路径、下一验证 |
+| 怎样让客户理解产品价值 | [02 · 产品定位与增长内容](https://github.com/NextVariable/global-growth-content-skill) | 定位、页面、文章、README、社媒与视频脚本 |
+| 怎样把合适的用户带来 | [03 · 产品发布与渠道获客](https://github.com/NextVariable/global-launch-acquisition-skill) | 渠道选择、发布包、合作、排期与执行核验 |
+| 怎样推动购买、首次价值和续费 | [04 · 销售转化与客户增长](https://github.com/NextVariable/global-sales-retention-skill) | 客户行动、试点、跟进、激活、续费与扩展 |
+| 下一步做什么，结果值不值得继续 | [05 · 增长实验执行与复盘](https://github.com/NextVariable/global-growth-experiments-skill) | 验证设计、测量、护栏、结果与投入决定 |
 
-各 Skill 的源文件、版本与测试维护在自己的仓库。本合集提供入口、选用方法、交接示例及指定版本的安装工具，不复制五套源文件，也不新增一个包办一切的第六 Skill。
+每个仓库都有可直接阅读的任务示例。没有其他四个也能使用其中一个；本合集维护目录与安装入口，不新增第六个包办一切的 Skill。
 
-## 安装
+## Quick start
 
-可去单个仓库按说明安装，也可用本合集的安装工具选择多个。需要 Git 和 Python 3.10+；安装过程只下载指定版本并复制技能目录，不执行下载内容中的脚本，不需要额外服务。
+单独安装时，进入相应仓库使用标准 `npx skills add` 命令。整套或选择多个安装，用本合集的指定版本工具，需要 Git 和 Python 3.10+：
 
-以 Codex 为例，先预览：
-
-```bash
+```sh
 git clone https://github.com/NextVariable/global-growth-skills.git
 cd global-growth-skills
 python3 scripts/install.py --dest ~/.agents/skills
 ```
 
-确认目录后执行：
+上一步只预览，确认后安装：
 
-```bash
+```sh
 python3 scripts/install.py --dest ~/.agents/skills --install
 ```
 
-只安装后三个：
+只安装获客和客户增长：
 
-```bash
-python3 scripts/install.py --dest ~/.agents/skills --only global-launch-acquisition global-sales-retention global-growth-experiments --install
+```sh
+python3 scripts/install.py --dest ~/.agents/skills --only global-launch-acquisition global-sales-retention --install
 ```
 
-已有同名目录时停止，不覆盖或混合旧版本。更新前自行保存旧版及个人修改，再选择一个空目标目录安装新版本进行比较。下载来源和固定版本见 [catalog.json](catalog.json)；它们是可复现的公开仓库快照，不表示自动跟随最新版本。重新加载客户端后调用对应 Skill。
+已有同名目录会停止，不覆盖你的版本。工具先下载全部选定版本，再复制完整技能单元并保留许可；不执行下载内容中的脚本。具体仓库和固定提交见 [catalog.json](catalog.json)，不自动跟随各仓库最新分支。更新前保存旧版及修改，再在空目录试装。
 
-## 从当前问题开始
-
-还不知道市场与客户，用 `$global-gtm-strategy-skill`；已有方向、缺产品表达，用 `$global-growth-content`；有素材要发布获客，用 `$global-launch-acquisition`；有试用或意向客户要推进，用 `$global-sales-retention`；需要判断下一步怎么试、试完要不要继续，用 `$global-growth-experiments`。
-
-不必每次顺序跑完五个。一次完整项目可以让第一个给出目标客户与价值假设，第二个生成适合这些客户的表达和资产，第三个组织渠道动作，第四个接住用户并帮助其购买和持续使用，第五个设计验证、检查结果，再把新证据交回相关部分。
+重新加载客户端后，从当前任务调用：
 
 ```text
-我们有一款面向英语团队的对账工具，已有目标客户和两次付费试点。
-这次使用 $global-launch-acquisition，依据附上的定位和现成内容，
-安排一条能带来合适试用团队的发布路径。每周只能支持四个新团队。
-请准备具体执行包；素材不够时列明要交给内容 Skill 的任务，
-收到主动需求后给客户增长 Skill 一份可接手的说明。
+使用 $global-launch-acquisition。
+我们做英语日志排查工具，已有可运行示例、落地页和45秒演示。
+两周能投入12小时，预算300美元，最多支持4个新团队。
+请选一条优先获客路径，给具体执行包、时间安排和观察方法。
 本次只准备，不对外发送或发布。
 ```
 
-共享的是产品背景和证据，不是强制共用一个数据库。交接带上项目、目标客户、当前事实和未知、可用素材版本、实际动作状态、限制与下一任务即可。可直接使用 [普通文字交接示例](handoff-example.md)。各 Skill 都可独立接收用户资料，不要求安装其他四个。
+## One context, five responsibilities
 
-## 验证与边界
+一份[产品背景](templates/product-brief.md)就能开始：产品做什么、这次决定什么、服务谁、已有证据、限制与授权。它可以是一段文字，不需要另建数据库。
 
-各仓库分别记录结构检查、计算测试和模型任务试用。本合集检查清单、安装时的目录边界、冲突保护和下载失败处理，见 [验证说明](validation/README.md)。
+市场判断交给内容制作；内容与条件交给渠道；用户主动需求交给客户增长；实际动作与结果交给实验。新证据再回到受影响的判断。可使用[普通文字交接示例](handoff-example.md)，保留事实、未知、版本和下一任务。
 
-```bash
-python3 scripts/validate.py
+完整覆盖与专项边界见[能力范围](docs/capabilities.md)。方法指令以中文为主，对客产物按目标语言生成。模型、搜索、浏览、CRM或发布工具由客户端提供；实际外部动作需要相应权限和可核验结果。
+
+## Quality
+
+用任务是否完成、事实是否准确、动作能否执行、变化是否正确传播来评价；框架多和文字长都不能证明质量。设计和贡献标准见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/validate.py
 ```
 
-Skill 能准备和分析，也能在现有工具与明确授权内执行；实际发布、触达、支出和客户系统修改需对应权限。模拟任务与工具检查不能证明真实获客、成交或留存收益。
+合集验证目录与安装保护，各技能单独维护方法和测试。[验证说明](validation/README.md)区分自动检查、模型试用和真实业务效果；[质量边界](docs/quality.md)说明哪些结论目前可以成立。现有检查不证明真实获客、成交或留存收益。
 
-Five independent Agent Skills for international GTM: strategy, positioning and content, launch and acquisition, sales and retention, and growth experiments. This repository is a versioned catalog and installer; each skill remains independently maintained.
+## English
 
-[MIT License](LICENSE)。每个安装单元随带自身的许可及必要声明，安装工具完整保留。
+Five independent Agent Skills for international GTM: strategy, positioning and content, launch and acquisition, sales and retention, and growth experiments. Start with one product context and use the skill that matches the current decision. This repository provides a versioned catalog and installer; each skill remains independently maintained.
+
+[MIT License](LICENSE). Each installed unit retains its bundled license and applicable notices.

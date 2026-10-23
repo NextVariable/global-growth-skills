@@ -5,35 +5,35 @@
       "title": "海外市场研究与GTM战略",
       "skill": "global-gtm-strategy-skill",
       "repository": "https://github.com/NextVariable/global-gtm-strategy-skill",
-      "revision": "4b345ec5743b8c82a84668d70e2c932f99fdb94f",
+      "revision": "8c744f6ba2c1ec1cab7e3a98a2476d1007f6a58e",
       "path": "skills/global-gtm-strategy-skill"
     },
     {
       "title": "产品定位与增长内容",
       "skill": "global-growth-content",
       "repository": "https://github.com/NextVariable/global-growth-content-skill",
-      "revision": "5112b6f1efd3fa7be08a515177b147a151144f6a",
+      "revision": "a1144e8180af340d455f1c2c04a208763443ac8b",
       "path": "skills/global-growth-content"
     },
     {
       "title": "产品发布与渠道获客",
       "skill": "global-launch-acquisition",
       "repository": "https://github.com/NextVariable/global-launch-acquisition-skill",
-      "revision": "eb1ba226149d201593c655d774f501d373fe1432",
+      "revision": "2c3bb79a79408628728016eef082676b4e3118ac",
       "path": "skills/global-launch-acquisition"
     },
     {
       "title": "销售转化与客户增长",
       "skill": "global-sales-retention",
       "repository": "https://github.com/NextVariable/global-sales-retention-skill",
-      "revision": "f96a87618ac05988bd01a5fb1494f85b3e1423c4",
+      "revision": "24c75ab44031c71db6d8c1d2b26f85b2721b46d0",
       "path": "skills/global-sales-retention"
     },
     {
       "title": "增长实验执行与复盘",
       "skill": "global-growth-experiments",
       "repository": "https://github.com/NextVariable/global-growth-experiments-skill",
-      "revision": "3e11b7a057301ae760ebbbeed18d15fae734012c",
+      "revision": "b4da53839dcff5c4619cdcc4dc970ee5619a7aec",
       "path": "skills/global-growth-experiments"
     }
   ]

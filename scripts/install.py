@@ -16,7 +16,18 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def load_catalog(path=ROOT / "catalog.json"):
     catalog = json.loads(path.read_text(encoding="utf-8"))
-    entries = catalog["skills"]
+    if (
+        not isinstance(catalog, dict)
+        or type(catalog.get("schema_version")) is not int
+        or catalog["schema_version"] != 1
+    ):
+        raise ValueError("catalog must be an object with schema_version 1")
+    entries = catalog.get("skills")
+    if not isinstance(entries, list) or any(not isinstance(item, dict) for item in entries):
+        raise ValueError("skills must be a list of skill objects")
+    required = ("skill", "repository", "revision", "path")
+    if any(any(not isinstance(item.get(field), str) for field in required) for item in entries):
+        raise ValueError("each skill requires string skill, repository, revision and path fields")
     names = [item["skill"] for item in entries]
     if len(entries) != 5 or len(set(names)) != 5:
         raise ValueError("catalog must contain five distinct skills")
@@ -58,12 +69,46 @@ def fetch(item, checkout):
     commands = [
         ["git", "init", "--quiet", str(checkout)],
         ["git", "-C", str(checkout), "remote", "add", "origin", item["repository"] + ".git"],
-        ["git", "-C", str(checkout), "fetch", "--ipv4", "--quiet", "--depth", "1", "origin", item["revision"]],
-        ["git", "-C", str(checkout), "-c", f"core.hooksPath={hooks}", "checkout", "--quiet", "--detach", "FETCH_HEAD"],
+        [
+            "git",
+            "-C",
+            str(checkout),
+            "fetch",
+            "--ipv4",
+            "--quiet",
+            "--depth",
+            "1",
+            "origin",
+            item["revision"],
+        ],
+        [
+            "git",
+            "-C",
+            str(checkout),
+            "-c",
+            f"core.hooksPath={hooks}",
+            "checkout",
+            "--quiet",
+            "--detach",
+            "FETCH_HEAD",
+        ],
     ]
     for command in commands:
-        subprocess.run(command, check=True, capture_output=True, text=True, timeout=60, env={**os.environ, "GIT_TERMINAL_PROMPT": "0"})
-    actual = subprocess.run(["git", "-C", str(checkout), "rev-parse", "HEAD"], check=True, capture_output=True, text=True, timeout=10).stdout.strip()
+        subprocess.run(
+            command,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
+        )
+    actual = subprocess.run(
+        ["git", "-C", str(checkout), "rev-parse", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    ).stdout.strip()
     if actual != item["revision"]:
         raise ValueError("downloaded revision mismatch")
     source = checkout / item["path"]
@@ -90,9 +135,15 @@ def install(entries, dest, fetcher=fetch):
         for item, source in zip(entries, sources):
             target = dest / item["skill"]
             try:
-                shutil.copytree(source, target)
+                shutil.copytree(
+                    source,
+                    target,
+                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store"),
+                )
             except OSError as exc:
-                raise ValueError(f"copy failed at {target}; inspect that directory; previously installed: {', '.join(installed) or 'none'}") from exc
+                raise ValueError(
+                    f"copy failed at {target}; inspect that directory; previously installed: {', '.join(installed) or 'none'}"
+                ) from exc
             installed.append(item["skill"])
     return installed
 
@@ -101,7 +152,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dest", type=Path, required=True)
     parser.add_argument("--only", nargs="+")
-    parser.add_argument("--install", action="store_true", help="download and copy; otherwise only preview")
+    parser.add_argument(
+        "--install", action="store_true", help="download and copy; otherwise only preview"
+    )
     args = parser.parse_args()
     try:
         entries = select(load_catalog(), args.only)
@@ -109,12 +162,20 @@ def main():
         for item in entries:
             print(f"{item['skill']} @ {item['revision'][:12]} -> {dest / item['skill']}")
         if not args.install:
-            print("Preview only. Add --install to download and copy. Existing skill directories will not be overwritten.")
+            print(
+                "Preview only. Add --install to download and copy. Existing skill directories will not be overwritten."
+            )
             return 0
         installed = install(entries, dest)
         print("Installed: " + ", ".join(installed))
         return 0
-    except (OSError, ValueError, KeyError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+    except (
+        OSError,
+        ValueError,
+        KeyError,
+        subprocess.CalledProcessError,
+        subprocess.TimeoutExpired,
+    ) as exc:
         print(f"Installation stopped: {exc}", file=sys.stderr)
         return 1
 

@@ -1,38 +1,44 @@
 {
-  "recorded_at_utc": "2026-10-23T16:37:56.685932+00:00",
+  "recorded_at_utc": "2026-10-23T21:00:19.093471+00:00",
   "platform": "macOS",
   "destination": "fresh temporary directory",
   "source": "five public GitHub repositories at catalog revisions",
+  "transport": "installer default Git fetch",
   "skills": [
     {
       "skill": "global-gtm-strategy-skill",
-      "revision": "4b345ec5743b8c82a84668d70e2c932f99fdb94f",
+      "revision": "8c744f6ba2c1ec1cab7e3a98a2476d1007f6a58e",
       "files": 22,
-      "format_check": "passed"
+      "format_check": "passed",
+      "complete_unit_matches_published_local_revision": true
     },
     {
       "skill": "global-growth-content",
-      "revision": "5112b6f1efd3fa7be08a515177b147a151144f6a",
+      "revision": "a1144e8180af340d455f1c2c04a208763443ac8b",
       "files": 10,
-      "format_check": "passed"
+      "format_check": "passed",
+      "complete_unit_matches_published_local_revision": true
     },
     {
       "skill": "global-launch-acquisition",
-      "revision": "eb1ba226149d201593c655d774f501d373fe1432",
+      "revision": "2c3bb79a79408628728016eef082676b4e3118ac",
       "files": 9,
-      "format_check": "passed"
+      "format_check": "passed",
+      "complete_unit_matches_published_local_revision": true
     },
     {
       "skill": "global-sales-retention",
-      "revision": "f96a87618ac05988bd01a5fb1494f85b3e1423c4",
+      "revision": "24c75ab44031c71db6d8c1d2b26f85b2721b46d0",
       "files": 9,
-      "format_check": "passed"
+      "format_check": "passed",
+      "complete_unit_matches_published_local_revision": true
     },
     {
       "skill": "global-growth-experiments",
-      "revision": "3e11b7a057301ae760ebbbeed18d15fae734012c",
+      "revision": "b4da53839dcff5c4619cdcc4dc970ee5619a7aec",
       "files": 9,
-      "format_check": "passed"
+      "format_check": "passed",
+      "complete_unit_matches_published_local_revision": true
     }
   ],
   "repeat_install_refused_without_changes": true

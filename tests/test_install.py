@@ -12,7 +12,12 @@ SPEC.loader.exec_module(INSTALLER)
 
 
 def fixture(name):
-    return {"skill": name, "repository": f"https://github.com/NextVariable/{name}", "revision": "a" * 40, "path": f"skills/{name}"}
+    return {
+        "skill": name,
+        "repository": f"https://github.com/NextVariable/{name}",
+        "revision": "a" * 40,
+        "path": f"skills/{name}",
+    }
 
 
 def fake_fetch(item, checkout):
@@ -24,6 +29,39 @@ def fake_fetch(item, checkout):
 
 
 class InstallerTests(unittest.TestCase):
+    def test_malformed_catalog_returns_a_clear_error(self):
+        samples = [
+            None,
+            [],
+            {"schema_version": True, "skills": []},
+            {"schema_version": 1, "skills": [None]},
+            {"schema_version": 1, "skills": [{"skill": 12}]},
+        ]
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "catalog.json"
+            for sample in samples:
+                with self.subTest(sample=sample):
+                    path.write_text(json.dumps(sample), encoding="utf-8")
+                    with self.assertRaises(ValueError):
+                        INSTALLER.load_catalog(path)
+
+    def test_install_excludes_machine_generated_cache(self):
+        def with_cache(item, checkout):
+            source = fake_fetch(item, checkout)
+            (source / "scripts/__pycache__").mkdir(parents=True)
+            (source / "scripts/__pycache__/helper.pyc").write_bytes(b"local-machine-cache")
+            (source / ".DS_Store").write_bytes(b"desktop-metadata")
+            (source / "scripts/helper.py").write_text("print('ready')", encoding="utf-8")
+            return source
+
+        with tempfile.TemporaryDirectory() as temp:
+            dest = Path(temp) / "target"
+            INSTALLER.install([fixture("one")], dest, with_cache)
+            self.assertTrue((dest / "one/scripts/helper.py").is_file())
+            self.assertTrue((dest / "one/LICENSE").is_file())
+            self.assertFalse((dest / "one/scripts/__pycache__").exists())
+            self.assertFalse((dest / "one/.DS_Store").exists())
+
     def test_real_checkout_does_not_run_downloaded_hook(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -31,8 +69,15 @@ class InstallerTests(unittest.TestCase):
             origin.mkdir()
             hooks = root / "trusted-fixture-hooks"
             hooks.mkdir()
+
             def git(*args):
-                return subprocess.run(["git", "-C", str(origin), "-c", f"core.hooksPath={hooks}", *args], check=True, capture_output=True, text=True).stdout.strip()
+                return subprocess.run(
+                    ["git", "-C", str(origin), "-c", f"core.hooksPath={hooks}", *args],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                ).stdout.strip()
+
             git("init", "--quiet")
             git("config", "user.name", "Fixture")
             git("config", "user.email", "fixture@example.invalid")
@@ -42,7 +87,9 @@ class InstallerTests(unittest.TestCase):
             (source / "LICENSE").write_text("fixture", encoding="utf-8")
             hostile = origin / ".empty-hooks/post-checkout"
             hostile.parent.mkdir()
-            hostile.write_text("#!/bin/sh\nprintf 'executed\\n' > executed-marker.txt\n", encoding="utf-8")
+            hostile.write_text(
+                "#!/bin/sh\nprintf 'executed\\n' > executed-marker.txt\n", encoding="utf-8"
+            )
             hostile.chmod(0o755)
             git("add", ".")
             git("update-index", "--chmod=+x", ".empty-hooks/post-checkout")
@@ -75,6 +122,7 @@ class InstallerTests(unittest.TestCase):
             if item["skill"] == "two":
                 raise OSError("simulated offline")
             return fake_fetch(item, checkout)
+
         with tempfile.TemporaryDirectory() as temp:
             dest = Path(temp) / "target"
             with self.assertRaises(OSError):
@@ -95,8 +143,8 @@ class InstallerTests(unittest.TestCase):
             entries = [fixture(f"skill-{i}") for i in range(5)]
             entries[0]["path"] = "../escape"
             path = Path(temp) / "catalog.json"
-            path.write_text(json.dumps({"skills": entries}))
-            with self.assertRaises(ValueError):
+            path.write_text(json.dumps({"schema_version": 1, "skills": entries}))
+            with self.assertRaisesRegex(ValueError, "unexpected install path"):
                 INSTALLER.load_catalog(path)
 
     def test_missing_license_never_installs(self):
@@ -104,6 +152,7 @@ class InstallerTests(unittest.TestCase):
             source = fake_fetch(item, checkout)
             (source / "LICENSE").unlink()
             return source
+
         with tempfile.TemporaryDirectory() as temp:
             dest = Path(temp) / "target"
             with self.assertRaises(ValueError):
