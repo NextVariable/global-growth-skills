@@ -76,7 +76,7 @@
   "case10_execution": {
     "route": "无",
     "explicit_load_for_verification": "路由冻结后，为完成调用者要求的实际加载验证，显式读取global-growth-experiments全文并运行随包计算器；这不改变第10题应不触发技能的判断。",
-    "loaded_file": "[local-workspace]/Desktop/海外增长 skill/05-增长实验执行与复盘/skills/global-growth-experiments/SKILL.md",
+    "loaded_file": "05-增长实验执行与复盘/skills/global-growth-experiments/SKILL.md",
     "command": "python3 05-增长实验执行与复盘/skills/global-growth-experiments/scripts/conversion_summary.py --control 40 100 --variant 55 100",
     "exit_code": 0,
     "control_rate": 0.4,

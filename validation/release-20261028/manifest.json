@@ -23,7 +23,9 @@
     },
     {
       "file": "routing-results.json",
-      "sha256": "3ce16ab9af54c8cb3732167190facf155f946f4e7f3f45f5e0c07074a8938035"
+      "sha256": "576922ed9e417a2abe9070505f28b2ef1a890ef73e95972441c4650d2de055e2",
+      "original_sha256": "3ce16ab9af54c8cb3732167190facf155f946f4e7f3f45f5e0c07074a8938035",
+      "publication_transform": "machine absolute workspace prefix replaced with relative path; original remains in private test artifacts"
     },
     {
       "file": "00-request-and-routing.md",
