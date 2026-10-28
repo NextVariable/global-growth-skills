@@ -1,0 +1,110 @@
+{
+  "recorded_at_utc": "2026-10-28T13:09:37.964183+00:00",
+  "source": "GitHub public pinned revisions via default Git installer",
+  "destination": "fresh temporary directory",
+  "skills": [
+    {
+      "skill": "global-gtm-strategy-skill",
+      "revision": "2b989adcfd79f05662aed3e54607f6c396c68fd6",
+      "files": 22,
+      "format_check": "passed",
+      "file_sha256": {
+        "LICENSE": "4f18feab6cac96e3e33da744be4cd74db6b779326008bfaf2b3243ecf16811ca",
+        "SKILL.md": "243ff0b3db079267b15d7ff1bdebb4ed387b7f2a5eb630d10d026a296144e75d",
+        "agents/openai.yaml": "41ac89a49093f118df6e7cf3f579e7cb18c81a048040a83ce845a3104576ae5e",
+        "references/alternatives.md": "31c9ff8d721a5fa1d283cafe6b5c5f0301cb8195914a2a94011679f4117664e2",
+        "references/attribution.md": "01f971271a486051ec75d439b01bb19abe13dc523f20a31f3f0180960503de36",
+        "references/customer-research.md": "728cc1a8bd216a8262fba6a4b38b3497ee675ed2b9d2d94d1cdf45365b585b21",
+        "references/entry-strategy.md": "fa396316c67ac95c987ddfa21e9c602b48796fe3eea2d477d2edaff401e6fe96",
+        "references/evidence-and-state.md": "ab0c5e8f0abecaf76f93e0be4d4a25e871b85e75bec5f4d15dbb50095e25d8db",
+        "references/market-selection.md": "e078f5c6f929c3883fc69b3dd7d439ed5cfd3f0f1ea920108827666e509e23d4",
+        "references/opportunity.md": "fc35fa28b5e8740724115d5c4610e23babe64a6ee6d8e23819f1104d068103df",
+        "scripts/opportunity_math.py": "4bdc9ffa1bcf8c547a6d87ff0ac195ef74a80b14595fc455f822c571889c002d",
+        "scripts/research_state.py": "16692506287afab13185a15ba1acbf4b902dcb05f4a1a921f4c37978d1d9e4a0",
+        "templates/handoff.md": "9461f76af0eee914abfcee0e179016ba8dca9d37ab255b51664cbf7903a55419",
+        "templates/records.json": "c71c3984548fc1e77d814ff2fcce54b0b7043c67b02cce4169326e592a048e99",
+        "templates/sizing-input.json": "ae93070ca48e6ece8a4c61fa9ec05c43191d87771a8df1ec260a643047918ab5",
+        "third-party-licenses/reference-a.txt": "a20126646f93d32a8989c3cf4772d59194f405034f7babe7daebeac22b8ab151",
+        "third-party-licenses/reference-b-go-global.txt": "d695b4624d3c42a22249763f62ba4dd8213302e031b5c876affcd341a8b3153f",
+        "third-party-licenses/reference-b-skills.txt": "7d902dfc8114358b13226129221c1f822a47e821db19e3dc6456d6ad2c2fa3ce",
+        "third-party-licenses/reference-b-user-interview.txt": "d6984dcfba35074625a7bdd9a02011dc048d8c9b3c6dece578c4772727a9eea1",
+        "third-party-licenses/reference-c.txt": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "third-party-licenses/reference-d.txt": "b70d71e24e40fce5da8f4b6f9cd862096a048e433db7f3c8cac5e348e6d34591",
+        "third-party-licenses/reference-e.txt": "a2c922f9b81b4f40347ddfa79c38eda0f1278b5a6d108bd4099b4da254c774ee"
+      }
+    },
+    {
+      "skill": "global-growth-content",
+      "revision": "035f597a830515e84cfe028f8055418d9944e0f2",
+      "files": 12,
+      "format_check": "passed",
+      "file_sha256": {
+        "LICENSE": "4f18feab6cac96e3e33da744be4cd74db6b779326008bfaf2b3243ecf16811ca",
+        "SKILL.md": "7665a6dfe7fb840d4234a1d6c5bc234317f38be3ebea3ce892a8bfb4bed4b827",
+        "agents/openai.yaml": "bacd037690edbda863ffad278272ccd36eca3e33ae9747cc5b929ae3d7da5e72",
+        "references/adaptation.md": "0779c123dce3cfdd6b0a5c0b615516472078cd735a9fe8722b1793117eb10326",
+        "references/attribution.md": "7c9efd12acb90ebcc49c26f1e65bab064f6f430ff05642645cab9be64ab91e9d",
+        "references/developer-adoption.md": "f311283bc560f4c48cc36a3301cac70d254f1b96451cf293bed4863ed8ca0229",
+        "references/pages-and-comparisons.md": "4787da7084cee49b8fcdb208b833f436fcb370e74df70955a83db7b0fa883726",
+        "references/positioning-and-language.md": "807028dcdb37aa5672e37a57e1504688e6e4db5a02194d3b7cd0228c6c5c5177",
+        "references/provenance-and-handoff.md": "4c8f24ecd5c73dad48349b0ab57bc529b38a72e6541a0edae534e628aed9293a",
+        "references/search-content.md": "aff6f03eb6f2bf7c698f7ee92b649448272a62425242afb40fdc2e08ea46d385",
+        "templates/content-handoff.md": "09d44ac4f5a6992dfd4d6bee47d9b3b441a4a43fd9aa2563fb3bf7c4a156350a",
+        "third-party-licenses/gingiris-skills-MIT.txt": "7d902dfc8114358b13226129221c1f822a47e821db19e3dc6456d6ad2c2fa3ce"
+      }
+    },
+    {
+      "skill": "global-launch-acquisition",
+      "revision": "2c3bb79a79408628728016eef082676b4e3118ac",
+      "files": 9,
+      "format_check": "passed",
+      "file_sha256": {
+        "LICENSE": "4f18feab6cac96e3e33da744be4cd74db6b779326008bfaf2b3243ecf16811ca",
+        "SKILL.md": "e96070f98863412d4c99d5b2f36324bf33da64e63fb0f7fdf51f208c5abe03e7",
+        "agents/openai.yaml": "ad4bec7184357c15dd1cc744da65d906d52b4a04ec4141521d400673ecaa5ea9",
+        "references/discovery-and-ecosystems.md": "b90daf9983408a7ab823ca7c5a3bdfc1c674c0c40c39d7a38c20a936bf018930",
+        "references/execution-and-recovery.md": "c37629f4afb7f4487384fbea0aa92e9b121ee5bb6b42656e5a97372f96ea080c",
+        "references/launch-and-channels.md": "ce4854e1ba3974b28359c4c5b00c4326a03012761e0cf841530982e6b5cc3702",
+        "references/partners-and-creators.md": "8d2f78084c0fc43c3873c6c80ede089282688f32db57f89fa92350286a9d7bbc",
+        "references/social-and-community.md": "ecd7f268d0385a022976a345b623987cdf08aa76f79c9c4c1cb12b07a367eef4",
+        "templates/channel-handoff.md": "1b719a2cb7da565b7a144ae3d59010545f8a483f4ab486638cb56fb26c12725a"
+      }
+    },
+    {
+      "skill": "global-sales-retention",
+      "revision": "24c75ab44031c71db6d8c1d2b26f85b2721b46d0",
+      "files": 9,
+      "format_check": "passed",
+      "file_sha256": {
+        "LICENSE": "4f18feab6cac96e3e33da744be4cd74db6b779326008bfaf2b3243ecf16811ca",
+        "SKILL.md": "cfbcf3e3d44d7bbd84053371f1e9c2db946e2c104e19b0449d642faab020e2fa",
+        "agents/openai.yaml": "598b124ffd420268ecb57c81347fde6b9db1b681c0a55726c5c5820e91c794bd",
+        "references/activation-and-conversion.md": "3814a508bba15254428eb9cf8747d5197941ef1bc329b54aeb669d10939a003a",
+        "references/deal-and-delivery.md": "6b355a86793f38ba2a94c221448f491ba39a7d99e1b5d01232a97f676fc391d2",
+        "references/discovery-and-motion.md": "529e7c2478cd4216cb9365ce1d4ffdab33b0cc79ef105c424d8ecb19f3df24ea",
+        "references/execution-and-handoff.md": "21c2a96e356d5a59d91865e54058dc647986178e77dfb8fd1010a8a4ea2abeee",
+        "references/retention-and-expansion.md": "eeee9cd6eab30ef9fe9d8f32d2f08c0a3ea7e31a544412a73641a9034731b746",
+        "templates/customer-handoff.md": "d7ce5c3e357132f71891141611a916f2c7051c60d3b1f338794a2574bf99b258"
+      }
+    },
+    {
+      "skill": "global-growth-experiments",
+      "revision": "b4da53839dcff5c4619cdcc4dc970ee5619a7aec",
+      "files": 9,
+      "format_check": "passed",
+      "file_sha256": {
+        "LICENSE": "4f18feab6cac96e3e33da744be4cd74db6b779326008bfaf2b3243ecf16811ca",
+        "SKILL.md": "285dd2f34e2d1e752cc0511b1b540384bd672cf38d2b4549cea890e9c85de904",
+        "agents/openai.yaml": "74550c69fcb828e8cbd38eda806a23d2a6eb7a876a9eeac38fc979711bb5e8de",
+        "references/execution.md": "92293cf1107f559aea24c93e3b0679a167e0f0469dc1683618e8c512da2b8c9e",
+        "references/experiment-design.md": "e42cd8e4b446bf423eaec4f2e79135ca5c77cb771c9f0aac037e5b63e28875f4",
+        "references/learning.md": "995609afcd1271fd3795cf92797353beb54f1ff9c948c338f9f4ae592ff35428",
+        "references/measurement.md": "d2506524738090062c1aacf722642bf08cdf925559561d39194c9563f9967ab4",
+        "scripts/conversion_summary.py": "95e6d3737838456c4ea4b07939e7d917b805f6b0197734d7655ec279c94a0f45",
+        "templates/experiment.md": "4dab4026b51917145ddb3032afc5fc029f1e1243321b7a766e9260cb91e30188"
+      }
+    }
+  ],
+  "repeat_install_refused": true,
+  "limits": "Package install and format only; no automatic trigger or customer effects measured."
+}

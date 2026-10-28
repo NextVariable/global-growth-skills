@@ -79,3 +79,5 @@ PYTHONDONTWRITEBYTECODE=1 python3 scripts/validate.py
 Five independent Agent Skills for international GTM: strategy, positioning and content, launch and acquisition, sales and retention, and growth experiments. Start with one product context and use the skill that matches the current decision. This repository provides a versioned catalog and installer; each skill remains independently maintained.
 
 [MIT License](LICENSE). Each installed unit retains its bundled license and applicable notices.
+
+维护与更新：[变更记录](CHANGELOG.md) · [升级与回退](docs/upgrading.md) · [安全问题反馈](SECURITY.md)。
