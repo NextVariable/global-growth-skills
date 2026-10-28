@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-28",
+  "reason": "Redact historical machine paths and private commit email; original history and model receipts retained privately. No business method or model conclusion changed.",
+  "commits": {
+    "a93430e90b9543b8952dbecc13cbb4f705dcd628": "a93430e90b9543b8952dbecc13cbb4f705dcd628",
+    "794b987c7a04c36b9ae7226135acb4ebd8261378": "794b987c7a04c36b9ae7226135acb4ebd8261378",
+    "a26a9f86b36684c101b72b48d6db039f2585233f": "6bc7e5ace42ca3f9e6e99056ea2d60ef681a795b",
+    "0d156ac7db4e314a75fa8e08e8db127ba1096432": "9924c723ab66d9715440801e68c1ccc0ba7ec1b2",
+    "ef7f320b5d015cbf1093895d3e0c1ad271aa2d0c": "3760d87d69cf5579329fa2e53c35947cd4e79132",
+    "5ccea2b64fd447b549f851543a7f8c7db51cffbf": "424a6b69302c3b96def542b03622c8abdc3ccfd7",
+    "7ac49d2cd5f68559b42bd14ee3200b30d5d95cb7": "b9081bd4df94dde22010e7bdc02dfc30a3952eb5"
+  },
+  "historical_blobs": {
+    "8ff906784eff154ce0c983073642232325c20a80": "62cb3998d7df3e70ff98628e11915eeeec900740"
+  }
+}
