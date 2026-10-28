@@ -1,5 +1,5 @@
 {
-  "recorded_at_utc": "2026-10-28T13:17:36.501831+00:00",
+  "recorded_at_utc": "2026-10-28T13:23:37.424646+00:00",
   "source": "five final public pinned revisions via default Git installer",
   "destination": "fresh temporary directory",
   "skills": [
@@ -8,7 +8,6 @@
       "revision": "b9a3f9d46e68e6959211ac5ebccb4a5bd35ead12",
       "files": 22,
       "format_check": "passed",
-      "matches_complete_published_unit": true,
       "file_sha256": {
         "LICENSE": "4f18feab6cac96e3e33da744be4cd74db6b779326008bfaf2b3243ecf16811ca",
         "SKILL.md": "243ff0b3db079267b15d7ff1bdebb4ed387b7f2a5eb630d10d026a296144e75d",
@@ -36,10 +35,9 @@
     },
     {
       "skill": "global-growth-content",
-      "revision": "5bc3ed1fbbfc27461b52c5df09775cf8f1394a14",
+      "revision": "d3d8aa367ace0e9ff27ce7a8a21e3ebd5e28140e",
       "files": 12,
       "format_check": "passed",
-      "matches_complete_published_unit": true,
       "file_sha256": {
         "LICENSE": "4f18feab6cac96e3e33da744be4cd74db6b779326008bfaf2b3243ecf16811ca",
         "SKILL.md": "7665a6dfe7fb840d4234a1d6c5bc234317f38be3ebea3ce892a8bfb4bed4b827",
@@ -60,7 +58,6 @@
       "revision": "a5bfa7c3d5a64b61bcb17491ad96a9b34269b96e",
       "files": 9,
       "format_check": "passed",
-      "matches_complete_published_unit": true,
       "file_sha256": {
         "LICENSE": "4f18feab6cac96e3e33da744be4cd74db6b779326008bfaf2b3243ecf16811ca",
         "SKILL.md": "e96070f98863412d4c99d5b2f36324bf33da64e63fb0f7fdf51f208c5abe03e7",
@@ -78,7 +75,6 @@
       "revision": "7c201004d3aba3896808660e56ba4a74b64322b6",
       "files": 9,
       "format_check": "passed",
-      "matches_complete_published_unit": true,
       "file_sha256": {
         "LICENSE": "4f18feab6cac96e3e33da744be4cd74db6b779326008bfaf2b3243ecf16811ca",
         "SKILL.md": "cfbcf3e3d44d7bbd84053371f1e9c2db946e2c104e19b0449d642faab020e2fa",
@@ -96,7 +92,6 @@
       "revision": "fb1060e4ff5c80dcfb00b2c68099a511b1e5eed4",
       "files": 9,
       "format_check": "passed",
-      "matches_complete_published_unit": true,
       "file_sha256": {
         "LICENSE": "4f18feab6cac96e3e33da744be4cd74db6b779326008bfaf2b3243ecf16811ca",
         "SKILL.md": "285dd2f34e2d1e752cc0511b1b540384bd672cf38d2b4549cea890e9c85de904",
