@@ -5,7 +5,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
-from install import load_catalog
+from install import load_catalog, validate_install_record
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -33,6 +33,7 @@ def documentation_errors(root):
 if __name__ == "__main__":
     try:
         entries = load_catalog()
+        validate_install_record(entries, ROOT / "validation/accepted-install.json")
     except (OSError, ValueError, KeyError) as exc:
         print(f"Catalog failed: {exc}")
         sys.exit(1)

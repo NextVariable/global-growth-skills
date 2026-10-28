@@ -1,0 +1,89 @@
+{
+  "test_kind": "显式给定描述的模型选择测试；不是自动客户端触发记录",
+  "selection_basis": "仅读取01至05五个SKILL.md的frontmatter后冻结路由选择；未联网，未修改仓库。",
+  "routes": [
+    {
+      "id": 1,
+      "request": "先进入日本还是美国市场",
+      "primary_skill": "global-gtm-strategy-skill",
+      "split_needed": false,
+      "reason": "市场优先级与进入策略。"
+    },
+    {
+      "id": 2,
+      "request": "改写AI工具首页让采购负责人看懂",
+      "primary_skill": "global-growth-content",
+      "split_needed": false,
+      "reason": "已有产品的客户语言与官网内容改写。"
+    },
+    {
+      "id": 3,
+      "request": "我们授权在已有账号发布一条审核好的产品上线帖",
+      "primary_skill": "global-launch-acquisition",
+      "split_needed": false,
+      "reason": "已授权渠道发布；文案已审核，无需先创作。"
+    },
+    {
+      "id": 4,
+      "request": "客户要求取消订阅如何处理",
+      "primary_skill": "global-sales-retention",
+      "split_needed": false,
+      "reason": "已有客户的续费流失与价值实现问题。"
+    },
+    {
+      "id": 5,
+      "request": "两组随机试验计数如何判断继续",
+      "primary_skill": "global-growth-experiments",
+      "split_needed": false,
+      "reason": "随机实验结果解释与继续停止判断，仍须核对实验质量与判定规则。"
+    },
+    {
+      "id": 6,
+      "request": "润色婚礼致辞",
+      "primary_skill": null,
+      "split_needed": false,
+      "reason": "非产品营销内容，不因涉及文字改写就触发增长内容技能。"
+    },
+    {
+      "id": 7,
+      "request": "设计React界面导航",
+      "primary_skill": null,
+      "split_needed": false,
+      "reason": "界面设计与工程任务；营销页面信息组织不等于应用导航设计。"
+    },
+    {
+      "id": 8,
+      "request": "计算学校录取概率",
+      "primary_skill": null,
+      "split_needed": false,
+      "reason": "不属于海外产品增长实验，且无依据不能编造录取概率。"
+    },
+    {
+      "id": 9,
+      "request": "先评估德国市场再写德语落地页",
+      "primary_skill": "global-gtm-strategy-skill",
+      "split_needed": true,
+      "reason": "先市场评估；市场与客户选择后交给 global-growth-content 写德语落地页。"
+    },
+    {
+      "id": 10,
+      "request": "只想核对40/100到55/100增加多少",
+      "primary_skill": null,
+      "split_needed": false,
+      "reason": "纯通用算数，明确不要求实验决策，五个技能均不应自动触发。"
+    }
+  ],
+  "case10_execution": {
+    "route": "无",
+    "explicit_load_for_verification": "路由冻结后，为完成调用者要求的实际加载验证，显式读取global-growth-experiments全文并运行随包计算器；这不改变第10题应不触发技能的判断。",
+    "loaded_file": "[local-workspace]/Desktop/海外增长 skill/05-增长实验执行与复盘/skills/global-growth-experiments/SKILL.md",
+    "command": "python3 05-增长实验执行与复盘/skills/global-growth-experiments/scripts/conversion_summary.py --control 40 100 --variant 55 100",
+    "exit_code": 0,
+    "control_rate": 0.4,
+    "variant_rate": 0.55,
+    "difference_percentage_points": 15,
+    "relative_change_percent": 37.5,
+    "answer": "从40%到55%，增加15个百分点；相对增长37.5%。只描述差额，不宣称因果、显著性或实验胜负。",
+    "raw_difference_percentage_points": 15.000000000000002
+  }
+}

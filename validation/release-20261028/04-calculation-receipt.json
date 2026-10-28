@@ -1,0 +1,36 @@
+{
+  "currency": "USD",
+  "billing_unit": "team/month",
+  "source": "task U1 and U2; projections not actual receipts",
+  "existing_paid_teams": 5,
+  "existing_price_unchanged": 20,
+  "existing_nominal_monthly_subscription": 100,
+  "new_team_cap": 4,
+  "new_mrr_if_4_sign_v1": 80,
+  "new_mrr_if_4_sign_v2": 120,
+  "total_nominal_monthly_if_4_new_sign_v2": 220,
+  "new_price_change_dollars": 10,
+  "new_price_change_percent": 50.0,
+  "initial_new_teams_planned": 2,
+  "new_mrr_if_2_sign_v2": 60,
+  "cash_ceiling": 300,
+  "cash_divided_by_4_is_budget_allocation_not_observed_cac": 75.0,
+  "v1_hours": [
+    2,
+    2,
+    4,
+    2,
+    2
+  ],
+  "v2_hours": [
+    2,
+    2,
+    1,
+    4,
+    1,
+    2
+  ],
+  "v1_total_hours": 12,
+  "v2_total_hours": 12,
+  "limitations": "No forecast of acquisition, no actual MRR verification, no labor cost or tax, no CAC/LTV/ROI inferred; two free teams excluded from paid revenue."
+}

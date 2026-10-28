@@ -1,0 +1,43 @@
+{
+  "execution": "two actual fresh subagent contexts; one routes ten cases and explicitly computes, one completes a sequential five-stage synthetic workflow with an update",
+  "fork_turns": "none",
+  "model": "inherited host model; exact build, sampling, token usage and cost unavailable",
+  "isolation_deviation": "workflow agent additionally read skill-creator despite the specified five-package read scope; disclosed, not a clean comparison experiment",
+  "scope": "offline tasks; no real customer, product, client auto-trigger, posting or revenue test",
+  "files": [
+    {
+      "file": "01-delivery-v1.md",
+      "sha256": "c058bc7ba24d9a6f5e7a4f77014b9c46bf2a37f34b12d5d285bd50eb1e0831fc"
+    },
+    {
+      "file": "02-delivery-v2-current.md",
+      "sha256": "53141a5b48172dbad130a16b9e0ccd748ff28652d6ed42748185cac35d42cf33"
+    },
+    {
+      "file": "03-impact-and-status.md",
+      "sha256": "c734015c0d81a1ae0c9cbe642317e921cfbade6f58529eeb41797ba0d26e97fc"
+    },
+    {
+      "file": "routing-results.md",
+      "sha256": "edab8b2d8589e19aa1d7f852fb63bd1775a28e4248a126f6ce8b475fe973fdd9"
+    },
+    {
+      "file": "routing-results.json",
+      "sha256": "3ce16ab9af54c8cb3732167190facf155f946f4e7f3f45f5e0c07074a8938035"
+    },
+    {
+      "file": "00-request-and-routing.md",
+      "sha256": "6ad6dea3ad364f2aa5386ae56fa2fc3eca664e40a057d1a3866f0bc756c34149"
+    },
+    {
+      "file": "04-calculation-receipt.json",
+      "sha256": "f97beff1925b7bfc5ba3403c38e69cb4ab036375c4d3fbf2fdaf848792a92297"
+    },
+    {
+      "file": "loaded-files.public.json",
+      "sha256": "e116427c13dd1a5b049ae87deb154e9970dbf774c8110889193549a9c617dd14",
+      "publication_transform": "absolute machine paths replaced with project-relative paths; original retained in local test artifacts"
+    }
+  ],
+  "review": "Maintainer reviewed actual outputs: correct facts and price cohorts; no claims of live publishing; v1 and v2 budget each sums to 12h. Routes match stated capability boundaries; arithmetic is 15 percentage points and 37.5% relative."
+}

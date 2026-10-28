@@ -1,0 +1,115 @@
+[
+  {
+    "path": "01-海外市场研究与GTM战略/skills/global-gtm-strategy-skill/SKILL.md",
+    "bytes": 6653,
+    "sha256": "243ff0b3db079267b15d7ff1bdebb4ed387b7f2a5eb630d10d026a296144e75d",
+    "reason": "入口路由或本任务对应参考资料"
+  },
+  {
+    "path": "02-产品定位与增长内容/skills/global-growth-content/SKILL.md",
+    "bytes": 5960,
+    "sha256": "7665a6dfe7fb840d4234a1d6c5bc234317f38be3ebea3ce892a8bfb4bed4b827",
+    "reason": "入口路由或本任务对应参考资料"
+  },
+  {
+    "path": "03-产品发布与渠道获客/skills/global-launch-acquisition/SKILL.md",
+    "bytes": 4970,
+    "sha256": "e96070f98863412d4c99d5b2f36324bf33da64e63fb0f7fdf51f208c5abe03e7",
+    "reason": "入口路由或本任务对应参考资料"
+  },
+  {
+    "path": "04-销售转化与客户增长/skills/global-sales-retention/SKILL.md",
+    "bytes": 4271,
+    "sha256": "cfbcf3e3d44d7bbd84053371f1e9c2db946e2c104e19b0449d642faab020e2fa",
+    "reason": "入口路由或本任务对应参考资料"
+  },
+  {
+    "path": "05-增长实验执行与复盘/skills/global-growth-experiments/SKILL.md",
+    "bytes": 5367,
+    "sha256": "285dd2f34e2d1e752cc0511b1b540384bd672cf38d2b4549cea890e9c85de904",
+    "reason": "入口路由或本任务对应参考资料"
+  },
+  {
+    "path": "01-海外市场研究与GTM战略/skills/global-gtm-strategy-skill/references/market-selection.md",
+    "bytes": 2788,
+    "sha256": "e078f5c6f929c3883fc69b3dd7d439ed5cfd3f0f1ea920108827666e509e23d4",
+    "reason": "入口路由或本任务对应参考资料"
+  },
+  {
+    "path": "01-海外市场研究与GTM战略/skills/global-gtm-strategy-skill/references/entry-strategy.md",
+    "bytes": 3612,
+    "sha256": "fa396316c67ac95c987ddfa21e9c602b48796fe3eea2d477d2edaff401e6fe96",
+    "reason": "入口路由或本任务对应参考资料"
+  },
+  {
+    "path": "01-海外市场研究与GTM战略/skills/global-gtm-strategy-skill/references/evidence-and-state.md",
+    "bytes": 8655,
+    "sha256": "ab0c5e8f0abecaf76f93e0be4d4a25e871b85e75bec5f4d15dbb50095e25d8db",
+    "reason": "入口路由或本任务对应参考资料"
+  },
+  {
+    "path": "02-产品定位与增长内容/skills/global-growth-content/references/pages-and-comparisons.md",
+    "bytes": 4617,
+    "sha256": "4787da7084cee49b8fcdb208b833f436fcb370e74df70955a83db7b0fa883726",
+    "reason": "入口路由或本任务对应参考资料"
+  },
+  {
+    "path": "02-产品定位与增长内容/skills/global-growth-content/references/provenance-and-handoff.md",
+    "bytes": 3361,
+    "sha256": "4c8f24ecd5c73dad48349b0ab57bc529b38a72e6541a0edae534e628aed9293a",
+    "reason": "入口路由或本任务对应参考资料"
+  },
+  {
+    "path": "03-产品发布与渠道获客/skills/global-launch-acquisition/references/launch-and-channels.md",
+    "bytes": 5261,
+    "sha256": "ce4854e1ba3974b28359c4c5b00c4326a03012761e0cf841530982e6b5cc3702",
+    "reason": "入口路由或本任务对应参考资料"
+  },
+  {
+    "path": "04-销售转化与客户增长/skills/global-sales-retention/references/discovery-and-motion.md",
+    "bytes": 3543,
+    "sha256": "529e7c2478cd4216cb9365ce1d4ffdab33b0cc79ef105c424d8ecb19f3df24ea",
+    "reason": "入口路由或本任务对应参考资料"
+  },
+  {
+    "path": "04-销售转化与客户增长/skills/global-sales-retention/references/activation-and-conversion.md",
+    "bytes": 3808,
+    "sha256": "3814a508bba15254428eb9cf8747d5197941ef1bc329b54aeb669d10939a003a",
+    "reason": "入口路由或本任务对应参考资料"
+  },
+  {
+    "path": "04-销售转化与客户增长/skills/global-sales-retention/references/deal-and-delivery.md",
+    "bytes": 4012,
+    "sha256": "6b355a86793f38ba2a94c221448f491ba39a7d99e1b5d01232a97f676fc391d2",
+    "reason": "入口路由或本任务对应参考资料"
+  },
+  {
+    "path": "04-销售转化与客户增长/skills/global-sales-retention/references/execution-and-handoff.md",
+    "bytes": 2900,
+    "sha256": "21c2a96e356d5a59d91865e54058dc647986178e77dfb8fd1010a8a4ea2abeee",
+    "reason": "入口路由或本任务对应参考资料"
+  },
+  {
+    "path": "05-增长实验执行与复盘/skills/global-growth-experiments/references/experiment-design.md",
+    "bytes": 3752,
+    "sha256": "e42cd8e4b446bf423eaec4f2e79135ca5c77cb771c9f0aac037e5b63e28875f4",
+    "reason": "入口路由或本任务对应参考资料"
+  },
+  {
+    "path": "05-增长实验执行与复盘/skills/global-growth-experiments/references/measurement.md",
+    "bytes": 3391,
+    "sha256": "d2506524738090062c1aacf722642bf08cdf925559561d39194c9563f9967ab4",
+    "reason": "入口路由或本任务对应参考资料"
+  },
+  {
+    "path": "05-增长实验执行与复盘/skills/global-growth-experiments/references/learning.md",
+    "bytes": 2853,
+    "sha256": "995609afcd1271fd3795cf92797353beb54f1ff9c948c338f9f4ae592ff35428",
+    "reason": "入口路由或本任务对应参考资料"
+  },
+  {
+    "path": "external/skill-creator/SKILL.md",
+    "reason": "测试方法参考；实际先读过，但不在指定五目录，属于读取范围偏离，必须报告",
+    "bytes": 15311
+  }
+]

@@ -29,6 +29,18 @@ def fake_fetch(item, checkout):
 
 
 class InstallerTests(unittest.TestCase):
+    def test_acceptance_must_match_catalog_revision(self):
+        entries = [fixture("one")]
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "record.json"
+            row = {**entries[0], "format_check": "passed"}
+            path.write_text(json.dumps({"skills": [row]}), encoding="utf-8")
+            INSTALLER.validate_install_record(entries, path)
+            row["revision"] = "b" * 40
+            path.write_text(json.dumps({"skills": [row]}), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "revisions differ"):
+                INSTALLER.validate_install_record(entries, path)
+
     def test_malformed_catalog_returns_a_clear_error(self):
         samples = [
             None,

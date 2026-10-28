@@ -45,6 +45,21 @@ def load_catalog(path=ROOT / "catalog.json"):
     return entries
 
 
+def validate_install_record(entries, path):
+    """Reject catalog updates that still claim installation of older revisions."""
+    record = json.loads(path.read_text(encoding="utf-8"))
+    expected = {item["skill"]: item["revision"] for item in entries}
+    records = record.get("skills", [])
+    actual = {item["skill"]: item["revision"] for item in records}
+    if len(records) != len(expected) or actual != expected:
+        raise ValueError(
+            "installation acceptance revisions differ from catalog; rerun the pinned install"
+        )
+    if any(item.get("format_check") != "passed" for item in records):
+        raise ValueError("installation acceptance contains an unvalidated package")
+    return record
+
+
 def select(entries, only):
     names = set(only or [item["skill"] for item in entries])
     unknown = names - {item["skill"] for item in entries}
