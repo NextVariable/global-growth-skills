@@ -5,6 +5,7 @@
 - Evidence Engine 2.0：claim 支持逐字片段而不只是整段摘录；新增 Claim–Evidence 映射、支持类型、重复合并、时效分级、证据缺口和 provider 指令注入阻断。
 - 逐字匹配与语义支持分离：`support` 只表示文本命中，`semantic_support` 在具名评审前保持 `unverified`；新增 `review` 记录和 `needs_review`/`unsupported_claims` 状态，字符串匹配不再被当作事实已验证。
 - 门禁只拦截“陈述外部事实却无 claim”的模型输出；无事实断言的建议不再被强制引用无关来源。包状态新增 `needs_evidence_review`。
+- 来源分类：文本命中按 `operator_input`、`external_evidence`、`inference`、`proposal` 区分。操作者提供或批准的预算、目标、样本量、独立条件和观察期不再要求外部引用；竞品价格、市场规模、客户数量和成功率阈值仍须来源。模型不能自报来源类别或审批，内部事实也不会被标为 `verified`。导出携带逐条 `provenance`。
 - 新增版本化决策契约：跨 Skill 交接携带 `decision_id`、`decision_revision`、`contract_sha256` 和结构化约束。未知阈值保持 `unknown`；下游只能复制或提出未批准的 `proposals`，改变人数、单位、分母、时间窗、预算或复用旧 revision 会在写入前失败。`revise-decision` 由操作者发起，保留旧版本并让旧草稿失效。
 - `web-public` 抓取固定到一次解析得到的全局单播地址，使用原主机名完成 TLS 校验，阻断 DNS Rebinding/TOCTOU；不支持代理传输。拒绝私网、重定向、非 HTML 和超限响应。
 - 来源失效改为精确依赖：只复核引用该来源的决策与草稿，新增无关来源不再误触发失效。

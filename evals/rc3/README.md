@@ -87,6 +87,34 @@ python3 -m harness --db "$db" revise-decision drift sample-size-3.json \
 
 **NOT TESTED**：当前环境没有可用模型宿主，本轮只执行确定性测试。真实模型结果、token 和耗时不得填写估计值。
 
+## 来源分类验收（Evidence Provenance）
+
+先复现并确认修复，不调用模型：
+
+```bash
+# 15 个来源分类与工作流回归用例
+python3 -m unittest tests.harness.test_provenance -v
+```
+
+复现原始缺陷：不带操作者上下文审计 “0 USD” 文本会得到 `missing_claims`；同一文本在 `budget.amount_minor=0` 上下文下为 `no_claims`，`provenance.operator_input` 含 `budget`。真实模型流程（具备宿主时）：
+
+```bash
+python3 -m harness --db "$db" start provenance --execution model \
+  --stages strategy content launch sales experiments --goal "Validate demand"
+python3 -m harness --db "$db" step provenance --model <name> \
+  --checkout "strategy=$strategy_repo" --checkout "content=$content_repo" \
+  --checkout "launch=$launch_repo" --checkout "sales=$sales_repo" \
+  --checkout "experiments=$experiments_repo" --timeout 180
+python3 -m harness --db "$db" audit provenance
+```
+
+检查项：
+
+- 正文中的 `0 USD` / `100 USD`、已批准样本量、独立条件和观察期进入 `provenance.operator_input`，不触发 `missing_claims`。
+- 竞品价格、市场规模、付费客户数量和模型自增百分比阈值仍留在 `unmapped_external_flags`，除非有结构化 claim。
+- `provenance.external_evidence` 只包含映射到来源的 claim；`inference` 保留假设；`proposal` 保留未批准建议。
+- 包状态不再因操作者预算变为 `incomplete_evidence`；模型或手工交接的决策仍需要 `needs_decision_review`。
+
 记录要求：
 
 - 每次模型调用的模型名、输入/输出/缓存 token、耗时、`prompt_bytes`、`skill_document_bytes` 和 `skill_package_bytes`。

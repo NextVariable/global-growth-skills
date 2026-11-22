@@ -8,7 +8,8 @@
 
 - **Evidence Engine 2.0**：claim 可引用摘录中的逐字片段，记录 `exact_excerpt`/`excerpt_fragment`、来源时效和重复合并；冲突、过期、注入来源不可引用。
 - **语义支持与逐字匹配分离**：模型草稿记录逐字匹配，语义支持保持 `unverified`。本版尚未接入独立评审。
-- **门禁边界**：错误的来源或引文拒绝保存。文本规则命中保留草稿并触发证据复核，纯建议允许空引用。审计状态区分 `not_applicable`、`no_eligible_sources`、`no_claims`、`conflict`、`missing_claims`、`needs_review`、`unsupported_claims`、`partial`、`verified`。
+- **来源分类**：文本规则命中按 `operator_input`、`external_evidence`、`inference`、`proposal` 分类。操作者提供或批准的预算、目标、样本量、独立条件和观察期不要求外部引用；未匹配内部事实的竞品价格、市场规模、客户数量与成功率阈值仍须结构化引用。内部事实只解除引用要求，不会自动变成 `verified`；模型不能自报来源类别或审批。审计与导出携带逐条 `provenance`。
+- **门禁边界**：错误的来源或引文拒绝保存。文本规则命中保留草稿；只有未匹配内部事实的外部断言触发 `missing_claims`，纯建议允许空引用。审计状态区分 `not_applicable`、`no_eligible_sources`、`no_claims`、`conflict`、`missing_claims`、`needs_review`、`unsupported_claims`、`partial`、`verified`。
 - **包状态**：`incomplete_evidence`（缺少必要 claim）、`needs_evidence_review`（逐字命中但语义未复核、评审拒绝或存在冲突）、`needs_quality_review`、`ready_for_internal_review`。
 - **精确失效**：来源依赖按实际引用计算，新增无关来源不再让已引用草稿失效；来源改动、撤回、冲突或过期仍沿依赖传播。
 - **公开网页 Provider**：`research-web` 只读抓取操作者给出的单个公开 HTTPS 页面，记录 SHA256、HTTP 状态、采集时间与有效期；拒绝私网、重定向、非 HTML 和超 1 MB 响应。DNS 只解析一次，所有答案须为全局单播地址，连接固定到已验证 IP 并用原主机名做 TLS 校验，禁止代理路径。
@@ -25,6 +26,7 @@
 - 质量评分是确定性结构检查，不判断语义真伪；没有评审器时 claim 始终为 `needs_review`，不会被标为 `verified`。
 - 浏览器 DOM、JavaScript 渲染、登录页和代理传输不在 `research-web` 支持范围。
 - 决策契约的一致性判定只读取结构化声明；自由文本中的矛盾不会自动拦截，仍需人工审阅。真实模型是否稳定复制契约尚未验证。
+- 来源分类依赖结构化数值匹配；超过十的英文数字词、非常规币种写法或含混表述可能仍被要求外部引用，需人工复核。
 - 真实客户采用、付费转化和外部发布仍未验证；不进行未经授权的外部触达、CRM 修改或广告消费。
 
 ### RC2 与 RC3 对照
