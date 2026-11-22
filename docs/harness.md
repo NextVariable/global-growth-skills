@@ -1,4 +1,4 @@
-# GTM Harness 1.0.0-rc.3
+# GTM Harness 1.0.0
 
 ## 架构与任务选择
 
@@ -12,7 +12,7 @@ flowchart LR
   State --> Gate["独立审批与 Mock 执行"]
 ```
 
-运行时只调度所选角色，并在所选节点之间检查上游完成状态。内容可单独用项目背景起草，获客可单独做渠道方案，销售不依赖获客。实验接收所选且已完成的上游产物。`--goal` 使用可检查的关键词规则，未匹配时要求 `--stages`。默认 `start` 维持旧双阶段兼容行为。五个固定 SHA 继续从合集安装目录清单读取，见[发布验收](../V1_RELEASE_READINESS.md)。
+运行时只调度所选角色，并在所选节点之间检查上游完成状态。内容可单独用项目背景起草，获客可单独做渠道方案，销售不依赖获客。实验接收所选且已完成的上游产物。`--goal` 使用可检查的关键词规则，未匹配时要求 `--stages`。默认 `start` 维持旧双阶段兼容行为。五个固定 SHA 继续从合集安装目录清单读取，见[发布验收](../V1_RELEASE_READINESS.md)、[V1.0 发布说明](v1.0.0-release.md)与[Release Gate](../validation/release-gate-v1.0.0.json)。
 
 ## Codex 宿主
 
@@ -105,7 +105,7 @@ python -m harness --db "$db" receipts
 
 ## 评测口径
 
-`scripts/evaluate_rc3.py` 覆盖 AI SaaS、开发者工具、智能硬件和 B2B 服务四个场景。`fixture` 是最小合成输出，只验证流程；`reference` 是确定性参考质量输出，只验证评分卡能区分强/弱交付物；`model` 才发起真实 Codex 调用，并在报告中记录调用次数、token 和明确的费用缺失。真实发布、客户触达和业务结果始终标记为 `not_measured`。`evals/rc3/baseline.json` 是已提交的确定性基线，不代表模型质量。
+`scripts/evaluate_rc3.py` 覆盖 AI SaaS、开发者工具、智能硬件和 B2B 服务四个场景。`fixture` 是最小合成输出，只验证流程；`reference` 是确定性参考质量输出，只验证评分卡能区分强/弱交付物；`model` 才发起真实 Codex 调用，并在报告中记录调用次数、token 和明确的费用缺失。真实发布、客户触达和业务结果始终标记为 `not_measured`。`evals/rc3/baseline.json` 是已提交的确定性基线，不代表模型质量。真实模型五阶段验收已在 `faa29ad` 执行（请求模型 `gpt-6.2-sol`，3/3 与 10/10 次宿主调用，含一次内容重试）；V1.0 未重复调用模型，具体记录见[发布说明](v1.0.0-release.md)。
 
 ## 常见故障
 

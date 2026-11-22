@@ -82,11 +82,11 @@ Five independent Agent Skills for international GTM: strategy, positioning and c
 
 维护与更新：[变更记录](CHANGELOG.md) · [升级与回退](docs/upgrading.md) · [安全问题反馈](SECURITY.md)。
 
-## GTM Harness 1.0.0-rc.3
+## GTM Harness 1.0.0
 
 五种 Skill 可按目标选择，也可用 `--stages` 显式组合。项目上下文、证据、任务状态和草稿存入仓库外的 SQLite。需要 Python 3.10+，以下命令从合集仓库根目录运行，先用离线示例验证安装，再切换到公开资料和真实模型。
 
-RC3 新增：Claim–Evidence 映射与逐字片段引用、来源时效/冲突/去重、provider 指令注入阻断、只读公开网页证据、包质量评分卡、`audit`/`doctor` 命令，以及按阶段裁剪 Skill 上下文的 60 KB 预算。真实模型质量仍未在本轮验证。
+RC3 新增：Claim–Evidence 映射与逐字片段引用、来源时效/冲突/去重、provider 指令注入阻断、只读公开网页证据、包质量评分卡、`audit`/`doctor` 命令，以及按阶段裁剪 Skill 上下文的 60 KB 预算。RC3 已完成真实模型五阶段验收（请求模型 `gpt-6.2-sol`）；V1.0 不新增运行时功能，只修正发布文档并记录验收边界。详见 [Release Notes](RELEASE_NOTES.md) 与 [中英文发布指南](docs/v1.0.0-release.md)。
 
 ```sh
 python -m venv .venv
@@ -105,7 +105,7 @@ python -m harness --db "$db" export demo > "$work/gtm-package.md"
 
 只处理渠道时用 `start channel --stages launch`。中断后的 `resume` 读取已提交结果。确认原进程已退出后，仍处于运行状态的任务可以加 `--recover` 恢复，适配器失败可以加 `--retry`。
 
-[Codex、手工交接与状态迁移](docs/harness.md) · [数据与 Skill 契约](docs/harness-contract.md) · [RC1 工程验收](V1_RELEASE_READINESS.md)
+[Codex、手工交接与状态迁移](docs/harness.md) · [数据与 Skill 契约](docs/harness-contract.md) · [V1.0 发布验收](V1_RELEASE_READINESS.md) · [Release Notes](RELEASE_NOTES.md) · [Release Gate](validation/release-gate-v1.0.0.json)
 
 
 ### 用公开资料和真实 Codex 跑一次

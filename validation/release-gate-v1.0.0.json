@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "product": "Global Growth Skills / GTM Harness",
+  "version": "1.0.0",
+  "repository": "https://github.com/NextVariable/global-growth-skills",
+  "pull_request": 1,
+  "accepted_head": "251a52f0382c34b23392470ed1fd61b842cf4c0e",
+  "prepared_at": "2026-11-22",
+  "release_gate": "PASS",
+  "approved_by": "Product Owner",
+  "merge_recommendation": "create_merge_commit",
+  "main_merged": false,
+  "github_release_created": false,
+  "catalog": {
+    "entries": 5,
+    "pinned": true,
+    "revisions": {
+      "global-gtm-strategy-skill": "b9a3f9d46e68e6959211ac5ebccb4a5bd35ead12",
+      "global-growth-content": "d3d8aa367ace0e9ff27ce7a8a21e3ebd5e28140e",
+      "global-launch-acquisition": "a5bfa7c3d5a64b61bcb17491ad96a9b34269b96e",
+      "global-sales-retention": "7c201004d3aba3896808660e56ba4a74b64322b6",
+      "global-growth-experiments": "fb1060e4ff5c80dcfb00b2c68099a511b1e5eed4"
+    }
+  },
+  "checks": [
+    {
+      "id": "harness-tests",
+      "result": "pass",
+      "detail": "125/125 tests, python3 scripts/validate_harness.py"
+    },
+    {
+      "id": "installer-tests",
+      "result": "pass",
+      "detail": "10/10 tests, python3 -m unittest tests.test_install"
+    },
+    {
+      "id": "product-scenarios",
+      "result": "pass",
+      "detail": "10/10 fixture scenarios, 0 model calls"
+    },
+    {
+      "id": "rc3-deterministic-evaluation",
+      "result": "pass",
+      "detail": "8 runs, completion 1.0, 0 error cases, 0 stage failures; fixture 54 / reference 100"
+    },
+    {
+      "id": "catalog-schema-links",
+      "result": "pass",
+      "detail": "5 separate repositories; JSON schemas and documentation links valid"
+    },
+    {
+      "id": "privacy-scan",
+      "result": "pass",
+      "detail": "113 tracked files, 0 current findings; history scan not run in this pass"
+    },
+    {
+      "id": "static-analysis",
+      "result": "pass",
+      "detail": "ruff --isolated --select E4,E7,E9,F"
+    },
+    {
+      "id": "clean-directory-install",
+      "result": "pass",
+      "detail": "5 pinned skills installed into a fresh temp directory"
+    },
+    {
+      "id": "offline-workflow-export",
+      "result": "pass",
+      "detail": "init, start, step, resume, change, resume, export all exit 0; markdown package 4554 bytes"
+    },
+    {
+      "id": "fixed-skill-sha",
+      "result": "pass",
+      "detail": "catalog revisions match five pinned GitHub commits"
+    }
+  ],
+  "ci": {
+    "head": "251a52f0382c34b23392470ed1fd61b842cf4c0e",
+    "total": 18,
+    "success": 18,
+    "failure": 0,
+    "runs": [
+      {
+        "workflow": "validate",
+        "url": "https://github.com/NextVariable/global-growth-skills/actions/runs/45032773389"
+      },
+      {
+        "workflow": "harness / offline",
+        "url": "https://github.com/NextVariable/global-growth-skills/actions/runs/45032773479"
+      },
+      {
+        "workflow": "validate (push)",
+        "url": "https://github.com/NextVariable/global-growth-skills/actions/runs/45032768882"
+      },
+      {
+        "workflow": "harness / offline (push)",
+        "url": "https://github.com/NextVariable/global-growth-skills/actions/runs/45032768830"
+      }
+    ]
+  },
+  "real_model_evidence": {
+    "commit": "faa29ad1badd2c35f345e6a4769156d9b6e3284a",
+    "model": "gpt-6.2-sol",
+    "host": "authenticated ChatGPT Codex CLI, read-only",
+    "billing": "not_measured",
+    "runs": [
+      {
+        "workflow": "Strategy -> Acquisition -> Experiments",
+        "completed_calls": "3/3",
+        "input_tokens": 111390,
+        "output_tokens": 5689,
+        "cached_input_tokens": 0,
+        "wall_clock_seconds": 149.42,
+        "stage_failures": 0
+      },
+      {
+        "workflow": "full five stages with one retry",
+        "completed_calls": "10/10",
+        "input_tokens": 370350,
+        "output_tokens": 11668,
+        "cached_input_tokens": 0,
+        "wall_clock_seconds": 376.82,
+        "stage_failures": 1,
+        "failure_detail": "first content generation rejected at persistence for missing, stale or contradicted citation; no partial draft saved; retried from revision 2 checkpoint and completed"
+      }
+    ],
+    "decision_binding": "operator approved proposed thresholds via revise-decision; downstream drafts bound to revision 2 and the approved receipt SHA256"
+  },
+  "final_provenance_fix": {
+    "commit": "251a52f0382c34b23392470ed1fd61b842cf4c0e",
+    "scope": "monetary provenance scoped to approved operator budgets; validated claim IDs preserved",
+    "deterministic_coverage": "tests/harness/test_provenance.py (19 cases) plus full harness suite",
+    "model_rerun": false,
+    "note": "The expensive five-stage model evaluation was not repeated after this fix."
+  },
+  "evidence_boundaries": {
+    "engineering_validation": "pass",
+    "real_model_execution": "pass_recorded_at_faa29ad",
+    "business_outcome": "not_measured"
+  },
+  "known_limitations": [
+    "No independent semantic reviewer; verbatim matches remain unverified and packages stay at needs_evidence_review.",
+    "Provenance classification is rule-based and may miss unusual number words, currency formats or ambiguous prose.",
+    "Decision-contract checks read structured declarations only; free-text contradictions require human review.",
+    "research-web supports one explicit public HTTPS page; no search, login, JavaScript rendering, redirects or proxy transport.",
+    "Approvals rely on the local POSIX account that owns the private SQLite database; no remote auth, RBAC or production write connector.",
+    "Real publishing, outreach, CRM writes, ad spend, customer adoption, conversion and revenue are not executed or measured."
+  ],
+  "release_actions": {
+    "merge_main": "pending_product_owner_authorization",
+    "github_release": "pending_product_owner_authorization",
+    "new_pull_request": false
+  }
+}

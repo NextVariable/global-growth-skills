@@ -1,5 +1,13 @@
 # Changes
 
+## 1.0.0
+
+- 将已验收 RC3（HEAD `251a52f`）整理为 V1.0 发布候选，不新增运行时功能。
+- 新增 [Release Notes](RELEASE_NOTES.md)、[中英文发布指南](docs/v1.0.0-release.md) 与 [Release Gate](validation/release-gate-v1.0.0.json)。
+- 修正发布文档中的证据表述：RC3 真实模型五阶段验收已于 `faa29ad` 完成（请求模型 `gpt-6.2-sol`，10/10 次调用，含一次内容重试）；`251a52f` 的来源分类修复由 19 个确定性用例覆盖，未重复执行五阶段模型评测。
+- 明确三层证据边界：工程验证通过、真实模型执行已记录、真实商业效果 `not_measured`。
+- 本轮只把文档修复推送到原分支；未合并 `main`，未创建 GitHub Release。
+
 ## 1.0.0-rc.3
 
 - Evidence Engine 2.0：claim 支持逐字片段而不只是整段摘录；新增 Claim–Evidence 映射、支持类型、重复合并、时效分级、证据缺口和 provider 指令注入阻断。
@@ -13,7 +21,7 @@
 - 新增只读 `web-public` Provider，可抓取显式公开 HTTPS 页面/定价页；拒绝私网、重定向、非 HTML 和超限响应。
 - GTM Package 增加质量评分卡、事实/假设分离、指标公式/分母/护栏/判定规则和跨阶段一致性检查。
 - Codex 上下文按阶段选择 Skill 文档并设 60 KB 预算，回执记录 prompt 与文档字节数。
-- 新增 `research-web`、`audit`、`doctor` 命令和 RC3 四行业评测集。本轮未执行真实模型调用，评测只覆盖确定性 fixture/reference。
+- 新增 `research-web`、`audit`、`doctor` 命令和 RC3 四行业评测集。真实模型五阶段验收已在 `faa29ad` 完成（请求模型 `gpt-6.2-sol`，10/10 次调用，含一次内容重试）；确定性评测覆盖 fixture/reference。
 - 本轮未创建正式 Release；`feat/rc3-research-quality` 需审查后合并。
 
 ## 2026-10-28 · 维护修订

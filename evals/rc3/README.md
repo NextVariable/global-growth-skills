@@ -26,7 +26,14 @@ python3 scripts/evaluate_rc3.py --mode model --model <name> \
 
 ## 真实模型验收
 
-当前环境没有 `codex` CLI，本轮未执行真实模型调用；`real_model_execution` 为 `not_run`，费用为 `not_incurred`。不得用 fixture/reference 分数替代模型质量。具备已认证 Codex CLI 与固定 Skill checkout 的环境按以下步骤独立验收。
+当前环境没有 `codex` CLI 时不得伪造结果。真实模型验收已在此前环境中于 `faa29ad` 执行，请求模型 `gpt-6.2-sol`，使用已认证的 ChatGPT Codex 并移除独立 API Key：
+
+| 工作流 | 宿主完成调用 | 输入 / 输出 token | 缓存输入 token | 模型命令墙钟 | 阶段失败 |
+|---|---:|---:|---:|---:|---:|
+| Strategy → Acquisition → Experiments | 3/3 | 111,390 / 5,689 | 0 | 149.42 秒 | 0 |
+| 完整五阶段，含一次重试 | 10/10 | 370,350 / 11,668 | 0 | 376.82 秒 | 1 |
+
+宿主未提供可核对账单，费用记 `not_measured`。不得用 fixture/reference 分数替代模型质量。最后的来源分类修复 `251a52f` 未重复调用模型，由 19 个确定性用例覆盖。需要在其他环境复验时，按以下步骤执行。
 
 ```bash
 # 1. 四行业调用与质量汇总（每个 case 完成五阶段）
@@ -85,14 +92,14 @@ python3 -m harness --db "$db" revise-decision drift sample-size-3.json \
 - 若模型输出 3 人或 60%，必须出现在 `proposals` 且带有理由；不得出现在 `constraints`，也不得自称 approved。
 - 修订后旧产物变为 stale，下一次请求使用新 revision；旧 revision 的声明触发 `stale_version`。
 
-**NOT TESTED**：当前环境没有可用模型宿主，本轮只执行确定性测试。真实模型结果、token 和耗时不得填写估计值。
+**复跑状态**：V1.0 发布准备没有重复执行五阶段模型评测。`251a52f` 的修复由确定性测试覆盖；真实模型结果、token 和耗时只能填写实际回执，不得估计。
 
 ## 来源分类验收（Evidence Provenance）
 
 先复现并确认修复，不调用模型：
 
 ```bash
-# 15 个来源分类与工作流回归用例
+# 19 个来源分类与工作流回归用例
 python3 -m unittest tests.harness.test_provenance -v
 ```
 
