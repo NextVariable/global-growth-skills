@@ -1,4 +1,4 @@
-# GTM Harness 1.0.0-rc.2
+# GTM Harness 1.0.0
 
 ## 架构与任务选择
 
@@ -12,7 +12,7 @@ flowchart LR
   State --> Gate["独立审批与 Mock 执行"]
 ```
 
-运行时只调度所选角色，并在所选节点之间检查上游完成状态。内容可单独用项目背景起草，获客可单独做渠道方案，销售不依赖获客。实验接收所选且已完成的上游产物。`--goal` 使用可检查的关键词规则，未匹配时要求 `--stages`。默认 `start` 维持旧双阶段兼容行为。五个固定 SHA 继续从合集安装目录清单读取，见[发布验收](../V1_RELEASE_READINESS.md)。
+运行时只调度所选角色，并在所选节点之间检查上游完成状态。内容可单独用项目背景起草，获客可单独做渠道方案，销售不依赖获客。实验接收所选且已完成的上游产物。`--goal` 使用可检查的关键词规则，未匹配时要求 `--stages`。默认 `start` 维持旧双阶段兼容行为。五个固定 SHA 继续从合集安装目录清单读取，见[发布验收](../V1_RELEASE_READINESS.md)、[V1.0 发布说明](v1.0.0-release.md)与[Release Gate](../validation/release-gate-v1.0.0.json)。
 
 ## Codex 宿主
 
@@ -24,7 +24,7 @@ python -m harness --db "$db" resume model-demo --model YOUR_AVAILABLE_CODEX_MODE
   --checkout "strategy=$strategy_repo" --checkout "launch=$launch_repo" --timeout 180
 ```
 
-Codex CLI 必须已经认证。Harness 从固定 Git 对象读取 `SKILL.md`、Markdown 参考和模板。调用发起前关闭 shell、统一执行、插件、MCP 和 Web Search，宿主只读，无审批升级。代码检查宿主是否报告被禁用的工具活动。回执保留文档摘要、请求模型、宿主完成事件、收到的 token 计数和耗时。缺失 token 与实际货币费用按未知处理。
+Codex CLI 必须已经认证。Harness 从固定 Git 对象读取 `SKILL.md`、Markdown 参考和模板。每个阶段固定发送 `SKILL.md`，再按阶段关键词选择参考和模板，默认上限 60 KB；完整包仍须低于 180 KB。提示词会列出被省略的文件，回执记录 `prompt_bytes`、`skill_document_bytes` 和 `skill_package_bytes`。调用发起前关闭 shell、统一执行、插件、MCP 和 Web Search，宿主只读，无审批升级。代码检查宿主是否报告被禁用的工具活动。回执保留文档摘要、请求模型、宿主完成事件、收到的 token 计数和耗时。缺失 token 与实际货币费用按未知处理。
 
 若 Codex 不可用，用 `start manual --execution handoff --stages strategy launch` 创建手工运行。请将下列输出与结果文件放到仓库外已有的工作目录。
 
@@ -45,7 +45,47 @@ SQLite `user_version=3`。打开旧双阶段数据库会事务迁移，保留原
 
 使用 `research TOPIC TERM` 从公开 GitHub 检索。TOPIC 可用 `market`、`competitor`、`icp` 或 `channel` 来标识研究目的。可用 `--repository OWNER/REPO` 精确查询，按词搜索最多 5 个结果。接入只读取固定 GitHub HTTPS API，禁止跳转，限响应大小和请求时限。它保留观察日和采集时刻、GitHub 标准 URL、源 ID、原始选定字段和规范化摘录。搜索范围限 GitHub 仓库，星标或分叉不足以支持需求、采用和市场规模判定。[GitHub Search API](https://docs.github.com/en/rest/search/search)
 
-`change` 可以导入或替换 `market_sources`。人工导入的自由文本保留供审核，当前 Codex 仅看到 GitHub 规范化观察。结构化引用须逐字匹配有效摘录，未知、冲突或过期来源不能进入引用。源 ID 和摘录摘要绑定到决策与草稿，变更后沿已保存的上游依赖传递。对声明为市场相关、尚无具体引用的结果，候选来源集合变化会触发复核。矛盾检查依赖同一 claim ID 的相反立场。自由文本的常见数字声明会在导出时提示复核，任意自然语言的真伪仍需人审。
+`change` 可以导入或替换 `market_sources`。人工导入的自由文本保留供审核，当前 Codex 仅看到 GitHub 规范化观察和公开网页快照。结构化引用须逐字匹配有效摘录；RC3 允许引用摘录中的逐字片段，并记录 `exact_excerpt` 或 `excerpt_fragment`。未知、冲突、过期或注入风险的来源不能进入引用。
+
+### Claim–Evidence 映射
+
+Codex 草稿的每条外部事实使用 `source_id`、`quote` 和 `text` 描述。`quote` 必须匹配来源摘录的逐字片段，`text` 是待复核断言。匹配只确立引用位置，语义支持保持 `unverified`。本版生成流程没有独立评审入口，模型输出和手工交接中的自报 `review` 不会被保存为评审。
+
+Harness 合并重复项、记录来源时效、冲突和证据缺口。文本规则产生的命中按来源分类：`operator_input`（操作者提供或批准的项目事实、预算与目标）、`external_evidence`（映射到有效来源的断言）、`inference`（有依据但未证实的假设）和 `proposal`（未批准建议）。已确认的预算、目标、样本量、独立条件和观察期不会触发外部引用要求；未匹配到内部事实的竞品价格、市场规模、付费客户数量和成功率阈值仍必须有结构化引用。内部事实只解除引用要求，不会把文本标为 `verified`。模型不能自报 `operator_input` 或审批；被拒的额外字段由 schema 拒绝。外部断言缺少结构化引用时，产物包标记 `incomplete_evidence`；只含操作者事实的文本不再触发该状态。已声明的来源 ID 或片段不匹配时，任务拒绝该结果。纯建议允许 `claims=[]`。已引用来源改动后，受影响的产物会失效。
+
+### 决策契约与跨 Skill 一致性
+
+战略结果现在附带版本化 `contract`。十个约束字段为 `objective`、`primary_metric`、`metric_definition`、`unit`、`target_value`、`comparator`、`sample_size`、`independence_conditions`、`observation_window` 和 `budget_constraints`。每个字段有 `state`：`decided` 携带已确认值，`unknown` 表示战略未确定，`proposed` 表示模型的暂定建议。只有操作者上下文已提供的目标与预算会自动成为 `decided`；其余未知字段保持 `unknown`，不会补造数字。数值字段中 `sample_size` 是整数，`target_value` 允许小数（如 `60.0` 百分比阈值），时间窗使用 `value` 加 `unit`（`days`/`weeks`），预算使用 `amount_minor`、`currency` 和 `unit`。
+
+交接到下游的任务输入从原来的 `{id, recommendation}` 扩展为：
+
+```json
+{
+  "id": 1,
+  "decision_id": "dec-0123456789abcdef",
+  "decision_revision": 1,
+  "contract_sha256": "<64 hex>",
+  "contract": {"decision_id": "...", "decision_revision": 1, "sample_size": {"state": "decided", "value": 2, "unit": "participant"}, "...": "..."},
+  "recommendation": "..."
+}
+```
+
+Positioning、launch、sales 和 experiments 必须返回 `constraint_refs`，逐字复制 `decision_id`、`decision_revision` 和所有 `decided` 约束。Harness 在写入草稿前做确定性比对：复制允许；缺字段、改数值、改单位、改分母、改时间窗、改预算币种或金额、放宽独立条件、把未知字段写成具体值，以及复用旧 revision，都会使该阶段尝试失败且不写入产物。`proposals` 只能作为新建议保存，不能替换契约；没有理由的 proposal 会被 schema 拒绝，proposal 也不会被导出为 approved。结构化匹配只核对声明。模型与手工交接的决策正文进入独立复核，产物包标记 `needs_decision_review`，并列出要复核的记录。新业务值由模型提出时保持 `proposed`，项目输入的目标和预算可直接成为已定约束。
+
+```sh
+python3 -m harness --db "$db" revise-decision RUN patch.json \
+  --reason "Operator approved a wider pilot" --expected-revision 1
+```
+
+修订由拥有私有数据库的本机 POSIX 帐号发起。系统从进程身份取得批准主体，并绑定原契约、补丁与新契约摘要。Windows 保留读取与草拟，审批修订需要 POSIX 宿主。历史记录保留，缺可信回执的旧批准活跃视图降为待确认。修订新增一行 decision；`decision_revision` 递增，记录 `change_reason`、`change_initiator` 和 `approved_by`。引用旧 decision 行的草稿标记为 stale，相关阶段重新排队；pricing 和 capabilities 等不依赖决策的产物保留。模型不能在自己的输出里设置 `approval_status`，也不能自称 approved，schema 与运行时都会拒绝。恢复运行时只使用当前激活的 revision，不混用新旧约束。
+
+### 公开网页 Provider
+
+`research-web URL --topic ...` 只读取操作者显式给出的一个公开 HTTPS 页面。拒绝私网/保留地址、非 443 端口、凭证、重定向、非 HTML/纯文本和超过 1 MB 的响应；记录 HTTP 状态、内容 SHA256、采集时间、有效期和可见文本摘录。DNS 只解析一次，所有答案都必须是全局单播地址；TCP 连接固定到已验证 IP，TLS 仍用原主机名做证书与 SNI 校验，因此解析结果变化不能把连接改写到其他地址。实现只建立直连 socket，不支持代理配置或环境代理变量；需要代理的环境不适用此 Provider。`--quote` 可把摘录收窄为页面中真实存在的逐字片段。它不执行搜索、登录、JavaScript、点击或任何外部写操作。页面内容视为不可信数据；检测到指令式文本的 provider 来源标记为 `blocked_injection`，不进入引用，也不进入模型提示。
+
+### 审计与质量
+
+`audit RUN` 输出 claim 映射、来源时效、注入标记、证据缺口和质量评分卡；包为 `incomplete_evidence` 或 `needs_decision_review` 时退出码为 2。评分卡检查交付物结构、指标公式/分母/护栏/判定规则、假设分离和跨阶段受众/价格/预算一致性。它是确定性结构检查，不判断语义真伪，也不代表真实客户效果。`doctor` 检查 Python、jsonschema、数据库路径和 Codex CLI。
 
 `export RUN` 默认输出 Markdown，`--format json` 附完整的引用检查、可用来源、尝试记录和依赖。部分运行明确标为 incomplete，过期产物用历史 ID 标识。导出的文字均须人工审核后才可使用。
 
@@ -62,6 +102,10 @@ python -m harness --db "$db" execute-mock examples/harness/mock-operation.json
 python -m harness --db "$db" receipts
 ```
 
+
+## 评测口径
+
+`scripts/evaluate_rc3.py` 覆盖 AI SaaS、开发者工具、智能硬件和 B2B 服务四个场景。`fixture` 是最小合成输出，只验证流程；`reference` 是确定性参考质量输出，只验证评分卡能区分强/弱交付物；`model` 才发起真实 Codex 调用，并在报告中记录调用次数、token 和明确的费用缺失。真实发布、客户触达和业务结果始终标记为 `not_measured`。`evals/rc3/baseline.json` 是已提交的确定性基线，不代表模型质量。真实模型五阶段验收已在 `faa29ad` 执行（请求模型 `gpt-6.2-sol`，3/3 与 10/10 次宿主调用，含一次内容重试）；V1.0 未重复调用模型，具体记录见[发布说明](v1.0.0-release.md)。
 
 ## 常见故障
 

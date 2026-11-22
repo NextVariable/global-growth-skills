@@ -1,6 +1,53 @@
-# GTM Harness 1.0.0-rc.2 产品验收
+# GTM Harness 1.0.0 产品验收
 
-**保留 RC。** 公开产品已完成真实检索、五阶段 Codex 调用、来源审查和导出。成稿可供内部审阅。真实客户采用、完整五角色的配对质量评测，以及受控的非 GitHub 市场数据源仍待验证。
+**V1.0 已通过产品验收。** RC2 已完成真实检索、五阶段 Codex 调用、来源审查和导出，但模型没有选用结构化引用。RC3 把这条缺口变成门禁，并补充公开网页证据、包质量评分和上下文预算；独立验收在零模型成本阶段发现发布阻塞后已修复。RC3 真实模型验收已在 `faa29ad` 执行（请求模型 `gpt-6.2-sol`，完整五阶段 10/10 次调用，含一次内容重试）。最后一处来源分类修复 `251a52f` 由确定性回归覆盖，未重复调用模型。发布结论见 [Release Gate](validation/release-gate-v1.0.0.json) 与 [Release Notes](RELEASE_NOTES.md)。
+
+## RC3 迭代（本次）
+
+### 已实现
+
+- **Evidence Engine 2.0**：claim 可引用摘录中的逐字片段，记录 `exact_excerpt`/`excerpt_fragment`、来源时效和重复合并；冲突、过期、注入来源不可引用。
+- **语义支持与逐字匹配分离**：模型草稿记录逐字匹配，语义支持保持 `unverified`。本版尚未接入独立评审。
+- **来源分类**：文本规则命中按 `operator_input`、`external_evidence`、`inference`、`proposal` 分类。操作者提供或批准的预算、目标、样本量、独立条件和观察期不要求外部引用；未匹配内部事实的竞品价格、市场规模、客户数量与成功率阈值仍须结构化引用。内部事实只解除引用要求，不会自动变成 `verified`；模型不能自报来源类别或审批。审计与导出携带逐条 `provenance`。
+- **门禁边界**：错误的来源或引文拒绝保存。文本规则命中保留草稿；只有未匹配内部事实的外部断言触发 `missing_claims`，纯建议允许空引用。审计状态区分 `not_applicable`、`no_eligible_sources`、`no_claims`、`conflict`、`missing_claims`、`needs_review`、`unsupported_claims`、`partial`、`verified`。
+- **包状态**：`incomplete_evidence`（缺少必要 claim）、`needs_evidence_review`（逐字命中但语义未复核、评审拒绝或存在冲突）、`needs_quality_review`、`ready_for_internal_review`。
+- **精确失效**：来源依赖按实际引用计算，新增无关来源不再让已引用草稿失效；来源改动、撤回、冲突或过期仍沿依赖传播。
+- **公开网页 Provider**：`research-web` 只读抓取操作者给出的单个公开 HTTPS 页面，记录 SHA256、HTTP 状态、采集时间与有效期；拒绝私网、重定向、非 HTML 和超 1 MB 响应。DNS 只解析一次，所有答案须为全局单播地址，连接固定到已验证 IP 并用原主机名做 TLS 校验，禁止代理路径。
+- **决策契约**：战略结果附带版本化 `contract`（目标、主指标与分母、单位、目标值、比较符、样本量、独立条件、时间窗、预算、证据引用、假设、审批状态）。未知值保持 `unknown`，不补造阈值；模型不能自我批准。下游任务输入携带 `decision_id`、`decision_revision`、`contract_sha256` 和完整契约。
+- **跨 Skill 一致性门禁**：positioning、launch、sales、experiments 必须在 `constraint_refs` 中逐字复制已确认约束。数值、单位、分母、时间窗、预算、独立条件被更改，或复用旧 revision，都会在写入草稿前失败；`proposals` 只能作为明确标注的未批准建议。修订通过 `revise-decision --reason` 由操作者发起，保留旧版本并使旧草稿失效。
+- **包质量**：`audit` 输出 Claim–Evidence 映射、时效、注入标记、证据缺口和六类交付物的结构评分；`needs_quality_review` 不允许充当可评审交付物。
+- **运行时**：每个阶段固定发 `SKILL.md`，参考/模板按阶段选择并限制 60 KB；回执记录 prompt、文档与全包字节数。
+- **评测**：四行业（AI SaaS、开发者工具、智能硬件、B2B 服务）fixture/reference 评测与 model 模式入口；报告明确区分 Fixture、真实模型和业务效果。[RC3 基线](evals/rc3/baseline.json)
+
+### 未验证或受限
+
+- 真实模型验收已在 `faa29ad` 执行：三阶段 3/3、完整五阶段 10/10 次宿主调用；token、耗时与失败见下表。宿主未提供可核对账单，成本记为 `not_measured`，未伪造结果或费用。`251a52f` 的来源分类修复由 `tests/harness/test_provenance.py` 的 19 个用例覆盖，未重复执行五阶段模型评测。[验收命令与记录要求](evals/rc3/README.md#真实模型验收)
+- 开发分支已推送，PR [#1](https://github.com/NextVariable/global-growth-skills/pull/1) 保持 open，CI 通过，未合并。
+- 质量评分是确定性结构检查，不判断语义真伪；没有评审器时 claim 始终为 `needs_review`，不会被标为 `verified`。
+- 浏览器 DOM、JavaScript 渲染、登录页和代理传输不在 `research-web` 支持范围。
+- 决策契约的一致性判定只读取结构化声明；自由文本中的矛盾不会自动拦截，仍需人工审阅。单次真实运行中，下游逐字复制了已批准约束；样本有限，稳定性仍需更多运行验证。
+- 来源分类依赖结构化数值匹配；超过十的英文数字词、非常规币种写法或含混表述可能仍被要求外部引用，需人工复核。
+- 真实客户采用、付费转化和外部发布仍未验证；不进行未经授权的外部触达、CRM 修改或广告消费。
+
+### RC2 与 RC3 对照
+
+| 指标 | RC2（真实模型，已测） | RC3（真实模型，已测） |
+|---|---:|---:|
+| 任务 | 五阶段 GTM | 五阶段 GTM，含一次重试 |
+| 成功调用 | 7/7，5/5 阶段 | 10/10，5/5 阶段 |
+| 输入 token | 248,336 | 370,350 |
+| 输出 token | 5,758 | 11,668 |
+| 缓存 token | 未报告 | 0 |
+| 端到端耗时 | 242.45 秒 | 376.82 秒 |
+| 参考文档字节 | 未测 | 回执字段已就绪 |
+| 结构化引用 | 0 条 | 门禁已实现；首次内容因引用问题被拒后从 revision 2 重试成功 |
+| 包质量评分 | 未使用评分卡 | 评分卡已输出；包保持 `needs_evidence_review` |
+
+Fixture 与 Reference 只验证流程和评分卡区分度，不能当作模型质量或成本证据。
+
+## RC2 真实运行和证据（历史）
+
+**RC2 结论。** 公开产品已完成真实检索、五阶段 Codex 调用、来源审查和导出。成稿可供内部审阅。真实客户采用、完整五角色的配对质量评测，以及受控的非 GitHub 市场数据源仍待验证。
 
 ## 可用能力
 
@@ -45,4 +92,4 @@ GitHub Provider 仅允许固定 HTTPS GET，拒绝重定向，不发送凭证，
 
 本地 Harness 40/40，安装器 10/10，离线代表任务 10/10。原安装器另完成五个固定版本的实际下载与安装。静态检查及版本历史敏感模式扫描通过。Windows 的 POSIX 模拟身份测试按兼容规则跳过。[三平台 Harness 及归档](https://github.com/NextVariable/global-growth-skills/actions/runs/44987367829) · [六项兼容与仓库检查](https://github.com/NextVariable/global-growth-skills/actions/runs/44987367836)
 
-代码路径包括 `harness/github_research.py`、`research.py`、`orchestrator.py`、`gateway.py`、`package.py`、`pins.py`、`__main__.py` 与兼容扩展的 v1 Schema。迁移与恢复沿用 SQLite v3。[快速开始](README.md#gtm-harness-100-rc2) · [故障说明](docs/harness.md#常见故障) · [Unit log](evals/rc2/offline-unittest.txt)
+代码路径包括 `harness/github_research.py`、`research.py`、`orchestrator.py`、`gateway.py`、`package.py`、`pins.py`、`__main__.py` 与兼容扩展的 v1 Schema。迁移与恢复沿用 SQLite v3。[当前快速开始](README.md#gtm-harness-100-rc3) · [故障说明](docs/harness.md#常见故障) · [Unit log](evals/rc2/offline-unittest.txt)

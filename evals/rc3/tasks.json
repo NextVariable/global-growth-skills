@@ -1,0 +1,106 @@
+{
+  "suite": "rc3",
+  "version": 1,
+  "cases": [
+    {
+      "id": "ai-saas",
+      "vertical": "AI SaaS",
+      "values": {
+        "product": "AI meeting-notes assistant",
+        "audience": "remote product teams",
+        "market": "US and EU B2B SaaS",
+        "goal": "validate a paid team workflow",
+        "price": {
+          "amount_minor": 2900,
+          "currency": "USD",
+          "unit": "seat per month"
+        },
+        "budget": {
+          "amount_minor": 200000,
+          "currency": "USD",
+          "unit": "total pilot budget"
+        },
+        "capabilities": [
+          "meeting notes",
+          "action items",
+          "CRM export"
+        ]
+      }
+    },
+    {
+      "id": "devtools",
+      "vertical": "Developer tools",
+      "values": {
+        "product": "CI failure triage CLI",
+        "audience": "platform engineering teams",
+        "market": "global developer tooling",
+        "goal": "validate a self-serve paid tier",
+        "price": {
+          "amount_minor": 4900,
+          "currency": "USD",
+          "unit": "repository per month"
+        },
+        "budget": {
+          "amount_minor": 80000,
+          "currency": "USD",
+          "unit": "total pilot budget"
+        },
+        "capabilities": [
+          "log clustering",
+          "failure ownership",
+          "GitHub checks"
+        ]
+      }
+    },
+    {
+      "id": "smart-hardware",
+      "vertical": "Smart hardware",
+      "values": {
+        "product": "desk air-quality monitor",
+        "audience": "home-office knowledge workers",
+        "market": "US direct-to-consumer",
+        "goal": "validate preorder demand and retail readiness",
+        "price": {
+          "amount_minor": 14900,
+          "currency": "USD",
+          "unit": "device"
+        },
+        "budget": {
+          "amount_minor": 500000,
+          "currency": "USD",
+          "unit": "total pilot budget"
+        },
+        "capabilities": [
+          "PM2.5 sensing",
+          "app alerts",
+          "USB-C power"
+        ]
+      }
+    },
+    {
+      "id": "b2b-services",
+      "vertical": "B2B services",
+      "values": {
+        "product": "fractional GTM audit",
+        "audience": "seed-stage SaaS founders",
+        "market": "North America",
+        "goal": "validate a productized audit offer",
+        "price": {
+          "amount_minor": 600000,
+          "currency": "USD",
+          "unit": "engagement"
+        },
+        "budget": {
+          "amount_minor": 30000,
+          "currency": "USD",
+          "unit": "total pilot budget"
+        },
+        "capabilities": [
+          "positioning review",
+          "channel audit",
+          "pipeline diagnosis"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,1131 @@
+{
+  "suite": "rc3",
+  "generated_at": "2026-11-22T14:06:36.570402+00:00",
+  "modes": [
+    "fixture",
+    "reference"
+  ],
+  "cases": [
+    {
+      "mode": "fixture",
+      "id": "ai-saas",
+      "vertical": "AI SaaS",
+      "status": "needs_quality_review",
+      "completion": 1.0,
+      "quality": {
+        "status": "fail",
+        "score": 54,
+        "items": [
+          {
+            "kind": "strategy",
+            "score": 40,
+            "status": "fail",
+            "checks": [
+              {
+                "name": "market_or_icp",
+                "ok": true
+              },
+              {
+                "name": "constraints",
+                "ok": false
+              },
+              {
+                "name": "decision",
+                "ok": false
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": false
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 0,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "positioning",
+            "score": 40,
+            "status": "fail",
+            "checks": [
+              {
+                "name": "value_proposition",
+                "ok": false
+              },
+              {
+                "name": "audience",
+                "ok": true
+              },
+              {
+                "name": "call_to_action",
+                "ok": false
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": false
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 0,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "pricing",
+            "score": 67,
+            "status": "warn",
+            "checks": [
+              {
+                "name": "price",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": false
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 0,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "capabilities",
+            "score": 67,
+            "status": "warn",
+            "checks": [
+              {
+                "name": "capabilities",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": false
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 0,
+            "evidence_gaps": []
+          }
+        ],
+        "consistency": [
+          {
+            "check": "audience_reused_in_positioning",
+            "ok": true,
+            "detail": "product, remote, teams"
+          },
+          {
+            "check": "price_consistent_in_pricing",
+            "ok": true,
+            "detail": "2900 USD"
+          }
+        ],
+        "counts": {
+          "fail": 2,
+          "warn": 2
+        }
+      },
+      "failures": [],
+      "model_calls": 0,
+      "tokens": [],
+      "evidence_class": "deterministic_fixture",
+      "business_outcome": "not_measured"
+    },
+    {
+      "mode": "fixture",
+      "id": "devtools",
+      "vertical": "Developer tools",
+      "status": "needs_quality_review",
+      "completion": 1.0,
+      "quality": {
+        "status": "fail",
+        "score": 54,
+        "items": [
+          {
+            "kind": "strategy",
+            "score": 40,
+            "status": "fail",
+            "checks": [
+              {
+                "name": "market_or_icp",
+                "ok": true
+              },
+              {
+                "name": "constraints",
+                "ok": false
+              },
+              {
+                "name": "decision",
+                "ok": false
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": false
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 0,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "positioning",
+            "score": 40,
+            "status": "fail",
+            "checks": [
+              {
+                "name": "value_proposition",
+                "ok": false
+              },
+              {
+                "name": "audience",
+                "ok": true
+              },
+              {
+                "name": "call_to_action",
+                "ok": false
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": false
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 0,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "pricing",
+            "score": 67,
+            "status": "warn",
+            "checks": [
+              {
+                "name": "price",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": false
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 0,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "capabilities",
+            "score": 67,
+            "status": "warn",
+            "checks": [
+              {
+                "name": "capabilities",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": false
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 0,
+            "evidence_gaps": []
+          }
+        ],
+        "consistency": [
+          {
+            "check": "audience_reused_in_positioning",
+            "ok": true,
+            "detail": "engineering, platform, teams"
+          },
+          {
+            "check": "price_consistent_in_pricing",
+            "ok": true,
+            "detail": "4900 USD"
+          }
+        ],
+        "counts": {
+          "fail": 2,
+          "warn": 2
+        }
+      },
+      "failures": [],
+      "model_calls": 0,
+      "tokens": [],
+      "evidence_class": "deterministic_fixture",
+      "business_outcome": "not_measured"
+    },
+    {
+      "mode": "fixture",
+      "id": "smart-hardware",
+      "vertical": "Smart hardware",
+      "status": "needs_quality_review",
+      "completion": 1.0,
+      "quality": {
+        "status": "fail",
+        "score": 54,
+        "items": [
+          {
+            "kind": "strategy",
+            "score": 40,
+            "status": "fail",
+            "checks": [
+              {
+                "name": "market_or_icp",
+                "ok": true
+              },
+              {
+                "name": "constraints",
+                "ok": false
+              },
+              {
+                "name": "decision",
+                "ok": false
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": false
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 0,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "positioning",
+            "score": 40,
+            "status": "fail",
+            "checks": [
+              {
+                "name": "value_proposition",
+                "ok": false
+              },
+              {
+                "name": "audience",
+                "ok": true
+              },
+              {
+                "name": "call_to_action",
+                "ok": false
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": false
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 0,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "pricing",
+            "score": 67,
+            "status": "warn",
+            "checks": [
+              {
+                "name": "price",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": false
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 0,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "capabilities",
+            "score": 67,
+            "status": "warn",
+            "checks": [
+              {
+                "name": "capabilities",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": false
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 0,
+            "evidence_gaps": []
+          }
+        ],
+        "consistency": [
+          {
+            "check": "audience_reused_in_positioning",
+            "ok": true,
+            "detail": "home, knowledge, office, workers"
+          },
+          {
+            "check": "price_consistent_in_pricing",
+            "ok": true,
+            "detail": "14900 USD"
+          }
+        ],
+        "counts": {
+          "fail": 2,
+          "warn": 2
+        }
+      },
+      "failures": [],
+      "model_calls": 0,
+      "tokens": [],
+      "evidence_class": "deterministic_fixture",
+      "business_outcome": "not_measured"
+    },
+    {
+      "mode": "fixture",
+      "id": "b2b-services",
+      "vertical": "B2B services",
+      "status": "needs_quality_review",
+      "completion": 1.0,
+      "quality": {
+        "status": "fail",
+        "score": 54,
+        "items": [
+          {
+            "kind": "strategy",
+            "score": 40,
+            "status": "fail",
+            "checks": [
+              {
+                "name": "market_or_icp",
+                "ok": true
+              },
+              {
+                "name": "constraints",
+                "ok": false
+              },
+              {
+                "name": "decision",
+                "ok": false
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": false
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 0,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "positioning",
+            "score": 40,
+            "status": "fail",
+            "checks": [
+              {
+                "name": "value_proposition",
+                "ok": false
+              },
+              {
+                "name": "audience",
+                "ok": true
+              },
+              {
+                "name": "call_to_action",
+                "ok": false
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": false
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 0,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "pricing",
+            "score": 67,
+            "status": "warn",
+            "checks": [
+              {
+                "name": "price",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": false
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 0,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "capabilities",
+            "score": 67,
+            "status": "warn",
+            "checks": [
+              {
+                "name": "capabilities",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": false
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 0,
+            "evidence_gaps": []
+          }
+        ],
+        "consistency": [
+          {
+            "check": "audience_reused_in_positioning",
+            "ok": true,
+            "detail": "founders, saas, seed, stage"
+          },
+          {
+            "check": "price_consistent_in_pricing",
+            "ok": true,
+            "detail": "600000 USD"
+          }
+        ],
+        "counts": {
+          "fail": 2,
+          "warn": 2
+        }
+      },
+      "failures": [],
+      "model_calls": 0,
+      "tokens": [],
+      "evidence_class": "deterministic_fixture",
+      "business_outcome": "not_measured"
+    },
+    {
+      "mode": "reference",
+      "id": "ai-saas",
+      "vertical": "AI SaaS",
+      "status": "ready_for_internal_review",
+      "completion": 1.0,
+      "quality": {
+        "status": "pass",
+        "score": 100,
+        "items": [
+          {
+            "kind": "strategy",
+            "score": 100,
+            "status": "pass",
+            "checks": [
+              {
+                "name": "market_or_icp",
+                "ok": true
+              },
+              {
+                "name": "constraints",
+                "ok": true
+              },
+              {
+                "name": "decision",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": true
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 1,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "positioning",
+            "score": 100,
+            "status": "pass",
+            "checks": [
+              {
+                "name": "value_proposition",
+                "ok": true
+              },
+              {
+                "name": "audience",
+                "ok": true
+              },
+              {
+                "name": "call_to_action",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": true
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 1,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "pricing",
+            "score": 100,
+            "status": "pass",
+            "checks": [
+              {
+                "name": "price",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": true
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 1,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "capabilities",
+            "score": 100,
+            "status": "pass",
+            "checks": [
+              {
+                "name": "capabilities",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": true
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 1,
+            "evidence_gaps": []
+          }
+        ],
+        "consistency": [
+          {
+            "check": "audience_reused_in_positioning",
+            "ok": true,
+            "detail": "product, remote, teams"
+          },
+          {
+            "check": "price_consistent_in_pricing",
+            "ok": true,
+            "detail": "2900 USD"
+          }
+        ],
+        "counts": {
+          "pass": 4
+        }
+      },
+      "failures": [],
+      "model_calls": 0,
+      "tokens": [],
+      "evidence_class": "deterministic_fixture",
+      "business_outcome": "not_measured"
+    },
+    {
+      "mode": "reference",
+      "id": "devtools",
+      "vertical": "Developer tools",
+      "status": "ready_for_internal_review",
+      "completion": 1.0,
+      "quality": {
+        "status": "pass",
+        "score": 100,
+        "items": [
+          {
+            "kind": "strategy",
+            "score": 100,
+            "status": "pass",
+            "checks": [
+              {
+                "name": "market_or_icp",
+                "ok": true
+              },
+              {
+                "name": "constraints",
+                "ok": true
+              },
+              {
+                "name": "decision",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": true
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 1,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "positioning",
+            "score": 100,
+            "status": "pass",
+            "checks": [
+              {
+                "name": "value_proposition",
+                "ok": true
+              },
+              {
+                "name": "audience",
+                "ok": true
+              },
+              {
+                "name": "call_to_action",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": true
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 1,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "pricing",
+            "score": 100,
+            "status": "pass",
+            "checks": [
+              {
+                "name": "price",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": true
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 1,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "capabilities",
+            "score": 100,
+            "status": "pass",
+            "checks": [
+              {
+                "name": "capabilities",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": true
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 1,
+            "evidence_gaps": []
+          }
+        ],
+        "consistency": [
+          {
+            "check": "audience_reused_in_positioning",
+            "ok": true,
+            "detail": "engineering, platform, teams"
+          },
+          {
+            "check": "price_consistent_in_pricing",
+            "ok": true,
+            "detail": "4900 USD"
+          }
+        ],
+        "counts": {
+          "pass": 4
+        }
+      },
+      "failures": [],
+      "model_calls": 0,
+      "tokens": [],
+      "evidence_class": "deterministic_fixture",
+      "business_outcome": "not_measured"
+    },
+    {
+      "mode": "reference",
+      "id": "smart-hardware",
+      "vertical": "Smart hardware",
+      "status": "ready_for_internal_review",
+      "completion": 1.0,
+      "quality": {
+        "status": "pass",
+        "score": 100,
+        "items": [
+          {
+            "kind": "strategy",
+            "score": 100,
+            "status": "pass",
+            "checks": [
+              {
+                "name": "market_or_icp",
+                "ok": true
+              },
+              {
+                "name": "constraints",
+                "ok": true
+              },
+              {
+                "name": "decision",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": true
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 1,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "positioning",
+            "score": 100,
+            "status": "pass",
+            "checks": [
+              {
+                "name": "value_proposition",
+                "ok": true
+              },
+              {
+                "name": "audience",
+                "ok": true
+              },
+              {
+                "name": "call_to_action",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": true
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 1,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "pricing",
+            "score": 100,
+            "status": "pass",
+            "checks": [
+              {
+                "name": "price",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": true
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 1,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "capabilities",
+            "score": 100,
+            "status": "pass",
+            "checks": [
+              {
+                "name": "capabilities",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": true
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 1,
+            "evidence_gaps": []
+          }
+        ],
+        "consistency": [
+          {
+            "check": "audience_reused_in_positioning",
+            "ok": true,
+            "detail": "home, knowledge, office, workers"
+          },
+          {
+            "check": "price_consistent_in_pricing",
+            "ok": true,
+            "detail": "14900 USD"
+          }
+        ],
+        "counts": {
+          "pass": 4
+        }
+      },
+      "failures": [],
+      "model_calls": 0,
+      "tokens": [],
+      "evidence_class": "deterministic_fixture",
+      "business_outcome": "not_measured"
+    },
+    {
+      "mode": "reference",
+      "id": "b2b-services",
+      "vertical": "B2B services",
+      "status": "ready_for_internal_review",
+      "completion": 1.0,
+      "quality": {
+        "status": "pass",
+        "score": 100,
+        "items": [
+          {
+            "kind": "strategy",
+            "score": 100,
+            "status": "pass",
+            "checks": [
+              {
+                "name": "market_or_icp",
+                "ok": true
+              },
+              {
+                "name": "constraints",
+                "ok": true
+              },
+              {
+                "name": "decision",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": true
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 1,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "positioning",
+            "score": 100,
+            "status": "pass",
+            "checks": [
+              {
+                "name": "value_proposition",
+                "ok": true
+              },
+              {
+                "name": "audience",
+                "ok": true
+              },
+              {
+                "name": "call_to_action",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": true
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 1,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "pricing",
+            "score": 100,
+            "status": "pass",
+            "checks": [
+              {
+                "name": "price",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": true
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 1,
+            "evidence_gaps": []
+          },
+          {
+            "kind": "capabilities",
+            "score": 100,
+            "status": "pass",
+            "checks": [
+              {
+                "name": "capabilities",
+                "ok": true
+              },
+              {
+                "name": "assumptions_separated",
+                "ok": true
+              },
+              {
+                "name": "evidence_gate",
+                "ok": true
+              }
+            ],
+            "evidence_status": "not_applicable",
+            "assumptions": 1,
+            "evidence_gaps": []
+          }
+        ],
+        "consistency": [
+          {
+            "check": "audience_reused_in_positioning",
+            "ok": true,
+            "detail": "founders, saas, seed, stage"
+          },
+          {
+            "check": "price_consistent_in_pricing",
+            "ok": true,
+            "detail": "600000 USD"
+          }
+        ],
+        "counts": {
+          "pass": 4
+        }
+      },
+      "failures": [],
+      "model_calls": 0,
+      "tokens": [],
+      "evidence_class": "deterministic_fixture",
+      "business_outcome": "not_measured"
+    }
+  ],
+  "summary": {
+    "case_runs": 8,
+    "completion_rate": 1.0,
+    "average_quality": 77,
+    "error_cases": 0,
+    "stage_failures": 0,
+    "quality_by_mode": {
+      "fixture": 54,
+      "reference": 100
+    },
+    "real_model_execution": {
+      "status": "not_run",
+      "calls": 0
+    },
+    "cost": {
+      "status": "not_incurred",
+      "reason": "Deterministic modes make no model calls."
+    },
+    "business_outcome": "not_measured",
+    "evidence_boundary": "Fixture and reference modes verify harness structure and the quality rubric. They are not model quality or business-outcome evidence."
+  }
+}

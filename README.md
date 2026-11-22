@@ -82,9 +82,11 @@ Five independent Agent Skills for international GTM: strategy, positioning and c
 
 维护与更新：[变更记录](CHANGELOG.md) · [升级与回退](docs/upgrading.md) · [安全问题反馈](SECURITY.md)。
 
-## GTM Harness 1.0.0-rc.2
+## GTM Harness 1.0.0
 
 五种 Skill 可按目标选择，也可用 `--stages` 显式组合。项目上下文、证据、任务状态和草稿存入仓库外的 SQLite。需要 Python 3.10+，以下命令从合集仓库根目录运行，先用离线示例验证安装，再切换到公开资料和真实模型。
+
+RC3 新增：Claim–Evidence 映射与逐字片段引用、来源时效/冲突/去重、provider 指令注入阻断、只读公开网页证据、包质量评分卡、`audit`/`doctor` 命令，以及按阶段裁剪 Skill 上下文的 60 KB 预算。RC3 已完成真实模型五阶段验收（请求模型 `gpt-6.2-sol`）；V1.0 不新增运行时功能，只修正发布文档并记录验收边界。详见 [Release Notes](RELEASE_NOTES.md) 与 [中英文发布指南](docs/v1.0.0-release.md)。
 
 ```sh
 python -m venv .venv
@@ -103,7 +105,7 @@ python -m harness --db "$db" export demo > "$work/gtm-package.md"
 
 只处理渠道时用 `start channel --stages launch`。中断后的 `resume` 读取已提交结果。确认原进程已退出后，仍处于运行状态的任务可以加 `--recover` 恢复，适配器失败可以加 `--retry`。
 
-[Codex、手工交接与状态迁移](docs/harness.md) · [数据与 Skill 契约](docs/harness-contract.md) · [RC1 工程验收](V1_RELEASE_READINESS.md)
+[Codex、手工交接与状态迁移](docs/harness.md) · [数据与 Skill 契约](docs/harness-contract.md) · [V1.0 发布验收](V1_RELEASE_READINESS.md) · [Release Notes](RELEASE_NOTES.md) · [Release Gate](validation/release-gate-v1.0.0.json)
 
 
 ### 用公开资料和真实 Codex 跑一次
@@ -128,4 +130,23 @@ python -m harness --db "$db" export public --format json > "$work/gtm-package.js
 
 也可在创建运行时用 `--stages strategy launch` 做简版。用 `status public` 看进度、证据和模型回执。检索失败仍可继续，证据缺口会保留在草稿。每次修改项目事实后用 `change` 提交补丁，再用 `resume` 更新受影响的产物。
 
-[命令、恢复与故障处理](docs/harness.md) · [真实导出示例](evals/rc2/example-package.md) · [RC2 验收](PRODUCT_READINESS.md)
+### RC3：公开网页证据、审计与评测
+
+```sh
+# 只读抓取一个公开定价页；拒绝私网、重定向和登录态
+python -m harness --db "$db" research-web "https://example.com/pricing" \
+  --topic competitor --quote "$49 per month" --valid-days 30
+
+# 检查某次运行的证据覆盖、来源时效和质量缺口；证据缺口时退出码为 2
+python -m harness --db "$db" audit public
+
+# 本机运行时与 Codex 可用性检查
+python -m harness --db "$db" doctor
+
+# 四行业确定性评测（不发模型请求，不代表模型质量）
+python3 scripts/evaluate_rc3.py --mode all --report /tmp/rc3-eval.json
+```
+
+`research-web` 只抓取操作者显式给出的单个 HTTPS 页面，不做搜索、登录或跳转；摘要是采集时点快照，不能证明需求、采用或市场规模。质量评分卡是确定性结构检查，不是语义真伪判断。
+
+[命令、恢复与故障处理](docs/harness.md) · [RC3 评测口径](evals/rc3/README.md) · [RC3 示例包](evals/rc3/example-package.md) · [RC2 真实导出示例](evals/rc2/example-package.md) · [RC2 验收](PRODUCT_READINESS.md)

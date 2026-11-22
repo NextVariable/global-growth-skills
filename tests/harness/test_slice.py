@@ -237,6 +237,47 @@ class HarnessTests(unittest.TestCase):
             len(self.h.step("run", self.adapter, recover=True)["artifacts"]), 3
         )
 
+    def test_model_prose_flags_allow_checkpoint_and_block_ready_package(self):
+        project = copy.deepcopy(PROJECT)
+        project["values"]["market_sources"] = [
+            {
+                "id": "survey",
+                "claim_key": "interest",
+                "url": "https://example.org/survey",
+                "observed_on": "2024-01-01",
+                "valid_until": "2030-01-01",
+                "kind": "observation",
+                "stance": "supports",
+                "excerpt": "Synthetic survey entry.",
+                "confidence_basis": "Fixture only.",
+            }
+        ]
+        path = self.path.parent / "model.sqlite"
+        h = Harness(path)
+        self.addCleanup(h.close)
+        h.initialize(project)
+        h.start("model", "model", stages=["strategy"])
+
+        class Model(FixtureAdapter):
+            execution = "model"
+
+            def execute(self, request):
+                result = super().execute(request)
+                if request["stage"] == "strategy":
+                    result["recommendation"] += (
+                        " The declared promotion budget is 0 USD."
+                    )
+                return result
+
+        from harness.package import snapshot
+
+        status = h.step("model", Model())
+        self.assertEqual(status["tasks"][0]["status"], "succeeded")
+        self.assertEqual(
+            status["decisions"][0]["evidence_audit"]["status"], "missing_claims"
+        )
+        self.assertEqual(snapshot(status, [])["status"], "incomplete_evidence")
+
     def test_cli_init_start_change_and_resume(self):
         path = self.path.parent / "cli.sqlite"
 
