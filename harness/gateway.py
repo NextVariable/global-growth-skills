@@ -8,6 +8,7 @@ import time
 from .contracts import HarnessError, digest, encode, validate
 from .research import review
 from .github_research import PROVIDER, fetch
+from .web_research import PROVIDER as WEB_PROVIDER, fetch as fetch_web
 
 
 OPERATION_ACCESS = {
@@ -36,7 +37,7 @@ class Gateway:
 
     def __init__(self, harness, *, readers=None, clock=time.time):
         self.harness = harness
-        self.readers = {PROVIDER: fetch, **(readers or {})}
+        self.readers = {PROVIDER: fetch, WEB_PROVIDER: fetch_web, **(readers or {})}
         self.clock = clock
         self.mock = MockExecutor()
 
@@ -75,11 +76,11 @@ class Gateway:
                 "executor": "mock_only",
             }
 
-    def research(self, query):
+    def research(self, query, provider=PROVIDER):
         # Snapshot revision before the read. A concurrent change must not be overwritten.
         with self.harness.transaction():
             revision = self.harness._project()["revision"]
-        records = self.read(PROVIDER, query)
+        records = self.read(provider, query)
         with self.harness.transaction():
             if self.harness._project()["revision"] != revision:
                 raise HarnessError("context changed during research; retry the read")
@@ -87,14 +88,14 @@ class Gateway:
             merged = {row["id"]: row for row in sources}
             for row in records:
                 previous = merged.get(row["id"])
-                if previous and previous.get("capture", {}).get("provider") != PROVIDER:
+                if previous and previous.get("capture", {}).get("provider") != provider:
                     raise HarnessError("capture ID collides with an operator source")
                 merged[row["id"]] = row
             combined = list(merged.values())
             market = review(combined)
             change = self.harness._apply_patch({"market_sources": combined}) if records else {}
         return {
-            "provider": PROVIDER,
+            "provider": provider,
             "access": "read_only",
             "query": query,
             "status": "retrieved" if records else "no_results",

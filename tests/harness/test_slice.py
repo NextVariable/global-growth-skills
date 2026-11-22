@@ -237,6 +237,37 @@ class HarnessTests(unittest.TestCase):
             len(self.h.step("run", self.adapter, recover=True)["artifacts"]), 3
         )
 
+    def test_model_run_must_map_eligible_evidence(self):
+        project = copy.deepcopy(PROJECT)
+        project["values"]["market_sources"] = [
+            {
+                "id": "survey",
+                "claim_key": "interest",
+                "url": "https://example.org/survey",
+                "observed_on": "2024-01-01",
+                "valid_until": "2030-01-01",
+                "kind": "observation",
+                "stance": "supports",
+                "excerpt": "Synthetic survey entry.",
+                "confidence_basis": "Fixture only.",
+            }
+        ]
+        path = self.path.parent / "model.sqlite"
+        h = Harness(path)
+        self.addCleanup(h.close)
+        h.initialize(project)
+        h.start("model", "model")
+
+        class Model(FixtureAdapter):
+            execution = "model"
+
+        with self.assertRaisesRegex(HarnessError, "attempt failed"):
+            h.step("model", Model())
+        status = h.status("model")
+        self.assertEqual(status["tasks"][0]["status"], "failed")
+        self.assertIn("claim mapping", status["tasks"][0]["detail"])
+        self.assertEqual(status["decisions"], [])
+
     def test_cli_init_start_change_and_resume(self):
         path = self.path.parent / "cli.sqlite"
 

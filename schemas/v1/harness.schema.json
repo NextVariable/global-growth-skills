@@ -338,6 +338,27 @@
         "claims": {
           "$ref": "#/$defs/claim-list"
         },
+        "evidence_audit": {
+          "$ref": "#/$defs/evidence-audit"
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000
+          },
+          "maxItems": 20
+        },
+        "evidence_gaps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000
+          },
+          "maxItems": 20
+        },
         "source_dependencies": {
           "type": "object",
           "propertyNames": {
@@ -421,6 +442,27 @@
         "claims": {
           "$ref": "#/$defs/claim-list"
         },
+        "evidence_audit": {
+          "$ref": "#/$defs/evidence-audit"
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000
+          },
+          "maxItems": 20
+        },
+        "evidence_gaps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000
+          },
+          "maxItems": 20
+        },
         "source_dependencies": {
           "type": "object",
           "propertyNames": {
@@ -493,6 +535,24 @@
         },
         "claims": {
           "$ref": "#/$defs/claim-list"
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000
+          },
+          "maxItems": 20
+        },
+        "evidence_gaps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000
+          },
+          "maxItems": 20
         }
       }
     },
@@ -521,6 +581,24 @@
         },
         "claims": {
           "$ref": "#/$defs/claim-list"
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000
+          },
+          "maxItems": 20
+        },
+        "evidence_gaps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000
+          },
+          "maxItems": 20
         }
       }
     },
@@ -763,6 +841,24 @@
               "items": {
                 "type": "object"
               }
+            },
+            "freshness": {
+              "type": "object",
+              "properties": {
+                "fresh": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "expiring": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "expired": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false
             }
           },
           "required": [
@@ -970,8 +1066,28 @@
           "minLength": 1,
           "maxLength": 5000
         },
+        "injection_flags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "freshness": {
+          "enum": [
+            "fresh",
+            "expiring",
+            "expired"
+          ]
+        },
         "capture": {
-          "$ref": "#/$defs/github-capture"
+          "oneOf": [
+            {
+              "$ref": "#/$defs/github-capture"
+            },
+            {
+              "$ref": "#/$defs/web-capture"
+            }
+          ]
         }
       },
       "required": [
@@ -1089,6 +1205,117 @@
         "error_code": {
           "type": "string",
           "pattern": "^[a-z_]{1,50}$"
+        },
+        "prompt_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "skill_document_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "skill_package_bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "web-capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "retrieved_at",
+        "topic",
+        "endpoint",
+        "http_status",
+        "content_type",
+        "content_sha256",
+        "content_bytes",
+        "requested_url",
+        "title",
+        "facts"
+      ],
+      "properties": {
+        "provider": {
+          "const": "web-public"
+        },
+        "retrieved_at": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "topic": {
+          "enum": [
+            "market",
+            "competitor",
+            "icp",
+            "channel"
+          ]
+        },
+        "endpoint": {
+          "type": "string",
+          "maxLength": 5000
+        },
+        "http_status": {
+          "const": 200
+        },
+        "content_type": {
+          "enum": [
+            "text/html",
+            "application/xhtml+xml",
+            "text/plain"
+          ]
+        },
+        "content_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "content_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "requested_url": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "facts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "url",
+            "title",
+            "http_status",
+            "content_sha256",
+            "visible_characters"
+          ],
+          "properties": {
+            "url": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            "title": {
+              "type": "string",
+              "maxLength": 300
+            },
+            "http_status": {
+              "const": 200
+            },
+            "content_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "visible_characters": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
         }
       }
     },
@@ -1170,6 +1397,170 @@
           "quote": {
             "type": "string",
             "minLength": 1,
+            "maxLength": 5000
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "support": {
+            "enum": [
+              "exact_excerpt",
+              "excerpt_fragment"
+            ]
+          }
+        }
+      }
+    },
+    "claim-map": {
+      "type": "object",
+      "required": [
+        "claim_id",
+        "source_id",
+        "quote",
+        "text",
+        "support",
+        "claim_key",
+        "observed_on",
+        "valid_until",
+        "freshness",
+        "stance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "claim_id": {
+          "$ref": "#/$defs/run-id"
+        },
+        "source_id": {
+          "$ref": "#/$defs/run-id"
+        },
+        "quote": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 5000
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 1000
+        },
+        "support": {
+          "enum": [
+            "exact_excerpt",
+            "excerpt_fragment"
+          ]
+        },
+        "claim_key": {
+          "$ref": "#/$defs/run-id"
+        },
+        "observed_on": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "valid_until": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "freshness": {
+          "enum": [
+            "fresh",
+            "expiring",
+            "expired"
+          ]
+        },
+        "stance": {
+          "enum": [
+            "supports",
+            "contradicts"
+          ]
+        }
+      }
+    },
+    "evidence-audit": {
+      "type": "object",
+      "required": [
+        "status",
+        "execution",
+        "eligible_source_count",
+        "missing_claims",
+        "prose_flags",
+        "claims",
+        "duplicates_removed",
+        "source_ids",
+        "freshness",
+        "injection_flags",
+        "evidence_gaps"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "not_applicable",
+            "no_eligible_sources",
+            "missing_claims",
+            "partial",
+            "verified"
+          ]
+        },
+        "execution": {
+          "enum": [
+            "fixture",
+            "model",
+            "handoff"
+          ]
+        },
+        "eligible_source_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "missing_claims": {
+          "type": "boolean"
+        },
+        "prose_flags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "claims": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/claim-map"
+          }
+        },
+        "duplicates_removed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/run-id"
+          }
+        },
+        "freshness": {
+          "type": "object",
+          "additionalProperties": {
+            "enum": [
+              "fresh",
+              "expiring",
+              "expired"
+            ]
+          }
+        },
+        "injection_flags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence_gaps": {
+          "type": "array",
+          "items": {
+            "type": "string",
             "maxLength": 5000
           }
         }

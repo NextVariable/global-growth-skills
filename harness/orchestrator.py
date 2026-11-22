@@ -3,6 +3,7 @@
 import json
 
 from .contracts import HarnessError, digest, encode, validate
+from .evidence import audit_evidence, requires_claim_mapping
 from .registry import skill_registry
 from .research import dependencies_changed, review, source_dependencies
 from .planning import DEFAULT, HANDOFF_KINDS, OUTPUTS, PARENTS, plan
@@ -455,6 +456,24 @@ class Harness(Store):
                 ):
                     raise HarnessError("market citations require exact claims")
                 source_dependencies(market, claims, citations)
+            audits = []
+            for req, result in zip(requests, results):
+                market = req.get("market_review", {"citation_ids": [], "sources": []})
+                text = result.get("recommendation") if stage == "strategy" else result.get("markdown")
+                audit = audit_evidence(
+                    market,
+                    result.get("claims", []),
+                    result.get("citations", []),
+                    text,
+                    execution=adapter.execution,
+                    gaps=result.get("evidence_gaps", []),
+                )
+                if requires_claim_mapping(audit):
+                    raise HarnessError(
+                        "model output omitted the required claim mapping for eligible evidence; "
+                        "retry with claims that quote supplied excerpts"
+                    )
+                audits.append(audit)
             if stage != "strategy" and any(
                 req["artifact_kind"] != result["kind"] for req, result in zip(requests, results)
             ):
@@ -464,9 +483,9 @@ class Harness(Store):
                 if self._owns_attempt(run_id, stage, attempt):
                     receipt = getattr(adapter, "last_receipt", None) or {}
                     detail = (
-                        receipt.get("error_code", "invalid adapter result")
+                        str(exc)
                         if isinstance(exc, HarnessError)
-                        else type(exc).__name__
+                        else receipt.get("error_code") or type(exc).__name__
                     )
                     self._set_task(run_id, stage, "failed", detail)
                     self._event(run_id, stage, attempt, {"status": "failed", "error": detail})
@@ -475,11 +494,12 @@ class Harness(Store):
         with self.transaction():
             if not self._owns_attempt(run_id, stage, attempt):
                 raise HarnessError("attempt superseded; results discarded")
-            for req, result in zip(requests, results):
+            for req, result, audit in zip(requests, results, audits):
                 refs = [
                     {key: item[key] for key in ("field", "revision")} for item in req["evidence"]
                 ]
                 data = {**result, "dependencies": refs, "execution": adapter.execution}
+                data["evidence_audit"] = audit
                 if stage == "strategy" or "decision" in req:
                     if not any(ref["field"] == "market_sources" for ref in refs):
                         refs.append({"field": "market_sources", "revision": 0})
