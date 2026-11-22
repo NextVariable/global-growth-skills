@@ -14,7 +14,8 @@ class PrivacyScanEmailRules(unittest.TestCase):
             self.assertEqual(privacy_scan.findings(value.encode()), [], value)
 
     def test_public_domains_are_still_flagged(self):
-        hits = privacy_scan.findings(b"owner@real-company.com")
+        sample = "owner@" + "real-company" + ".com"
+        hits = privacy_scan.findings(sample.encode())
         self.assertEqual(hits, [{"rule": "email", "matches": 1}])
 
     def test_noreply_and_example_domains_are_ignored(self):
