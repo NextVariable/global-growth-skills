@@ -12,13 +12,13 @@
 
 ## 真实运行和证据
 
-使用合集仓库作为公开产品。English-speaking solo founders 为候选细分，零推广预算是测试约束。研究执行一次精确仓库查询与一次相关项目搜索，保留四个真实公开快照。目标仓库快照记录到 1 个星标、0 个 fork。该数字属于采集时点的仓库活动，需求和使用率未知。[项目输入](evals/rc2/public-project.json) · [产品快照](evals/rc2/research-product.json) · [搜索结果](evals/rc2/research-competitors.json)
+使用合集仓库作为公开产品。English-speaking solo founders 为候选细分，零推广预算是测试约束。研究执行一次精确仓库查询与一次相关项目搜索，保留四个真实公开快照。初次连接因 Python 缺信任证书失败，日志保留失败回执。配置可信系统 CA 后重试成功。目标仓库快照记录到 1 个星标、0 个 fork。该数字属于采集时点的仓库活动，需求和使用率未知。[项目输入](evals/rc2/public-project.json) · [产品快照](evals/rc2/research-product.json) · [搜索结果](evals/rc2/research-competitors.json)
 
 五阶段完整运行使用已核对的固定 Skill 和 Codex，请求模型 `gpt-6.2-sol`。首次因克隆缺少 catalog 固定 Git 对象失败，尚未发起模型调用。使用含固定对象的克隆继续，5/5 阶段、7/7 次模型调用完成，共生成一份战略决策、六份草稿。重试后端到端 242.45 秒，宿主累计 235.640 秒，248,336 输入 token、5,758 输出 token。账单未知。[运行原始状态和回执](evals/rc2/full-model-run.json) · [Markdown 导出](evals/rc2/example-package.md) · [JSON 导出](evals/rc2/example-package.json)
 
 人工复核发现五阶段持续沿用同一受众、零付费推广条件和试点边界。落地页有具体清单和 CTA，获客给出可撤回的单入口，销售区分安装和实际采用，实验给出分母、数据来源、时间窗与停止条件。负责人、招募渠道可达性与真实客户行动仍待验证。完整运行保留四条来源，模型没有选用结构化引用。战略标记待复核。没有发现把仓库活动当成客户采用或市场规模的陈述。
 
-另用独立 Git 副本、新 Python 环境和五个新下载的固定 Skill 跑 README 简版。两次独立进程先完成战略，再从同一决策 ID 恢复到获客，成功导出两种格式。[全新目录验收](evals/rc2/fresh-checkout.json)
+另用独立 Git 副本、新 Python 环境和五个新下载的固定 Skill 跑 README 的离线版及真实模型版。真实模型先验证战略到获客，再在新项目库中完成全五阶段。完整复跑的 `step` 和 `resume` 是独立进程，恢复前后的战略决策 ID 一致。7/7 次模型调用，两条模型命令合计 361.06 秒，249,806 输入 token、6,769 输出 token，Markdown 和 JSON 均导出。复跑同样未选用结构化引用，市场判断继续待复核。[全新目录验收](evals/rc2/fresh-checkout.json)
 
 价格与证据改动另外在真实运行数据库的隔离副本中执行。改价只失效价格草稿、销售与实验。撤回配对实验中被引用的快照后，战略失去活跃版本，获客稿失效。测试未重新调用模型。离线测试验证失效结果可以重建，以及超时、SQLite 回滚、拒绝无权限操作及未知写入结果后的停止机制。[状态变更回执](evals/rc2/state-changes.json) · [离线任务结果](evals/rc2/fixture-matrix.json)
 
@@ -43,6 +43,6 @@ GitHub Provider 仅允许固定 HTTPS GET，拒绝重定向，不发送凭证，
 
 正式版仍需扩大真实业务样本、接入独立市场资料和行为证据、对完整工作流做盲评与人工时间测量，并准备真实模型费用对账和生产环境身份治理。本次没有执行真实发布、触达、CRM 写入或付费操作。
 
-本地 Harness 40/40，安装器 10/10，离线代表任务 10/10。静态检查及版本历史敏感模式扫描通过。Windows 的 POSIX 模拟身份测试按兼容规则跳过。[GitHub Actions](https://github.com/NextVariable/global-growth-skills/actions)
+本地 Harness 40/40，安装器 10/10，离线代表任务 10/10。原安装器另完成五个固定版本的实际下载与安装。静态检查及版本历史敏感模式扫描通过。Windows 的 POSIX 模拟身份测试按兼容规则跳过。[三平台 Harness 及归档](https://github.com/NextVariable/global-growth-skills/actions/runs/44987367829) · [六项兼容与仓库检查](https://github.com/NextVariable/global-growth-skills/actions/runs/44987367836)
 
 代码路径包括 `harness/github_research.py`、`research.py`、`orchestrator.py`、`gateway.py`、`package.py`、`pins.py`、`__main__.py` 与兼容扩展的 v1 Schema。迁移与恢复沿用 SQLite v3。[快速开始](README.md#gtm-harness-100-rc2) · [故障说明](docs/harness.md#常见故障) · [Unit log](evals/rc2/offline-unittest.txt)

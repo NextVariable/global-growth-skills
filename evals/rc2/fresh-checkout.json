@@ -2,10 +2,6 @@
   "collection_code_commit": "bf6d9c6",
   "fresh_git_checkout": true,
   "fresh_virtualenv": true,
-  "pinned_skills_prepared": [
-    "launch",
-    "strategy"
-  ],
   "prepared_catalog_pin_count": 5,
   "provider": "github-public",
   "source_ids": [
@@ -78,5 +74,334 @@
       "source_ids": [],
       "prose_flags": []
     }
-  ]
+  ],
+  "pinned_skills_used": [
+    "launch",
+    "strategy"
+  ],
+  "full_workflow": {
+    "execution": "model",
+    "model": "gpt-6.2-sol",
+    "stages": [
+      {
+        "stage": "strategy",
+        "status": "succeeded",
+        "attempt": 1
+      },
+      {
+        "stage": "content",
+        "status": "succeeded",
+        "attempt": 1
+      },
+      {
+        "stage": "launch",
+        "status": "succeeded",
+        "attempt": 1
+      },
+      {
+        "stage": "sales",
+        "status": "succeeded",
+        "attempt": 1
+      },
+      {
+        "stage": "experiments",
+        "status": "succeeded",
+        "attempt": 1
+      }
+    ],
+    "unchanged_decision_id": 1,
+    "retrieved_sources": [
+      {
+        "capture": {
+          "endpoint": "/repos/NextVariable/global-growth-skills",
+          "facts": {
+            "forks_count": 0,
+            "full_name": "NextVariable/global-growth-skills",
+            "open_issues_count": 0,
+            "stargazers_count": 1
+          },
+          "provider": "github-public",
+          "retrieved_at": "2026-11-22T04:58:54.243309+00:00",
+          "topic": "market"
+        },
+        "claim_key": "gh-331af9506465f648b0ec",
+        "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+        "excerpt": "GitHub public repository NextVariable/global-growth-skills is listed with 1 stars, 0 forks and 0 open issues or pull requests.",
+        "id": "gh-331af9506465f648b0ec",
+        "kind": "observation",
+        "observed_on": "2026-11-22",
+        "stance": "supports",
+        "url": "https://github.com/NextVariable/global-growth-skills",
+        "valid_until": "2026-11-29",
+        "status": "reviewable"
+      },
+      {
+        "capture": {
+          "endpoint": "/search/repositories",
+          "facts": {
+            "forks_count": 9036,
+            "full_name": "coreyhaines31/marketingskills",
+            "open_issues_count": 40,
+            "stargazers_count": 61911
+          },
+          "provider": "github-public",
+          "retrieved_at": "2026-11-22T04:59:00.485746+00:00",
+          "topic": "competitor"
+        },
+        "claim_key": "gh-156cf857b72a844a91ae",
+        "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+        "excerpt": "GitHub public repository coreyhaines31/marketingskills is listed with 61911 stars, 9036 forks and 40 open issues or pull requests.",
+        "id": "gh-156cf857b72a844a91ae",
+        "kind": "observation",
+        "observed_on": "2026-11-22",
+        "stance": "supports",
+        "url": "https://github.com/coreyhaines31/marketingskills",
+        "valid_until": "2026-11-29",
+        "status": "reviewable"
+      },
+      {
+        "capture": {
+          "endpoint": "/search/repositories",
+          "facts": {
+            "forks_count": 267,
+            "full_name": "wondelai/skills",
+            "open_issues_count": 13,
+            "stargazers_count": 2760
+          },
+          "provider": "github-public",
+          "retrieved_at": "2026-11-22T04:59:00.485746+00:00",
+          "topic": "competitor"
+        },
+        "claim_key": "gh-9914de67573a7a1ba371",
+        "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+        "excerpt": "GitHub public repository wondelai/skills is listed with 2760 stars, 267 forks and 13 open issues or pull requests.",
+        "id": "gh-9914de67573a7a1ba371",
+        "kind": "observation",
+        "observed_on": "2026-11-22",
+        "stance": "supports",
+        "url": "https://github.com/wondelai/skills",
+        "valid_until": "2026-11-29",
+        "status": "reviewable"
+      },
+      {
+        "capture": {
+          "endpoint": "/search/repositories",
+          "facts": {
+            "forks_count": 1130,
+            "full_name": "davidpc007/openclaw-marketing-skills",
+            "open_issues_count": 0,
+            "stargazers_count": 182
+          },
+          "provider": "github-public",
+          "retrieved_at": "2026-11-22T04:59:00.485746+00:00",
+          "topic": "competitor"
+        },
+        "claim_key": "gh-75c95c0438bd513f5a5f",
+        "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+        "excerpt": "GitHub public repository davidpc007/openclaw-marketing-skills is listed with 182 stars, 1130 forks and 0 open issues or pull requests.",
+        "id": "gh-75c95c0438bd513f5a5f",
+        "kind": "observation",
+        "observed_on": "2026-11-22",
+        "stance": "supports",
+        "url": "https://github.com/davidpc007/openclaw-marketing-skills",
+        "valid_until": "2026-11-29",
+        "status": "reviewable"
+      }
+    ],
+    "read_receipts": [
+      {
+        "operation_id": "github-public",
+        "event": "read_confirmed",
+        "data": {
+          "query_digest": "faa83e9379d28afbec907e8bc8d02b755706fe78cb5c09bcfd1f59453c22873f",
+          "source_count": 1
+        }
+      },
+      {
+        "operation_id": "github-public",
+        "event": "read_confirmed",
+        "data": {
+          "query_digest": "47c56a9a260dd7f3aab6047171938d852f8ff5e89e40e50aabaf11e1e41bc1ff",
+          "source_count": 3
+        }
+      }
+    ],
+    "host_receipts": [
+      {
+        "stage": "strategy",
+        "calls": 1,
+        "duration_ms": 36156,
+        "exit_code": 0,
+        "host": "codex",
+        "requested_model": "gpt-6.2-sol",
+        "skill_document_digest": "c6de1d3fe081cde3e4b1f4c658d7bc352d695b9b5d56e0c6f435641b1e502c80",
+        "status": "completed",
+        "tokens": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 37706,
+          "output_tokens": 837,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "stage": "content",
+        "calls": 1,
+        "duration_ms": 44227,
+        "exit_code": 0,
+        "host": "codex",
+        "requested_model": "gpt-6.2-sol",
+        "skill_document_digest": "42515737144d02f3468edb8ef43d2fe4db2e310ba341a4387ac0e569ab8eb381",
+        "status": "completed",
+        "tokens": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 36014,
+          "output_tokens": 907,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "stage": "content",
+        "calls": 1,
+        "duration_ms": 43513,
+        "exit_code": 0,
+        "host": "codex",
+        "requested_model": "gpt-6.2-sol",
+        "skill_document_digest": "42515737144d02f3468edb8ef43d2fe4db2e310ba341a4387ac0e569ab8eb381",
+        "status": "completed",
+        "tokens": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 34530,
+          "output_tokens": 197,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "stage": "content",
+        "calls": 1,
+        "duration_ms": 41318,
+        "exit_code": 0,
+        "host": "codex",
+        "requested_model": "gpt-6.2-sol",
+        "skill_document_digest": "42515737144d02f3468edb8ef43d2fe4db2e310ba341a4387ac0e569ab8eb381",
+        "status": "completed",
+        "tokens": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 34536,
+          "output_tokens": 300,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "stage": "launch",
+        "calls": 1,
+        "duration_ms": 58370,
+        "exit_code": 0,
+        "host": "codex",
+        "requested_model": "gpt-6.2-sol",
+        "skill_document_digest": "c451dc8906bcdf7f8a8adaab34e013fa84c1ae40d880fedcb55379695d5e5734",
+        "status": "completed",
+        "tokens": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 35918,
+          "output_tokens": 1682,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "stage": "sales",
+        "calls": 1,
+        "duration_ms": 51287,
+        "exit_code": 0,
+        "host": "codex",
+        "requested_model": "gpt-6.2-sol",
+        "skill_document_digest": "949e5ed97fb9cae540109b93b4ba309e5d296839a0cf75c847239b80dc34c133",
+        "status": "completed",
+        "tokens": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 34904,
+          "output_tokens": 1043,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "stage": "experiments",
+        "calls": 1,
+        "duration_ms": 67911,
+        "exit_code": 0,
+        "host": "codex",
+        "requested_model": "gpt-6.2-sol",
+        "skill_document_digest": "5ce4adae8ab41fe14e5a6a2c2d8c00b66dd3f029dabec25e954fb9afe2a5da13",
+        "status": "completed",
+        "tokens": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 24448,
+          "input_tokens": 36198,
+          "output_tokens": 1803,
+          "reasoning_output_tokens": 0
+        }
+      }
+    ],
+    "model_commands_wall_seconds": 361.06,
+    "model_calls": 7,
+    "input_tokens": 249806,
+    "output_tokens": 6769,
+    "claim_audit": [
+      {
+        "record": "strategy",
+        "exact_excerpt_checks": 0,
+        "source_ids": [],
+        "prose_flags": []
+      },
+      {
+        "record": "positioning",
+        "exact_excerpt_checks": 0,
+        "source_ids": [],
+        "prose_flags": []
+      },
+      {
+        "record": "pricing",
+        "exact_excerpt_checks": 0,
+        "source_ids": [],
+        "prose_flags": []
+      },
+      {
+        "record": "capabilities",
+        "exact_excerpt_checks": 0,
+        "source_ids": [],
+        "prose_flags": []
+      },
+      {
+        "record": "launch-plan",
+        "exact_excerpt_checks": 0,
+        "source_ids": [],
+        "prose_flags": []
+      },
+      {
+        "record": "sales-plan",
+        "exact_excerpt_checks": 0,
+        "source_ids": [],
+        "prose_flags": []
+      },
+      {
+        "record": "experiment-plan",
+        "exact_excerpt_checks": 0,
+        "source_ids": [],
+        "prose_flags": []
+      }
+    ],
+    "export_sha256": {
+      "markdown": "222881e18a4a5a066d8bd019125234e535455e5a914168d7a7d13535a9dc733d",
+      "json": "83c84699489e08586f2bc54519f79853978b3364a13eec2df43f8851420ce3a5"
+    }
+  },
+  "offline_quick_start": {
+    "result": "passed",
+    "price_changes_rebuilt_selectively": true
+  }
 }

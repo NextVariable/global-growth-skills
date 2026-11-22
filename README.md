@@ -103,7 +103,7 @@ python -m harness --db "$db" export demo > "$work/gtm-package.md"
 
 只处理渠道时用 `start channel --stages launch`。中断后的 `resume` 读取已提交结果。确认原进程已退出后，仍处于运行状态的任务可以加 `--recover` 恢复，适配器失败可以加 `--retry`。
 
-[Codex、手工交接与状态迁移](docs/harness.md) · [数据与 Skill 契约](docs/harness-contract.md) · [预发布验收](V1_RELEASE_READINESS.md)
+[Codex、手工交接与状态迁移](docs/harness.md) · [数据与 Skill 契约](docs/harness-contract.md) · [RC1 工程验收](V1_RELEASE_READINESS.md)
 
 
 ### 用公开资料和真实 Codex 跑一次
