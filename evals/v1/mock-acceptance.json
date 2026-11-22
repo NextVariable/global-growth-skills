@@ -1,0 +1,40 @@
+{
+  "execution": "mock",
+  "unapproved_exit": 1,
+  "unapproved_error": "Harness error: write denied: exact unexpired unused approval required",
+  "approved": {
+    "executor": "mock",
+    "status": "confirmed",
+    "target": "simulated-channel"
+  },
+  "duplicate_exit": 1,
+  "duplicate_error": "Harness error: write denied: exact unexpired unused approval required",
+  "receipts": [
+    {
+      "operation_id": "example-mock-publish",
+      "event": "approved",
+      "data": {
+        "digest": "468956dced213ee3280b588eabc4294ecf53be62fd6cc6231e7327d4edb16463",
+        "expires": 1795320975
+      }
+    },
+    {
+      "operation_id": "example-mock-publish",
+      "event": "outcome_unknown",
+      "data": {
+        "digest": "468956dced213ee3280b588eabc4294ecf53be62fd6cc6231e7327d4edb16463",
+        "executor": "mock"
+      }
+    },
+    {
+      "operation_id": "example-mock-publish",
+      "event": "confirmed",
+      "data": {
+        "executor": "mock",
+        "status": "confirmed",
+        "target": "simulated-channel"
+      }
+    }
+  ],
+  "publication_transform": "Local numeric account identifier omitted."
+}
