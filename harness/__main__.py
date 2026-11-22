@@ -17,6 +17,7 @@ from .package import markdown, snapshot
 from .pins import prepare_pins
 from .registry import ROLES
 from .hn_research import PROVIDER as HN_PROVIDER
+from .host import capability_matrix
 from .telemetry import cost_report
 from .web_research import PROVIDER as WEB_PROVIDER
 
@@ -83,6 +84,9 @@ def main():
     commands.add_parser("execute-mock").add_argument("operation")
     prepare = commands.add_parser("prepare")
     prepare.add_argument("operation")
+    commands.add_parser(
+        "host-contract", help="list host adapters, declared limits and the task contract"
+    )
     commands.add_parser("receipts")
     cost = commands.add_parser("cost-report", help="token, byte and duration totals for one run")
     cost.add_argument("run_id")
@@ -245,6 +249,18 @@ def main():
                 ],
             }
             exit_code = 2 if package["status"] in {"incomplete_evidence", "needs_decision_review"} else 0
+        elif args.command == "host-contract":
+            result = {
+                "hosts": capability_matrix(),
+                "contract": {
+                    "task_input": "TaskInput.from_request / to_request",
+                    "task_result": "TaskResult.to_dict",
+                    "boundary": (
+                        "Hosts execute one bounded task. Workflow state, evidence and approvals "
+                        "stay in the harness."
+                    ),
+                },
+            }
         elif args.command == "cost-report":
             result = cost_report(harness.status(args.run_id))
         elif args.command == "handoff":

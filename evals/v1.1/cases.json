@@ -1,0 +1,120 @@
+{
+  "suite": "v1.1-benchmark",
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "ai-saas",
+      "segment": "AI SaaS",
+      "product": "AI meeting notes for small consulting teams",
+      "values": {
+        "product": "AI meeting notes for small consulting teams",
+        "market": "English-speaking professional services",
+        "audience": "Consultants and boutique agency founders who run 10+ client calls per week",
+        "goal": "Validate a 20 USD per seat per month workflow with 20 qualified trials",
+        "price": {
+          "amount_minor": 2000,
+          "currency": "USD",
+          "unit": "seat per month"
+        },
+        "capabilities": [
+          "meeting summary",
+          "action item extraction",
+          "manual CRM export"
+        ],
+        "budget": {
+          "amount_minor": 0,
+          "currency": "USD",
+          "unit": "paid acquisition for the pilot"
+        }
+      },
+      "references": [
+        {
+          "label": "Public product site",
+          "url": "https://www.granola.ai/"
+        },
+        {
+          "label": "Public pricing page",
+          "url": "https://www.granola.ai/pricing"
+        }
+      ],
+      "reference_note": "URLs identify public material. This fixture imports no number, price or market-size claim from them.",
+      "research_term": "AI meeting notes"
+    },
+    {
+      "id": "developer-tools",
+      "segment": "Developer Tools",
+      "product": "Fast formatter and linter for JavaScript and TypeScript projects",
+      "values": {
+        "product": "Fast formatter and linter for JavaScript and TypeScript projects",
+        "market": "Open-source JavaScript and TypeScript teams",
+        "audience": "Frontend and platform engineers maintaining repositories with more than five contributors",
+        "goal": "Increase opt-in adoption through documentation and community channels",
+        "price": {
+          "amount_minor": 0,
+          "currency": "USD",
+          "unit": "open-source software license"
+        },
+        "capabilities": [
+          "single command formatting",
+          "lint rules",
+          "editor integration"
+        ],
+        "budget": {
+          "amount_minor": 0,
+          "currency": "USD",
+          "unit": "paid acquisition"
+        }
+      },
+      "references": [
+        {
+          "label": "Public documentation",
+          "url": "https://biomejs.dev/"
+        },
+        {
+          "label": "Public GitHub repository",
+          "url": "https://github.com/biomejs/biome"
+        }
+      ],
+      "reference_note": "Public documentation and repository only; stars and download counts are not demand or market size.",
+      "research_term": "JavaScript formatter"
+    },
+    {
+      "id": "smart-hardware",
+      "segment": "Smart Hardware",
+      "product": "Smart ring with a companion sleep and recovery subscription",
+      "values": {
+        "product": "Smart ring with a companion sleep and recovery subscription",
+        "market": "English-speaking wellness consumers",
+        "audience": "Sleep-focused professionals who already track recovery with a wearable",
+        "goal": "Validate a 349 USD device plus subscription bundle with a small pilot",
+        "price": {
+          "amount_minor": 34900,
+          "currency": "USD",
+          "unit": "device"
+        },
+        "capabilities": [
+          "sleep staging",
+          "recovery score",
+          "mobile app"
+        ],
+        "budget": {
+          "amount_minor": 50000,
+          "currency": "USD",
+          "unit": "one-off pilot budget"
+        }
+      },
+      "references": [
+        {
+          "label": "Public product site",
+          "url": "https://ouraring.com/"
+        },
+        {
+          "label": "Public membership page",
+          "url": "https://ouraring.com/membership"
+        }
+      ],
+      "reference_note": "Public pages only. Retail price and membership terms remain claims until captured and reviewed.",
+      "research_term": "smart ring"
+    }
+  ]
+}
