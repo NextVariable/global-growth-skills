@@ -1,5 +1,16 @@
 # Changes
 
+## 1.0.0-rc.3
+
+- Evidence Engine 2.0：claim 支持逐字片段而不只是整段摘录；新增 Claim–Evidence 映射、支持类型、重复合并、时效分级、证据缺口和 provider 指令注入阻断。
+- 来源失效改为精确依赖：只复核引用该来源的决策与草稿，新增无关来源不再误触发失效。
+- 模型在有可用来源但没有结构化 claim 时直接失败，不再静默通过；包状态新增 `incomplete_evidence` 与 `needs_quality_review`。
+- 新增只读 `web-public` Provider，可抓取显式公开 HTTPS 页面/定价页；拒绝私网、重定向、非 HTML 和超限响应。
+- GTM Package 增加质量评分卡、事实/假设分离、指标公式/分母/护栏/判定规则和跨阶段一致性检查。
+- Codex 上下文按阶段选择 Skill 文档并设 60 KB 预算，回执记录 prompt 与文档字节数。
+- 新增 `research-web`、`audit`、`doctor` 命令和 RC3 四行业评测集。本轮未执行真实模型调用，评测只覆盖确定性 fixture/reference。
+- 本轮未创建正式 Release；`feat/rc3-research-quality` 需审查后合并。
+
 ## 2026-10-28 · 维护修订
 
 锁定五包修复版本并重跑真实下载，新增安装验收版本一致性检查；增加安全反馈与更新说明，以及 GitHub Actions 依赖更新检查。业务方法没有在此维护修订中改变；本地检查不能冒充真实客户效果或新一轮模型验收。提交历史和自动检查用于定位交付版本。

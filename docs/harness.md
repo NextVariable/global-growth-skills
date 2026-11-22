@@ -1,4 +1,4 @@
-# GTM Harness 1.0.0-rc.2
+# GTM Harness 1.0.0-rc.3
 
 ## 架构与任务选择
 
@@ -24,7 +24,7 @@ python -m harness --db "$db" resume model-demo --model YOUR_AVAILABLE_CODEX_MODE
   --checkout "strategy=$strategy_repo" --checkout "launch=$launch_repo" --timeout 180
 ```
 
-Codex CLI 必须已经认证。Harness 从固定 Git 对象读取 `SKILL.md`、Markdown 参考和模板。调用发起前关闭 shell、统一执行、插件、MCP 和 Web Search，宿主只读，无审批升级。代码检查宿主是否报告被禁用的工具活动。回执保留文档摘要、请求模型、宿主完成事件、收到的 token 计数和耗时。缺失 token 与实际货币费用按未知处理。
+Codex CLI 必须已经认证。Harness 从固定 Git 对象读取 `SKILL.md`、Markdown 参考和模板。每个阶段固定发送 `SKILL.md`，再按阶段关键词选择参考和模板，默认上限 60 KB；完整包仍须低于 180 KB。提示词会列出被省略的文件，回执记录 `prompt_bytes`、`skill_document_bytes` 和 `skill_package_bytes`。调用发起前关闭 shell、统一执行、插件、MCP 和 Web Search，宿主只读，无审批升级。代码检查宿主是否报告被禁用的工具活动。回执保留文档摘要、请求模型、宿主完成事件、收到的 token 计数和耗时。缺失 token 与实际货币费用按未知处理。
 
 若 Codex 不可用，用 `start manual --execution handoff --stages strategy launch` 创建手工运行。请将下列输出与结果文件放到仓库外已有的工作目录。
 
@@ -45,7 +45,21 @@ SQLite `user_version=3`。打开旧双阶段数据库会事务迁移，保留原
 
 使用 `research TOPIC TERM` 从公开 GitHub 检索。TOPIC 可用 `market`、`competitor`、`icp` 或 `channel` 来标识研究目的。可用 `--repository OWNER/REPO` 精确查询，按词搜索最多 5 个结果。接入只读取固定 GitHub HTTPS API，禁止跳转，限响应大小和请求时限。它保留观察日和采集时刻、GitHub 标准 URL、源 ID、原始选定字段和规范化摘录。搜索范围限 GitHub 仓库，星标或分叉不足以支持需求、采用和市场规模判定。[GitHub Search API](https://docs.github.com/en/rest/search/search)
 
-`change` 可以导入或替换 `market_sources`。人工导入的自由文本保留供审核，当前 Codex 仅看到 GitHub 规范化观察。结构化引用须逐字匹配有效摘录，未知、冲突或过期来源不能进入引用。源 ID 和摘录摘要绑定到决策与草稿，变更后沿已保存的上游依赖传递。对声明为市场相关、尚无具体引用的结果，候选来源集合变化会触发复核。矛盾检查依赖同一 claim ID 的相反立场。自由文本的常见数字声明会在导出时提示复核，任意自然语言的真伪仍需人审。
+`change` 可以导入或替换 `market_sources`。人工导入的自由文本保留供审核，当前 Codex 仅看到 GitHub 规范化观察和公开网页快照。结构化引用须逐字匹配有效摘录；RC3 允许引用摘录中的逐字片段，并记录 `exact_excerpt` 或 `excerpt_fragment`。未知、冲突、过期或注入风险的来源不能进入引用。
+
+### Claim–Evidence 映射
+
+每条外部事实必须同时给出 `source_id`、`quote`（来源摘录中的逐字片段）和可选 `text`（草稿中的断言）。Harness 会合并同源同片段重复项、检查来源时效（`fresh`/`expiring`/`expired`）、标记 30 天内到期证据，并把 `assumptions` 与 `evidence_gaps` 分开保存。模型运行中，如果存在可用来源但没有任何 claim，任务直接失败并提示重试；包状态为 `incomplete_evidence` 时不能作为可评审交付物。对声明为市场相关、尚无具体引用的结果，候选来源集合变化仍会触发复核。
+
+来源依赖按精确引用计算：只复核引用该来源的决策与草稿，新增无关来源不会误伤已有产物。来源 ID 和摘录摘要绑定到决策与草稿，撤回、改动、冲突或过期后沿已保存的上游依赖传递。
+
+### 公开网页 Provider
+
+`research-web URL --topic ...` 只读取操作者显式给出的一个公开 HTTPS 页面。拒绝私网/保留地址、非 443 端口、凭证、重定向、非 HTML/纯文本和超过 1 MB 的响应；记录 HTTP 状态、内容 SHA256、采集时间、有效期和可见文本摘录。`--quote` 可把摘录收窄为页面中真实存在的逐字片段。它不执行搜索、登录、JavaScript、点击或任何外部写操作。页面内容视为不可信数据；检测到指令式文本的 provider 来源标记为 `blocked_injection`，不进入引用，也不进入模型提示。
+
+### 审计与质量
+
+`audit RUN` 输出 claim 映射、来源时效、注入标记、证据缺口和质量评分卡；包为 `incomplete_evidence` 时退出码为 2。评分卡检查交付物结构、指标公式/分母/护栏/判定规则、假设分离和跨阶段受众/价格/预算一致性。它是确定性结构检查，不判断语义真伪，也不代表真实客户效果。`doctor` 检查 Python、jsonschema、数据库路径和 Codex CLI。
 
 `export RUN` 默认输出 Markdown，`--format json` 附完整的引用检查、可用来源、尝试记录和依赖。部分运行明确标为 incomplete，过期产物用历史 ID 标识。导出的文字均须人工审核后才可使用。
 
@@ -62,6 +76,10 @@ python -m harness --db "$db" execute-mock examples/harness/mock-operation.json
 python -m harness --db "$db" receipts
 ```
 
+
+## 评测口径
+
+`scripts/evaluate_rc3.py` 覆盖 AI SaaS、开发者工具、智能硬件和 B2B 服务四个场景。`fixture` 是最小合成输出，只验证流程；`reference` 是确定性参考质量输出，只验证评分卡能区分强/弱交付物；`model` 才发起真实 Codex 调用，并在报告中记录调用次数、token 和明确的费用缺失。真实发布、客户触达和业务结果始终标记为 `not_measured`。`evals/rc3/baseline.json` 是已提交的确定性基线，不代表模型质量。
 
 ## 常见故障
 
