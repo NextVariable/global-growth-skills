@@ -197,7 +197,7 @@
     "Real publishing, outreach, CRM writes, ad spend and customer outcomes are not executed or measured.",
     "Capture verification is structural: a fabricated local web capture with a plausible hash is not detected without re-fetching the page.",
     "The exported package groups mapped claims as external_evidence even when the decision brief labels the source external_signal.",
-    "docs/product-scope.md lives on this Draft branch; if PR #3 is not merged, the scope document is not on main."
+    "docs/product-scope.md is published on both the V1.0 release branch and this Draft branch; it reaches main with either merge."
   ],
   "codex_final_audit": "ready_with_documented_p1_items",
   "independent_audit": {
