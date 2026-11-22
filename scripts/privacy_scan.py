@@ -64,7 +64,11 @@ def scan(history=False):
             hits = findings(git("cat-file", "blob", oid))
             if hits:
                 archived.append({"object": oid, "findings": hits})
-        for line in git("log", "--all", "--format=%H%x09%an <%ae> %cn <%ce>%n%B%x00").split(b"\0"):
+        # Platform merge commits (refs/pull/N/merge) are authored by the hosting
+        # service using the account profile email. They are not repository
+        # content and cannot be changed from the repository, so auditing them
+        # would make push and pull_request runs disagree.
+        for line in git("log", "--all", "--no-merges", "--format=%H%x09%an <%ae> %cn <%ce>%n%B%x00").split(b"\0"):
             hits = findings(line)
             if hits:
                 metadata.append({"findings": hits})
