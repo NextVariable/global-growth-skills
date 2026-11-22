@@ -6,9 +6,25 @@
   "repository": "https://github.com/NextVariable/global-growth-skills",
   "branch": "feat/v1.1-gtm-intelligence",
   "base_commit": "7112a7df48d59419594619d51d279e6d0f20fb00",
-  "head_commit": "reported_in_draft_pull_request",
+  "head_commit": "81ee02a778bf232e5fff0ab6d63dbbfcd408cd63",
   "prepared_at": "2026-11-23",
   "release_gate": "DRAFT",
+  "ci": {
+    "head": "81ee02a778bf232e5fff0ab6d63dbbfcd408cd63",
+    "total": 18,
+    "success": 18,
+    "failure": 0,
+    "runs": [
+      {
+        "workflow": "Validate",
+        "url": "https://github.com/NextVariable/global-growth-skills/actions/runs/45049682185"
+      },
+      {
+        "workflow": "Harness fixture tests",
+        "url": "https://github.com/NextVariable/global-growth-skills/actions/runs/45049682178"
+      }
+    ]
+  },
   "catalog": {
     "entries": 5,
     "pinned": true,
@@ -44,7 +60,7 @@
     {
       "id": "privacy-scan-history",
       "result": "pass",
-      "detail": "historical blobs and commit metadata scanned; 0 findings. The scanner now ignores reserved, non-routable domains such as host.local, which had been flagged from local commit identities."
+      "detail": "historical blobs and commit metadata scanned; 0 findings. The scanner ignores reserved, non-routable domains such as host.local and skips its own synthetic fixture during the history scan."
     },
     {
       "id": "static-analysis",
@@ -121,7 +137,7 @@
     "Real publishing, outreach, CRM writes, ad spend and customer outcomes are not executed or measured."
   ],
   "release_actions": {
-    "draft_pull_request": "created",
+    "draft_pull_request": "https://github.com/NextVariable/global-growth-skills/pull/3",
     "merge_main": "not_performed_pending_product_owner_authorization",
     "github_release": "not_performed_pending_product_owner_authorization",
     "new_tag": "not_performed"
