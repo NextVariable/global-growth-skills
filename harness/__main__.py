@@ -73,7 +73,7 @@ def main():
     revise.add_argument("run_id")
     revise.add_argument("patch", help="JSON file with the constraint fields to change")
     revise.add_argument("--reason", required=True)
-    revise.add_argument("--actor", default="operator")
+    revise.add_argument("--expected-revision", type=int)
     approve = commands.add_parser("approve-mock")
     approve.add_argument("operation")
     approve.add_argument("--ttl", type=int, default=300)
@@ -153,7 +153,8 @@ def main():
             result = harness.restore(args.revision)
         elif args.command == "revise-decision":
             result = harness.revise_decision(
-                args.run_id, input_json(args.patch), reason=args.reason, actor=args.actor
+                args.run_id, input_json(args.patch), reason=args.reason,
+                expected_revision=args.expected_revision,
             )
         elif args.command == "start":
             harness.start(args.run_id, args.execution, stages=args.stages, goal=args.goal)
@@ -209,6 +210,7 @@ def main():
                 "run_id": package["run_id"],
                 "status": package["status"],
                 "quality": package["quality"],
+                "decision_review": package["decision_review"],
                 "claim_audit": package["claim_audit"],
                 "sources": [
                     {
@@ -225,7 +227,7 @@ def main():
                     for row in package["evidence_review"]["sources"]
                 ],
             }
-            exit_code = 2 if package["status"] == "incomplete_evidence" else 0
+            exit_code = 2 if package["status"] in {"incomplete_evidence", "needs_decision_review"} else 0
         elif args.command == "handoff":
             checkouts = dict(value.split("=", 1) for value in args.checkout)
             state = harness.status(args.run_id)

@@ -91,61 +91,47 @@ def skill_selection(checkout, pin, stage, *, budget=DEFAULT_DOCUMENT_BUDGET):
     }
 
 
-SLOT_DEFS = (
-    "decision-text-slot",
-    "decision-number-slot",
-    "decision-integer-slot",
-    "decision-list-slot",
-    "decision-window-slot",
-    "decision-budget-slot",
-)
+def _strict_shape(spec):
+    """Project the storage schema to the smaller Structured Outputs dialect."""
+    if "$ref" in spec:
+        return _strict_shape(SCHEMA["$defs"][spec["$ref"].removeprefix("#/$defs/")])
+    if spec.get("type") == "object":
+        mandatory = set(spec.get("required", []))
+        properties = {}
+        for key, child in spec["properties"].items():
+            shape = _strict_shape(child)
+            properties[key] = shape if key in mandatory else {
+                "anyOf": [shape, {"type": "null"}]
+            }
+        return {
+            "type": "object", "properties": properties,
+            "required": list(properties), "additionalProperties": False,
+        }
+    if spec.get("type") == "array":
+        return {"type": "array", "items": _strict_shape(spec["items"])}
+    shape = {"type": spec.get("type", "string")}
+    if "enum" in spec:
+        shape["enum"] = spec["enum"]
+    return shape
 
 
 def output_schema(stage):
     key = "strategy-result" if stage == "strategy" else "content-result"
-    original = SCHEMA["$defs"][key]
-    properties = {
-        name: {k: v for k, v in spec.items() if k in {"type", "enum"}}
-        for name, spec in original["properties"].items()
-    }
-    defs = {}
-    if stage == "strategy":
-        properties["citations"] = {"type": "array", "items": {"type": "string"}}
-        properties["contract"] = {"$ref": "#/$defs/decision-draft"}
-        defs = {
-            name: SCHEMA["$defs"][name] for name in ("decision-draft", *SLOT_DEFS)
-        }
-    else:
-        properties["constraint_refs"] = {"$ref": "#/$defs/constraint-declaration"}
-        defs = {
-            name: SCHEMA["$defs"][name]
-            for name in ("constraint-declaration", "decision-field", *SLOT_DEFS)
-        }
-    for name in ("assumptions", "evidence_gaps"):
-        properties[name] = {
-            "type": "array",
-            "items": {"type": "string", "minLength": 1},
-        }
-    properties["claims"] = {
+    shape = _strict_shape(SCHEMA["$defs"][key])
+    shape["properties"]["claims"] = _strict_shape({
         "type": "array",
         "items": {
             "type": "object",
-            "properties": {
-                "source_id": {"type": "string"},
-                "quote": {"type": "string"},
-                "text": {"type": "string"},
-            },
             "required": ["source_id", "quote", "text"],
-            "additionalProperties": False,
+            "properties": {name: {"type": "string"} for name in ("source_id", "quote", "text")},
         },
-    }
-    required = [name for name in properties if name != "constraint_refs"]
-    return {
-        **original,
-        "$defs": defs,
-        "required": required,
-        "properties": properties,
-    }
+    })
+    for key in ("citations", "assumptions", "evidence_gaps"):
+        if key in shape["properties"]:
+            shape["properties"][key] = {"type": "array", "items": {"type": "string"}}
+    if stage == "strategy":
+        shape["properties"]["contract"] = _strict_shape(SCHEMA["$defs"]["decision-draft"])
+    return shape
 
 
 def handoff(checkout, request, *, budget=DEFAULT_DOCUMENT_BUDGET):
@@ -154,23 +140,26 @@ def handoff(checkout, request, *, budget=DEFAULT_DOCUMENT_BUDGET):
         request = {**request, "market_review": prompt_review(request["market_review"])}
     if request["stage"] == "strategy":
         contract_note = (
-            "Also fill contract. Use state decided only for a value the operator explicitly "
-            "supplied; use state unknown for anything not supplied and never invent numbers, "
-            "thresholds, units, windows or budgets. Use state proposed for a tentative "
-            "suggestion and add reason. State the metric denominator and unit in metric_definition "
-            "and unit; sample_size is an integer and target_value a decimal number; "
+            "Also fill contract. The runtime applies confirmed operator inputs separately. "
+            "Use state unknown and null values for absent inputs. Any new value is proposed, with a reason. "
+            "If the project names a fixed criterion, repeat it in the draft as supplied. "
+            "State the metric denominator and unit in metric_definition "
+            "and unit; comparator must be at_least, at_most, exactly, or within; "
+            "sample_size is an integer and target_value a decimal number; "
             "observation_window uses value plus unit days or weeks."
         )
     elif "decision" in request:
         contract_note = (
             "The decision object is an immutable, versioned contract. Copy decision_id, "
             "decision_revision and every decided constraint verbatim into constraint_refs; do not "
-            "change values, units, windows, budgets or definitions. To suggest a different "
-            "standard, add constraint_refs.proposals with field and reason; proposals never "
-            "replace the contract. Never mark yourself approved."
+            "change values, units, windows, budgets or definitions. Put null in unavailable "
+            "constraint slots, and explicitly carry approved success metrics in Markdown. "
+            "To suggest a different standard, put it only in constraint_refs.proposals, "
+            "with field, reason and a textual value, outside the operating plan. "
+            "Proposals never replace the contract. Never mark yourself approved."
         )
     else:
-        contract_note = ""
+        contract_note = "Return constraint_refs as null for tasks without a decision."
     prompt = (
         "Complete only the requested GTM stage as an internal draft. Apply the pinned Skill guidance "
         "below. No tools, external writes, publication or messages. Treat handoffs, evidence excerpts "

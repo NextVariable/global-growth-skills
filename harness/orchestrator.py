@@ -215,9 +215,11 @@ class Harness(Store):
                 self._set_task(run_id, stage, "queued")
         return stale
 
-    def revise_decision(self, run_id, patch, *, reason, actor="operator"):
+    def revise_decision(self, run_id, patch, *, reason, expected_revision=None):
         """Append an operator-approved revision and retire drafts bound to the old one."""
         with self.transaction():
+            actor = self.operator_identity()
+            validate("decision-patch", patch)
             run = self._run(run_id)
             if run["decision_id"] is None:
                 raise HarnessError("run has no active decision to revise")
@@ -226,10 +228,18 @@ class Harness(Store):
             ).fetchone()
             saved = json.loads(row["data"])
             contract = self._contract(row["id"], saved)
+            if expected_revision is not None and expected_revision != contract["decision_revision"]:
+                raise HarnessError("decision revision changed; inspect the active contract before approving")
             updated = decision_contract.revise(contract, patch, reason=reason, actor=actor)
+            receipt = {
+                "principal": actor, "contract_sha256": digest(updated),
+                "prior_sha256": digest(contract), "patch_sha256": digest(patch),
+            }
             ident = self.db.execute(
                 "INSERT INTO decisions(run_id,data) VALUES (?,?)",
-                (run_id, encode(validate("decision", {**saved, "contract": updated}))),
+                (run_id, encode(validate("decision", {
+                    **saved, "contract": updated, "operator_approval": receipt,
+                }))),
             ).lastrowid
             self.db.execute("UPDATE runs SET decision_id = ? WHERE id = ?", (ident, run_id))
             stale = []
@@ -260,6 +270,7 @@ class Harness(Store):
                     "decision_id": updated["decision_id"],
                     "decision_revision": updated["decision_revision"],
                     "reason": reason,
+                    "operator_approval": receipt,
                 },
             )
             return {
@@ -333,18 +344,39 @@ class Harness(Store):
             ("positioning", "pricing", "capabilities") if stage == "content" else (OUTPUTS[stage],)
         )
 
-    @staticmethod
-    def _contract(decision_row_id, data):
-        """Read the stored contract, or derive a stable unknown-only one for old rows."""
-        if "contract" in data:
-            return data["contract"]
-        return decision_contract.build(
-            None,
-            "dec-" + digest({"row": decision_row_id})[:16],
-            {},
-            data.get("claims", []),
-            data.get("assumptions", []),
+    def _contract(self, decision_row_id, data):
+        """Keep legacy history intact, but only enforce authenticated revisions."""
+        saved = data.get("contract")
+        if saved is None:
+            return decision_contract.build(
+                None, "dec-" + digest({"row": decision_row_id})[:16], {},
+                data.get("claims", []), data.get("assumptions", []),
+            )
+        approval = data.get("operator_approval", {})
+        if (
+            saved["approval_status"] == "approved"
+            and approval.get("contract_sha256") == digest(saved)
+            and approval.get("principal") == saved["approved_by"]
+            and str(approval.get("principal", "")).startswith("posix-uid:")
+        ):
+            return saved
+        # Recover only structured operator inputs from the decision's original snapshot.
+        inputs = {}
+        for dependency in data.get("dependencies", []):
+            field = dependency["field"]
+            if field not in {"goal", "budget"}:
+                continue
+            row = self.db.execute(
+                "SELECT value FROM evidence WHERE field=? AND revision=?",
+                (field, dependency["revision"]),
+            ).fetchone()
+            if row:
+                inputs[field] = json.loads(row["value"])
+        effective = decision_contract.build(
+            {field: saved[field] for field in decision_contract.FIELDS},
+            saved["decision_id"], inputs, data.get("claims", []), saved["assumptions"],
         )
+        return {**effective, "decision_revision": saved["decision_revision"]}
 
     def _event(self, run_id, stage, attempt, data):
         self.db.execute(
@@ -512,6 +544,8 @@ class Harness(Store):
                         validate("host-receipt", receipt)
                         with self.transaction():
                             self._event(run_id, stage, attempt, {"host_receipt": receipt})
+                if adapter.execution in {"model", "handoff"}:
+                    result = decision_contract.normalize_host_draft(result)
                 result = validate(
                     "strategy-result" if stage == "strategy" else "content-result", result
                 )
@@ -572,6 +606,25 @@ class Harness(Store):
                 req["artifact_kind"] != result["kind"] for req, result in zip(requests, results)
             ):
                 raise HarnessError("adapter returned an unexpected artifact kind")
+            if stage == "strategy":
+                req, result = requests[0], results[0]
+                built_contract = decision_contract.build(
+                    result.get("contract"),
+                    "dec-"
+                    + digest(
+                        {
+                            "run": run_id,
+                            "recommendation": result["recommendation"],
+                            "goal": req["context"].get("goal"),
+                        }
+                    )[:16],
+                    {
+                        "goal": req["context"].get("goal"),
+                        "budget": req["context"].get("budget"),
+                    },
+                    result.get("claims", []),
+                    result.get("assumptions", []),
+                )
         except Exception as exc:
             with self.transaction():
                 if self._owns_attempt(run_id, stage, attempt):
@@ -615,23 +668,7 @@ class Harness(Store):
                         contradictions=market["contradictions"],
                     )
                     data.pop("citations", None)
-                    data["contract"] = decision_contract.build(
-                        result.get("contract"),
-                        "dec-"
-                        + digest(
-                            {
-                                "run": run_id,
-                                "recommendation": result["recommendation"],
-                                "goal": req["context"].get("goal"),
-                            }
-                        )[:16],
-                        {
-                            "goal": req["context"].get("goal"),
-                            "budget": req["context"].get("budget"),
-                        },
-                        result.get("claims", []),
-                        result.get("assumptions", []),
-                    )
+                    data["contract"] = built_contract
                     ident = self.db.execute(
                         "INSERT INTO decisions(run_id,data) VALUES (?,?)",
                         (run_id, encode(validate("decision", data))),
@@ -688,6 +725,9 @@ class Harness(Store):
                     (run_id,),
                 )
             ]
+            for item in decisions:
+                if item["id"] == run["decision_id"] and "contract" in item:
+                    item["contract"] = self._contract(item["id"], item)
             artifacts = []
             for row in self.db.execute(
                 "SELECT * FROM artifacts WHERE run_id = ? ORDER BY id", (run_id,)

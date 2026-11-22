@@ -2,9 +2,10 @@
 
 A downstream draft may copy the approved constraints or propose new ones. It
 cannot change an approved constraint without an operator-approved revision.
-The gate reads structured fields only; free text can raise a separate warning
-but never decides consistency.
+The deterministic gate validates declarations. Draft prose requires independent review.
 """
+
+import math
 
 from .contracts import HarnessError
 
@@ -101,7 +102,10 @@ def _value(name, raw):
         if name in INTEGER_FIELDS:
             if type(value) is not int or value < 0:
                 raise HarnessError(f"decided {name} needs a non-negative integer value")
-        elif type(value) not in {int, float} or type(value) is bool or value < 0:
+        elif (
+            type(value) not in {int, float} or value < 0
+            or (type(value) is float and not math.isfinite(value))
+        ):
             raise HarnessError(f"decided {name} needs a non-negative number value")
         out = {"value": value}
     elif name in WINDOW_FIELDS:
@@ -130,6 +134,25 @@ def _value(name, raw):
     return out
 
 
+def normalize_host_draft(result):
+    """Translate required-but-nullable host slots to the existing storage format."""
+    if not isinstance(result, dict):
+        return result
+
+    def without_nulls(value):
+        if isinstance(value, dict):
+            return {key: without_nulls(item) for key, item in value.items() if item is not None}
+        if isinstance(value, list):
+            return [without_nulls(item) for item in value]
+        return value
+
+    return {
+        key: without_nulls(value) if key in {"contract", "constraint_refs"} else value
+        for key, value in result.items()
+        if key != "constraint_refs" or value is not None
+    }
+
+
 def build(raw, decision_id, values, claims=(), assumptions=()):
     """Build revision 1 from operator inputs plus an optional model proposal.
 
@@ -146,7 +169,10 @@ def build(raw, decision_id, values, claims=(), assumptions=()):
                 "decision contract has unknown fields: " + ", ".join(sorted(extra))
             )
         for name, slot in raw.items():
-            contract[name] = _slot(name, slot)
+            normalized = _slot(name, slot)
+            if normalized["state"] == "decided":
+                normalized["state"] = "proposed"
+            contract[name] = normalized
     # Operator inputs override model guesses for the constraints they actually supplied.
     goal = values.get("goal")
     if not _blank(goal):
@@ -234,7 +260,10 @@ def _same(field, expected, actual):
     if field in WINDOW_FIELDS:
         if type(actual.get("value")) is not int or actual.get("unit") not in {"days", "weeks"}:
             return False
-        return _window_days(expected) == _window_days(actual)
+        return (
+            _window_days(expected) == _window_days(actual)
+            and expected.get("description") == actual.get("description")
+        )
     if field in NUMBER_FIELDS:
         value = actual.get("value")
         if field in INTEGER_FIELDS:
@@ -269,7 +298,7 @@ def _summary(name, slot):
     return {"value": slot.get("value"), "unit": slot.get("unit")}
 
 
-def markdown_lines(contract):
+def markdown_lines(contract, *, format_text=str):
     """Render the contract without turning proposals into approved standards."""
     lines = []
     for field in FIELDS:
@@ -289,7 +318,7 @@ def markdown_lines(contract):
             detail = str(slot["value"])
             if slot.get("unit"):
                 detail += f" ({slot['unit']})"
-        lines.append(f"- **{field}** · {detail}")
+        lines.append(f"- **{field}** · {format_text(detail)}")
     return lines
 
 
@@ -338,7 +367,11 @@ def check(contract, declared):
         if expected["state"] == "decided":
             if actual is None:
                 drift.append({"field": field, "kind": "omitted"})
-            elif not isinstance(actual, dict) or not _same(field, expected, actual):
+            elif (
+                not isinstance(actual, dict)
+                or actual.get("state") != "decided"
+                or not _same(field, expected, actual)
+            ):
                 drift.append(
                     {
                         "field": field,

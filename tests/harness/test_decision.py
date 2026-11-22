@@ -1,8 +1,10 @@
 import copy
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from harness import decision as dc
 from harness.contracts import HarnessError, ROOT, validate
@@ -81,11 +83,19 @@ class DecisionContractTests(unittest.TestCase):
         self.path = Path(tmp.name) / "project.sqlite"
         self.h = Harness(self.path)
         self.addCleanup(self.h.close)
+        if not hasattr(os, "geteuid"):
+            fixture_identity = patch.object(Harness, "operator_identity", return_value="posix-uid:1000")
+            fixture_identity.start()
+            self.addCleanup(fixture_identity.stop)
         self.h.initialize(copy.deepcopy(PROJECT))
         self.h.start("run", "handoff", stages=list(STAGES))
 
     def contract(self):
         return self.h.status("run")["decisions"][-1]["contract"]
+
+    def approve_seed(self):
+        self.h.step("run", scripted())
+        self.h.revise_decision("run", CONTRACT, reason="fixture approval", expected_revision=1)
 
     def test_contract_starts_pending_with_typed_constraints(self):
         self.h.step("run", scripted())
@@ -94,7 +104,7 @@ class DecisionContractTests(unittest.TestCase):
         self.assertEqual(contract["approval_status"], "pending")
         self.assertEqual(contract["change_initiator"], "model")
         self.assertEqual(contract["primary_metric"]["value"], "qualified independent completions")
-        self.assertEqual(contract["sample_size"], {"state": "decided", "value": 2, "unit": "participant"})
+        self.assertEqual(contract["sample_size"], {"state": "proposed", "value": 2, "unit": "participant"})
         self.assertEqual(contract["observation_window"]["value"], 14)
         validate("decision-contract", contract)
 
@@ -122,7 +132,7 @@ class DecisionContractTests(unittest.TestCase):
         self.assertEqual(outcome["drift"][0]["kind"], "fabricated")
 
     def test_acquisition_cannot_change_two_people_to_three(self):
-        self.h.step("run", scripted())
+        self.approve_seed()
         self.h.step("run", scripted())
 
         def to_three(declared):
@@ -144,7 +154,7 @@ class DecisionContractTests(unittest.TestCase):
         self.assertEqual(self.contract()["sample_size"]["value"], 2)
 
     def test_experiments_cannot_assert_an_unapproved_sixty_percent_standard(self):
-        self.h.step("run", scripted())
+        self.approve_seed()
         self.h.step("run", scripted())
         self.h.step("run", scripted())
         self.h.step("run", scripted())
@@ -169,6 +179,7 @@ class DecisionContractTests(unittest.TestCase):
         draft = copy.deepcopy(CONTRACT)
         draft["target_value"] = {"state": "decided", "value": 60.0, "unit": "percent"}
         contract = dc.build(draft, "dec-0123456789abcdef", {"goal": "x"})
+        contract = dc.revise(contract, draft, reason="fixture approval", actor="posix-uid:1000")
         self.assertEqual(
             contract["target_value"],
             {"state": "decided", "value": 60.0, "unit": "percent"},
@@ -195,6 +206,7 @@ class DecisionContractTests(unittest.TestCase):
         contract = dc.build(
             copy.deepcopy(CONTRACT), "dec-0123456789abcdef", {"goal": "x"}
         )
+        contract = dc.revise(contract, CONTRACT, reason="fixture approval", actor="posix-uid:1000")
         declared = dc.declaration(contract)
         declared["constraints"]["target_value"] = {
             "state": "decided",
@@ -210,6 +222,7 @@ class DecisionContractTests(unittest.TestCase):
         contract = dc.build(
             copy.deepcopy(CONTRACT), "dec-0123456789abcdef", {"goal": "x"}
         )
+        contract = dc.revise(contract, CONTRACT, reason="fixture approval", actor="posix-uid:1000")
         declared = dc.declaration(contract)
         del declared["constraints"]["independence_conditions"]
         declared["constraints"]["budget_constraints"] = {
@@ -232,6 +245,7 @@ class DecisionContractTests(unittest.TestCase):
         contract = dc.build(
             copy.deepcopy(CONTRACT), "dec-0123456789abcdef", {"goal": "x"}
         )
+        contract = dc.revise(contract, CONTRACT, reason="fixture approval", actor="posix-uid:1000")
         declared = dc.declaration(contract)
         declared["constraints"]["metric_definition"] = {
             "state": "decided",
@@ -251,7 +265,7 @@ class DecisionContractTests(unittest.TestCase):
                 }
             ]
 
-        self.h.step("run", scripted())
+        self.approve_seed()
         self.h.step("run", scripted())
         result = self.h.step(
             "run", scripted(**{"launch-plan": propose})
@@ -311,7 +325,6 @@ class DecisionContractTests(unittest.TestCase):
                 }
             },
             reason="Operator approved a wider pilot",
-            actor="operator",
         )
         self.assertEqual(result["decision_revision"], 2)
         status = self.h.status("run")
@@ -319,7 +332,12 @@ class DecisionContractTests(unittest.TestCase):
         self.assertEqual(revisions, [1, 2])
         self.assertEqual(status["decisions"][1]["contract"]["approval_status"], "approved")
         self.assertEqual(status["decisions"][1]["contract"]["change_reason"], "Operator approved a wider pilot")
-        self.assertEqual(status["decisions"][1]["contract"]["approved_by"], "operator")
+        self.assertEqual(
+            status["decisions"][1]["contract"]["approved_by"], self.h.operator_identity()
+        )
+        self.assertEqual(
+            status["decisions"][1]["operator_approval"]["principal"], self.h.operator_identity()
+        )
         self.assertEqual(status["decisions"][1]["contract"]["change_initiator"], "human")
         active = {a["kind"]: a for a in status["artifacts"] if a["status"] == "draft"}
         self.assertEqual(set(active), {"pricing", "capabilities"})
@@ -380,7 +398,7 @@ class DecisionContractTests(unittest.TestCase):
         self.assertEqual(self.contract()["sample_size"]["value"], 3)
 
     def test_strategy_two_then_acquisition_three_then_experiments_sixty(self):
-        self.h.step("run", scripted())
+        self.approve_seed()
         self.h.step("run", scripted())
 
         def to_three(declared):
@@ -445,6 +463,70 @@ class DecisionContractTests(unittest.TestCase):
         )
         self.assertEqual(launch["status"], "failed")
         self.assertIn("stale_version", launch["detail"])
+
+    def test_invalid_runtime_slot_leaves_retryable_failure(self):
+        adapter = scripted()
+        execute = adapter.execute
+
+        def invalid(request):
+            result = execute(request)
+            result["contract"]["comparator"]["value"] = "not-a-comparator"
+            return result
+
+        adapter.execute = invalid
+        with self.assertRaisesRegex(HarnessError, "attempt failed"):
+            self.h.step("run", adapter)
+        self.assertEqual(self.h.status("run")["tasks"][0]["status"], "failed")
+        self.assertEqual(self.h.step("run", scripted(), retry=True)["tasks"][0]["status"], "succeeded")
+
+    def test_matching_refs_with_conflicting_prose_require_independent_review(self):
+        self.approve_seed()
+        adapter = scripted()
+        execute = adapter.execute
+
+        def conflicting(request):
+            result = execute(request)
+            if request.get("artifact_kind") == "launch-plan":
+                result["markdown"] = "Proceed only if 3 people finish and conversion reaches 60%."
+            return result
+
+        adapter.execute = conflicting
+        for _ in range(4):
+            state = self.h.step("run", adapter)
+        launch = next(a for a in state["artifacts"] if a["kind"] == "launch-plan")
+        self.assertEqual(launch["constraint_check"]["status"], "consistent")
+        package = snapshot(state, [])
+        self.assertEqual(package["status"], "needs_decision_review")
+        self.assertIn({"kind": "launch-plan", "id": launch["id"]}, package["decision_review"]["records"])
+        self.assertIn("Independent decision review required", markdown(package))
+
+    def test_review_identity_cannot_come_from_patch_or_stale_request(self):
+        self.h.step("run", scripted())
+        with self.assertRaises(HarnessError):
+            self.h.revise_decision("run", {"approved_by": "operator"}, reason="spoof")
+        with self.assertRaisesRegex(HarnessError, "revision changed"):
+            self.h.revise_decision("run", CONTRACT, reason="old approval", expected_revision=99)
+        self.assertEqual(self.contract()["approval_status"], "pending")
+
+    @unittest.skipUnless(hasattr(os, "geteuid"), "POSIX database ownership boundary")
+    def test_revision_refuses_shared_database(self):
+        self.h.step("run", scripted())
+        self.path.chmod(0o644)
+        with self.assertRaisesRegex(HarnessError, "owner-only"):
+            self.h.revise_decision("run", CONTRACT, reason="shared file")
+
+    def test_unattested_legacy_approval_downgrades_without_rewriting_history(self):
+        self.h.step("run", scripted())
+        row = self.h.db.execute("SELECT id,data FROM decisions").fetchone()
+        data = json.loads(row["data"])
+        data["contract"] = dc.revise(data["contract"], CONTRACT, reason="legacy", actor="operator")
+        self.h.db.execute("UPDATE decisions SET data=? WHERE id=?", (json.dumps(data), row["id"]))
+        effective = self.contract()
+        self.assertEqual(effective["sample_size"]["state"], "proposed")
+        self.assertEqual(effective["decision_revision"], 2)
+        self.assertEqual(effective["approval_status"], "pending")
+        stored = self.h.db.execute("SELECT data FROM decisions").fetchone()[0]
+        self.assertEqual(json.loads(stored)["contract"]["approval_status"], "approved")
 
     def test_resume_uses_the_same_contract_revision(self):
         self.h.step("run", scripted())

@@ -40,13 +40,35 @@ class CodexHostTests(unittest.TestCase):
         self.assertEqual(set(strategy["properties"]), set(strategy["required"]))
         self.assertIn("contract", strategy["required"])
         launch = output_schema("launch")
-        self.assertEqual(
-            set(launch["properties"]) - {"constraint_refs"}, set(launch["required"])
-        )
+        self.assertEqual(set(launch["properties"]), set(launch["required"]))
+        self.assertIn({"type": "null"}, launch["properties"]["constraint_refs"]["anyOf"])
         for schema in (strategy, launch):
             fields = schema["properties"]["claims"]["items"]
             self.assertEqual(set(fields["properties"]), set(fields["required"]))
             self.assertEqual(set(fields["required"]), {"source_id", "quote", "text"})
+
+    def test_decision_schemas_use_the_strict_host_subset_recursively(self):
+        from jsonschema import Draft202012Validator
+
+        def visit(node):
+            self.assertFalse(
+                set(node) & {"$ref", "$defs", "allOf", "if", "then", "else", "not"}
+            )
+            if node.get("type") == "object":
+                self.assertEqual(set(node["properties"]), set(node["required"]))
+                self.assertIs(node["additionalProperties"], False)
+                for prop in node["properties"].values():
+                    visit(prop)
+            for branch in node.get("anyOf", []):
+                visit(branch)
+            if "items" in node:
+                visit(node["items"])
+
+        for stage in ("strategy", "content", "launch", "sales", "experiments"):
+            schema = output_schema(stage)
+            self.assertEqual(schema["type"], "object")
+            Draft202012Validator.check_schema(schema)
+            visit(schema)
 
     def test_reads_pinned_blob_over_worktree(self):
         prompt, schema, digest, selection = handoff(self.checkout, self.request)

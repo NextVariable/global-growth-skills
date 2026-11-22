@@ -70,14 +70,14 @@ Harness 合并重复项、记录来源时效、冲突和证据缺口。文本规
 }
 ```
 
-Positioning、launch、sales 和 experiments 必须返回 `constraint_refs`，逐字复制 `decision_id`、`decision_revision` 和所有 `decided` 约束。Harness 在写入草稿前做确定性比对：复制允许；缺字段、改数值、改单位、改分母、改时间窗、改预算币种或金额、放宽独立条件、把未知字段写成具体值，以及复用旧 revision，都会使该阶段尝试失败且不写入产物。`proposals` 只能作为新建议保存，不能替换契约；没有理由的 proposal 会被 schema 拒绝，proposal 也不会被导出为 approved。自由文本只用于人工阅读，不参与一致性判定。
+Positioning、launch、sales 和 experiments 必须返回 `constraint_refs`，逐字复制 `decision_id`、`decision_revision` 和所有 `decided` 约束。Harness 在写入草稿前做确定性比对：复制允许；缺字段、改数值、改单位、改分母、改时间窗、改预算币种或金额、放宽独立条件、把未知字段写成具体值，以及复用旧 revision，都会使该阶段尝试失败且不写入产物。`proposals` 只能作为新建议保存，不能替换契约；没有理由的 proposal 会被 schema 拒绝，proposal 也不会被导出为 approved。结构化匹配只核对声明。模型与手工交接的决策正文进入独立复核，产物包标记 `needs_decision_review`，并列出要复核的记录。新业务值由模型提出时保持 `proposed`，项目输入的目标和预算可直接成为已定约束。
 
 ```sh
 python3 -m harness --db "$db" revise-decision RUN patch.json \
-  --reason "Operator approved a wider pilot" --actor operator
+  --reason "Operator approved a wider pilot" --expected-revision 1
 ```
 
-修订由操作者命令发起，新增一行 decision 并保留旧版本；`decision_revision` 递增，记录 `change_reason`、`change_initiator` 和 `approved_by`。引用旧 decision 行的草稿标记为 stale，相关阶段重新排队；pricing 和 capabilities 等不依赖决策的产物保留。模型不能在自己的输出里设置 `approval_status`，也不能自称 approved，schema 与运行时都会拒绝。恢复运行时只使用当前激活的 revision，不混用新旧约束。
+修订由拥有私有数据库的本机 POSIX 帐号发起。系统从进程身份取得批准主体，并绑定原契约、补丁与新契约摘要。Windows 保留读取与草拟，审批修订需要 POSIX 宿主。历史记录保留，缺可信回执的旧批准活跃视图降为待确认。修订新增一行 decision；`decision_revision` 递增，记录 `change_reason`、`change_initiator` 和 `approved_by`。引用旧 decision 行的草稿标记为 stale，相关阶段重新排队；pricing 和 capabilities 等不依赖决策的产物保留。模型不能在自己的输出里设置 `approval_status`，也不能自称 approved，schema 与运行时都会拒绝。恢复运行时只使用当前激活的 revision，不混用新旧约束。
 
 ### 公开网页 Provider
 
@@ -85,7 +85,7 @@ python3 -m harness --db "$db" revise-decision RUN patch.json \
 
 ### 审计与质量
 
-`audit RUN` 输出 claim 映射、来源时效、注入标记、证据缺口和质量评分卡；包为 `incomplete_evidence` 时退出码为 2。评分卡检查交付物结构、指标公式/分母/护栏/判定规则、假设分离和跨阶段受众/价格/预算一致性。它是确定性结构检查，不判断语义真伪，也不代表真实客户效果。`doctor` 检查 Python、jsonschema、数据库路径和 Codex CLI。
+`audit RUN` 输出 claim 映射、来源时效、注入标记、证据缺口和质量评分卡；包为 `incomplete_evidence` 或 `needs_decision_review` 时退出码为 2。评分卡检查交付物结构、指标公式/分母/护栏/判定规则、假设分离和跨阶段受众/价格/预算一致性。它是确定性结构检查，不判断语义真伪，也不代表真实客户效果。`doctor` 检查 Python、jsonschema、数据库路径和 Codex CLI。
 
 `export RUN` 默认输出 Markdown，`--format json` 附完整的引用检查、可用来源、尝试记录和依赖。部分运行明确标为 incomplete，过期产物用历史 ID 标识。导出的文字均须人工审核后才可使用。
 

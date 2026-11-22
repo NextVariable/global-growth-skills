@@ -4,6 +4,7 @@ from contextlib import contextmanager
 import os
 from pathlib import Path
 import sqlite3
+import stat
 
 from .contracts import HarnessError, ROOT
 
@@ -47,6 +48,7 @@ class Store:
             pass
         else:
             os.close(fd)
+        self.path = path
         self.db = sqlite3.connect(path, isolation_level=None, timeout=5)
         self.db.row_factory = sqlite3.Row
         self.db.execute("PRAGMA foreign_keys = ON")
@@ -83,6 +85,16 @@ class Store:
         except BaseException:
             self.db.close()
             raise
+
+    def operator_identity(self):
+        """Authorize local decision changes for a private POSIX database owner."""
+        if not hasattr(os, "geteuid"):
+            raise HarnessError("decision approval requires a local POSIX database owner")
+        info = self.path.stat()
+        uid = os.geteuid()
+        if not stat.S_ISREG(info.st_mode) or info.st_uid != uid or info.st_mode & 0o077:
+            raise HarnessError("decision approval requires an owner-only project database")
+        return f"posix-uid:{uid}"
 
     def close(self):
         self.db.close()

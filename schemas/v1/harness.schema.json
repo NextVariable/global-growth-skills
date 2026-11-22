@@ -296,6 +296,34 @@
           "minLength": 1,
           "maxLength": 20000
         },
+        "operator_approval": {
+          "type": "object",
+          "required": [
+            "principal",
+            "contract_sha256",
+            "prior_sha256",
+            "patch_sha256"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "principal": {
+              "type": "string",
+              "pattern": "^posix-uid:[0-9]+$"
+            },
+            "contract_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "prior_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "patch_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
         "contract": {
           "$ref": "#/$defs/decision-contract"
         },

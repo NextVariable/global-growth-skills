@@ -26,10 +26,24 @@ def snapshot(state, receipts):
     records = ([("strategy", decision)] if decision else []) + [(a["kind"], a) for a in active]
     audits = [item.get("evidence_audit") or {} for _, item in records]
     quality = assess(state)
+    review_records = [
+        {"kind": label, "id": item["id"]}
+        for label, item in records
+        if decision
+        and decision.get("contract")
+        and item.get("execution", state["execution"]) in {"model", "handoff"}
+        and (label == "strategy" or item.get("decision_id") == decision["id"])
+    ]
+    decision_review = {
+        "status": "required" if review_records else "not_applicable",
+        "records": review_records,
+    }
     if not all(t["status"] == "succeeded" for t in state["tasks"]):
         status = "incomplete"
     elif any(audit.get("status") == "missing_claims" for audit in audits):
         status = "incomplete_evidence"
+    elif review_records:
+        status = "needs_decision_review"
     elif any(
         audit.get("status") in {"needs_review", "unsupported_claims", "partial", "conflict"}
         for audit in audits
@@ -54,6 +68,7 @@ def snapshot(state, receipts):
         "decision": decision,
         "artifacts": active,
         "quality": quality,
+        "decision_review": decision_review,
         "historical_artifact_ids": [a["id"] for a in state["artifacts"] if a["status"] == "stale"],
         "tasks": state["tasks"],
         "evidence_review": sources,
@@ -137,6 +152,12 @@ def markdown(package):
         if field in context["values"]:
             lines.append(f"- **{field}** · {_text(_field_value(context['values'][field]))}")
     lines += ["", *[f"- `{t['stage']}` · {t['status']}" for t in package["tasks"]], ""]
+    if package["decision_review"]["status"] == "required":
+        lines += [
+            "**Independent decision review required.** The declaration check covers structured "
+            "values only. Compare the generated prose with the approved contract before use.",
+            "",
+        ]
     decision = package["decision"]
     if decision:
         lines += [
@@ -152,7 +173,7 @@ def markdown(package):
             lines += [
                 f"Decision contract `{contract['decision_id']}` · revision {contract['decision_revision']} · approval `{contract['approval_status']}`",
                 "",
-                *contract_lines(contract),
+                *contract_lines(contract, format_text=_text),
                 "",
             ]
             if contract.get("change_reason"):
@@ -176,7 +197,7 @@ def markdown(package):
         check = a.get("constraint_check")
         if check:
             lines += [
-                f"Constraints `{check['status']}` · decision revision {check['decision_revision']}",
+                f"Structured references `{check['status']}` · decision revision {check['decision_revision']}",
                 "",
             ]
             for proposal in check.get("proposals") or []:
