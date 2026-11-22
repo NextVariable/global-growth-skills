@@ -67,6 +67,15 @@ class WebResearchTests(unittest.TestCase):
                 resolve=lambda host: ["10.0.0.5"],
                 clock=lambda: NOW,
             )
+        for host in ("100.64.0.1", "192.0.2.1", "198.18.0.1", "240.0.0.1", "::ffff:127.0.0.1"):
+            with self.subTest(host=host):
+                with self.assertRaisesRegex(HarnessError, "private|reserved"):
+                    fetch(
+                        {"url": f"https://[{host}]/x" if ":" in host else f"https://{host}/x", "topic": "market"},
+                        get=get_ok(),
+                        resolve=resolve_public,
+                        clock=lambda: NOW,
+                    )
 
     def test_non_public_urls_are_refused(self):
         for url in ("http://example.com/x", "https://user:pass@example.com/x", "https://example.com:8443/x"):

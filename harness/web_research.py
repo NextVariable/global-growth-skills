@@ -83,6 +83,24 @@ def _collapse(text):
     return re.sub(r"\s+", " ", text).strip()
 
 
+def _public_address(value):
+    try:
+        address = ipaddress.ip_address(value)
+    except ValueError:
+        raise HarnessError("web research received an invalid address") from None
+    if (
+        not address.is_global
+        or address.is_private
+        or address.is_loopback
+        or address.is_link_local
+        or address.is_reserved
+        or address.is_multicast
+        or address.is_unspecified
+    ):
+        raise HarnessError("web research refuses private or reserved addresses")
+    return str(address)
+
+
 def _url(url):
     if not isinstance(url, str) or len(url) > 2000 or any(ord(c) < 32 for c in url):
         raise HarnessError("provide one absolute public HTTPS URL")
@@ -102,8 +120,8 @@ def _url(url):
         literal = ipaddress.ip_address(host)
     except ValueError:
         literal = None
-    if literal is not None and not literal.is_global:
-        raise HarnessError("web research refuses private or reserved addresses")
+    if literal is not None:
+        _public_address(host)
     cleaned = urlunsplit(("https", host, parts.path or "/", parts.query, ""))
     return parts, cleaned
 
@@ -128,13 +146,7 @@ def _validated_addresses(host, resolve):
         raise HarnessError("web research could not resolve the public host")
     validated = []
     for value in addresses:
-        try:
-            address = ipaddress.ip_address(value)
-        except ValueError:
-            raise HarnessError("web research received an invalid address") from None
-        if not address.is_global:
-            raise HarnessError("web research refuses hosts resolving to private or reserved addresses")
-        validated.append(str(address))
+        validated.append(_public_address(value))
     return validated
 
 
@@ -268,14 +280,15 @@ def fetch(query, *, get=None, resolve=_default_resolve, clock=lambda: datetime.n
 def verify_capture(row):
     capture = row.get("capture") or {}
     facts = capture.get("facts") or {}
-    expected = "web-" + digest(capture.get("requested_url", "").casefold())[:20]
-    requested = urlsplit(str(capture.get("requested_url", "")))
+    requested_url = str(capture.get("requested_url", ""))
+    expected = "web-" + digest(requested_url.casefold())[:20]
+    requested = urlsplit(requested_url)
     endpoint = urlsplit(str(capture.get("endpoint", "")))
     if (
         capture.get("provider") != PROVIDER
-        or row["id"] != expected
-        or row["url"] != capture.get("requested_url")
-        or facts.get("url") != row["url"]
+        or row.get("id") != expected
+        or row.get("url") != requested_url
+        or facts.get("url") != row.get("url")
         or capture.get("http_status") != 200
         or facts.get("http_status") != 200
         or not re.fullmatch(r"[0-9a-f]{64}", facts.get("content_sha256", ""))
@@ -288,6 +301,6 @@ def verify_capture(row):
         or requested.scheme != "https"
         or endpoint.scheme != "https"
         or endpoint.hostname != requested.hostname
-        or not row["excerpt"].strip()
+        or not str(row.get("excerpt", "")).strip()
     ):
         raise HarnessError("capture does not match the normalized public web evidence")
