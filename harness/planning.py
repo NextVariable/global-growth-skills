@@ -16,7 +16,11 @@ HANDOFF_KINDS = {
     "sales": ("positioning", "pricing", "capabilities"),
     "experiments": ("positioning", "launch-plan", "sales-plan"),
 }
-OUTPUTS = {"launch": "launch-plan", "sales": "sales-plan", "experiments": "experiment-plan"}
+OUTPUTS = {
+    "launch": "launch-plan",
+    "sales": "sales-plan",
+    "experiments": "experiment-plan",
+}
 ALIASES = {
     "strategy": ("strategy", "market", "战略", "市场"),
     "content": ("content", "copy", "内容", "文案"),
@@ -29,11 +33,19 @@ ALIASES = {
 def plan(stages=None, goal=None):
     if stages is None and goal:
         lower = goal.casefold()
-        stages = list(ROLES) if any(s in lower for s in ("full workflow", "完整", "全链路")) else [
-            role for role, aliases in ALIASES.items() if any(alias in lower for alias in aliases)
-        ]
+        stages = (
+            list(ROLES)
+            if any(s in lower for s in ("full workflow", "完整", "全链路"))
+            else [
+                role
+                for role, aliases in ALIASES.items()
+                if any(alias in lower for alias in aliases)
+            ]
+        )
         if not stages:
-            raise HarnessError("goal did not select a stage; specify --stages explicitly")
+            raise HarnessError(
+                "goal did not select a stage; specify --stages explicitly"
+            )
     if stages is None:
         stages = DEFAULT
     if not stages or len(set(stages)) != len(stages) or set(stages) - ROLES.keys():

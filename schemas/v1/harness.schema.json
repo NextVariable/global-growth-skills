@@ -74,6 +74,9 @@
                 "maxLength": 20000
               },
               "minItems": 0
+            },
+            "market_sources": {
+              "$ref": "#/$defs/source-list"
             }
           }
         }
@@ -152,6 +155,9 @@
                 "maxLength": 20000
               },
               "minItems": 0
+            },
+            "market_sources": {
+              "$ref": "#/$defs/source-list"
             }
           }
         }
@@ -173,7 +179,8 @@
             "audience",
             "goal",
             "price",
-            "capabilities"
+            "capabilities",
+            "market_sources"
           ]
         },
         "revision": {
@@ -203,12 +210,13 @@
             "audience",
             "goal",
             "price",
-            "capabilities"
+            "capabilities",
+            "market_sources"
           ]
         },
         "revision": {
           "type": "integer",
-          "minimum": 1
+          "minimum": 0
         }
       }
     },
@@ -236,8 +244,34 @@
         "execution": {
           "enum": [
             "fixture",
-            "model"
+            "model",
+            "handoff"
           ]
+        },
+        "market_status": {
+          "enum": [
+            "needs_review",
+            "sources_available"
+          ]
+        },
+        "citation_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/run-id"
+          }
+        },
+        "contradictions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/run-id"
+          }
+        },
+        "eligible_citation_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/run-id"
+          },
+          "uniqueItems": true
         }
       }
     },
@@ -288,7 +322,8 @@
         "execution": {
           "enum": [
             "fixture",
-            "model"
+            "model",
+            "handoff"
           ]
         },
         "sha256": {
@@ -301,6 +336,12 @@
             "type": "integer",
             "minimum": 1
           }
+        },
+        "market_status": {
+          "enum": [
+            "needs_review",
+            "sources_available"
+          ]
         }
       }
     },
@@ -354,6 +395,13 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 20000
+        },
+        "citations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/run-id"
+          },
+          "uniqueItems": true
         }
       }
     },
@@ -498,6 +546,9 @@
                 "maxLength": 20000
               },
               "minItems": 0
+            },
+            "market_sources": {
+              "$ref": "#/$defs/source-list"
             }
           }
         },
@@ -562,6 +613,42 @@
             ],
             "additionalProperties": false
           }
+        },
+        "market_review": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "enum": [
+                "needs_review",
+                "sources_available"
+              ]
+            },
+            "citation_ids": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/run-id"
+              }
+            },
+            "contradictions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/run-id"
+              }
+            },
+            "sources": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          },
+          "required": [
+            "status",
+            "citation_ids",
+            "contradictions",
+            "sources"
+          ],
+          "additionalProperties": false
         }
       }
     },
@@ -617,6 +704,9 @@
             "maxLength": 20000
           },
           "minItems": 0
+        },
+        "market_sources": {
+          "$ref": "#/$defs/source-list"
         }
       },
       "minProperties": 1
@@ -624,6 +714,228 @@
     "run-id": {
       "type": "string",
       "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$"
+    },
+    "operation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/run-id"
+        },
+        "project_id": {
+          "$ref": "#/$defs/run-id"
+        },
+        "kind": {
+          "enum": [
+            "publish",
+            "outreach",
+            "crm_update",
+            "ad_spend"
+          ]
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 5000
+        },
+        "payload": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "kind",
+        "target",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "mock-receipt": {
+      "type": "object",
+      "properties": {
+        "executor": {
+          "const": "mock"
+        },
+        "status": {
+          "const": "confirmed"
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 5000
+        }
+      },
+      "required": [
+        "executor",
+        "status",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/run-id"
+        },
+        "claim_key": {
+          "$ref": "#/$defs/run-id"
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 5000
+        },
+        "observed_on": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "valid_until": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "kind": {
+          "enum": [
+            "observation",
+            "inference",
+            "hypothesis",
+            "unverified"
+          ]
+        },
+        "stance": {
+          "enum": [
+            "supports",
+            "contradicts"
+          ]
+        },
+        "excerpt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 5000
+        },
+        "confidence_basis": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 5000
+        }
+      },
+      "required": [
+        "id",
+        "claim_key",
+        "url",
+        "observed_on",
+        "valid_until",
+        "kind",
+        "stance",
+        "excerpt",
+        "confidence_basis"
+      ],
+      "additionalProperties": false
+    },
+    "source-list": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source"
+      },
+      "maxItems": 50
+    },
+    "handoff-results": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "input_digest",
+          "result"
+        ],
+        "properties": {
+          "input_digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "result": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "host-receipt": {
+      "type": "object",
+      "required": [
+        "host",
+        "requested_model",
+        "skill_document_digest",
+        "status",
+        "calls",
+        "tokens",
+        "duration_ms"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "host": {
+          "const": "codex"
+        },
+        "requested_model": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_.:-]{1,80}$"
+        },
+        "skill_document_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "failed"
+          ]
+        },
+        "calls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tokens": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "input_tokens": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cached_input_tokens": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cache_write_input_tokens": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "output_tokens": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "reasoning_output_tokens": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "exit_code": {
+          "type": "integer"
+        },
+        "error_code": {
+          "type": "string",
+          "pattern": "^[a-z_]{1,50}$"
+        }
+      }
     }
   }
 }

@@ -7,7 +7,9 @@ from pathlib import Path
 from jsonschema import Draft202012Validator
 
 ROOT = Path(__file__).resolve().parents[1]
-SCHEMA = json.loads((ROOT / "schemas/v1/harness.schema.json").read_text(encoding="utf-8"))
+SCHEMA = json.loads(
+    (ROOT / "schemas/v1/harness.schema.json").read_text(encoding="utf-8")
+)
 Draft202012Validator.check_schema(SCHEMA)
 
 
@@ -16,7 +18,13 @@ class HarnessError(Exception):
 
 
 def encode(value):
-    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    return json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    )
 
 
 def digest(value):

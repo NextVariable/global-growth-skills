@@ -4,6 +4,7 @@ import json
 
 from .contracts import HarnessError, digest, encode, validate
 from .registry import skill_registry
+from .research import review
 from .planning import DEFAULT, HANDOFF_KINDS, OUTPUTS, PARENTS, plan
 from .store import Store
 
@@ -30,17 +31,30 @@ class Harness(Store):
             SELECT e.* FROM evidence e
             WHERE revision = (SELECT max(revision) FROM evidence WHERE field = e.field)
         """)
-        return {row["field"]: (json.loads(row["value"]), json.loads(row["data"])) for row in rows}
+        return {
+            row["field"]: (json.loads(row["value"]), json.loads(row["data"]))
+            for row in rows
+            if row["value"] != "null"
+        }
 
     def _save_evidence(self, field, revision, value):
-        evidence = validate("evidence", {
-            "field": field, "revision": revision, "source": "operator_input", "sha256": digest(value)
-        })
-        self.db.execute("INSERT INTO evidence VALUES (?, ?, ?, ?)",
-                        (field, revision, encode(value), encode(evidence)))
+        evidence = validate(
+            "evidence",
+            {
+                "field": field,
+                "revision": revision,
+                "source": "operator_input",
+                "sha256": digest(value),
+            },
+        )
+        self.db.execute(
+            "INSERT INTO evidence VALUES (?, ?, ?, ?)",
+            (field, revision, encode(value), encode(evidence)),
+        )
 
     def initialize(self, data):
         validate("project-input", data)
+        review(data["values"].get("market_sources", []))
         with self.transaction():
             if self.db.execute("SELECT 1 FROM project").fetchone():
                 raise HarnessError("database already has a project")
@@ -50,66 +64,149 @@ class Harness(Store):
 
     def update(self, patch):
         validate("context-patch", patch)
+        if "market_sources" in patch:
+            review(patch["market_sources"])
         with self.transaction():
-            project, inputs = self._project(), self._inputs()
-            changes = {
-                field: value for field, value in patch.items()
-                if field not in inputs or encode(value) != encode(inputs[field][0])
+            return self._apply_patch(patch)
+
+    def restore(self, revision):
+        if type(revision) is not int or revision < 1:
+            raise HarnessError("revision must be a positive integer")
+        with self.transaction():
+            if revision > self._project()["revision"]:
+                raise HarnessError("unknown context revision")
+            old = {
+                row["field"]: json.loads(row["value"])
+                for row in self.db.execute(
+                    """
+                SELECT e.* FROM evidence e WHERE revision = (
+                    SELECT max(revision) FROM evidence WHERE field = e.field AND revision <= ?
+                )""",
+                    (revision,),
+                )
             }
-            revision = project["revision"]
-            if not changes:
-                return {"revision": revision, "stale_artifact_ids": []}
-            revision += 1
-            self.db.execute("UPDATE project SET revision = ?", (revision,))
-            for field, value in changes.items():
-                self._save_evidence(field, revision, value)
-            stale = []
-            for row in self.db.execute("SELECT id, data FROM artifacts WHERE stale = 0").fetchall():
-                deps = json.loads(row["data"])["dependencies"]
-                if any(ref["field"] in changes for ref in deps):
-                    stale.append(row["id"])
-                    self.db.execute("UPDATE artifacts SET stale = 1 WHERE id = ?", (row["id"],))
-            for run in self.db.execute("SELECT id FROM runs").fetchall():
-                run_id = run["id"]
-                for task in self._tasks(run_id):
-                    stage = task["stage"]
-                    fields = set(STRATEGY_FIELDS) if stage == "strategy" else {
-                        f for kind in self._kinds(stage) for f in DRAFT_FIELDS[kind]
-                    }
-                    if not fields & changes.keys():
+            current = self._inputs()
+            return self._apply_patch({**dict.fromkeys(current), **old})
+
+    def _apply_patch(self, patch):
+        project, inputs = self._project(), self._inputs()
+        changes = {
+            field: value
+            for field, value in patch.items()
+            if field not in inputs or encode(value) != encode(inputs[field][0])
+        }
+        revision = project["revision"]
+        if not changes:
+            return {"revision": revision, "stale_artifact_ids": []}
+        revision += 1
+        self.db.execute("UPDATE project SET revision = ?", (revision,))
+        for field, value in changes.items():
+            self._save_evidence(field, revision, value)
+        return {
+            "revision": revision,
+            "stale_artifact_ids": self._invalidate(set(changes)),
+        }
+
+    def _invalidate(self, fields_changed, only_run=None):
+        stale = []
+        for row in self.db.execute(
+            "SELECT id, data FROM artifacts WHERE stale=0 AND (? IS NULL OR run_id=?)",
+            (only_run, only_run),
+        ).fetchall():
+            deps = json.loads(row["data"])["dependencies"]
+            if any(ref["field"] in fields_changed for ref in deps):
+                stale.append(row["id"])
+                self.db.execute(
+                    "UPDATE artifacts SET stale = 1 WHERE id = ?", (row["id"],)
+                )
+        for run in self.db.execute(
+            "SELECT id FROM runs WHERE ? IS NULL OR id = ?", (only_run, only_run)
+        ).fetchall():
+            run_id = run["id"]
+            for task in self._tasks(run_id):
+                stage = task["stage"]
+                fields = (
+                    {*STRATEGY_FIELDS, "market_sources"}
+                    if stage == "strategy"
+                    else {f for kind in self._kinds(stage) for f in DRAFT_FIELDS[kind]}
+                )
+                if not fields & fields_changed and not (
+                    "market_sources" in fields_changed
+                    and stage != "strategy"
+                    and "strategy" in self._plan(run_id)
+                ):
+                    continue
+                if stage == "strategy":
+                    self.db.execute(
+                        "UPDATE runs SET decision_id = NULL WHERE id = ?", (run_id,)
+                    )
+                if task["status"] == "succeeded" and stage != "strategy":
+                    current = self._active(run_id)
+                    if all(kind in current for kind in self._kinds(stage)):
                         continue
-                    if stage == "strategy":
-                        self.db.execute("UPDATE runs SET decision_id = NULL WHERE id = ?", (run_id,))
-                    if task["status"] == "succeeded" and stage != "strategy":
-                        current = self._active(run_id)
-                        if all(kind in current for kind in self._kinds(stage)):
-                            continue
-                    status = "pending" if stage == "content" and "strategy" in self._plan(run_id) \
-                        and self._run(run_id)["decision_id"] is None else "queued"
-                    self._set_task(run_id, stage, status)
-            return {"revision": revision, "stale_artifact_ids": stale}
+                status = (
+                    "pending"
+                    if stage == "content"
+                    and "strategy" in self._plan(run_id)
+                    and self._run(run_id)["decision_id"] is None
+                    else "queued"
+                )
+                self._set_task(run_id, stage, status)
+        return stale
+
+    def _refresh_market(self, run_id, decision_id):
+        if decision_id is None:
+            return
+        saved = json.loads(
+            self.db.execute(
+                "SELECT data FROM decisions WHERE id=?", (decision_id,)
+            ).fetchone()[0]
+        )
+        if "market_status" not in saved:
+            return
+        latest = review(self._inputs().get("market_sources", ([], None))[0])
+        if (latest["status"], latest["citation_ids"], latest["contradictions"]) != (
+            saved["market_status"],
+            saved.get("eligible_citation_ids", saved["citation_ids"]),
+            saved["contradictions"],
+        ):
+            self._invalidate({"market_sources"}, only_run=run_id)
 
     def start(self, run_id, execution="fixture", *, stages=None, goal=None):
         validate("run-id", run_id)
-        if execution not in {"fixture", "model"}:
+        if execution not in {"fixture", "model", "handoff"}:
             raise HarnessError("unsupported execution mode")
         stages = plan(stages, goal)
         registry = skill_registry()
         pins = encode({stage: registry[stage] for stage in stages})
         with self.transaction():
             self._project()
-            existing = self.db.execute("SELECT execution, plan FROM runs WHERE id = ?", (run_id,)).fetchone()
+            existing = self.db.execute(
+                "SELECT execution, plan FROM runs WHERE id = ?", (run_id,)
+            ).fetchone()
             if existing:
                 if existing["execution"] != execution:
                     raise HarnessError("run already uses another execution mode")
-                if (json.loads(existing["plan"]) if existing["plan"] else list(DEFAULT)) != stages:
+                if (
+                    json.loads(existing["plan"]) if existing["plan"] else list(DEFAULT)
+                ) != stages:
                     raise HarnessError("run already has a different plan")
                 return
-            self.db.execute("INSERT INTO runs(id,registry,execution,plan) VALUES (?, ?, ?, ?)",
-                            (run_id, pins, execution, encode(stages)))
-            self.db.executemany("INSERT INTO tasks VALUES (?, ?, ?, 0, NULL)",
-                                [(run_id, stage, "pending" if set(PARENTS[stage]) & set(stages) else "queued")
-                                 for stage in stages])
+            self.db.execute(
+                "INSERT INTO runs(id,registry,execution,plan) VALUES (?, ?, ?, ?)",
+                (run_id, pins, execution, encode(stages)),
+            )
+            self.db.executemany(
+                "INSERT INTO tasks VALUES (?, ?, ?, 0, NULL)",
+                [
+                    (
+                        run_id,
+                        stage,
+                        "pending" if set(PARENTS[stage]) & set(stages) else "queued",
+                    )
+                    for stage in stages
+                ],
+            )
 
     def _run(self, run_id):
         run = self.db.execute("SELECT * FROM runs WHERE id = ?", (run_id,)).fetchone()
@@ -122,60 +219,112 @@ class Harness(Store):
         return json.loads(saved) if saved else list(DEFAULT)
 
     def _tasks(self, run_id):
-        rows = {r["stage"]: r for r in self.db.execute("SELECT * FROM tasks WHERE run_id = ?", (run_id,))}
+        rows = {
+            r["stage"]: r
+            for r in self.db.execute("SELECT * FROM tasks WHERE run_id = ?", (run_id,))
+        }
         return [rows[stage] for stage in self._plan(run_id)]
 
     def _active(self, run_id):
-        return {r["kind"]: r for r in self.db.execute(
-            "SELECT * FROM artifacts WHERE run_id=? AND stale=0", (run_id,))}
+        return {
+            r["kind"]: r
+            for r in self.db.execute(
+                "SELECT * FROM artifacts WHERE run_id=? AND stale=0", (run_id,)
+            )
+        }
 
     @staticmethod
     def _kinds(stage):
-        return ("positioning", "pricing", "capabilities") if stage == "content" else (OUTPUTS[stage],)
+        return (
+            ("positioning", "pricing", "capabilities")
+            if stage == "content"
+            else (OUTPUTS[stage],)
+        )
 
     def _event(self, run_id, stage, attempt, data):
-        self.db.execute("INSERT INTO events(run_id,stage,attempt,data) VALUES (?,?,?,?)",
-                        (run_id, stage, attempt, encode(data)))
+        self.db.execute(
+            "INSERT INTO events(run_id,stage,attempt,data) VALUES (?,?,?,?)",
+            (run_id, stage, attempt, encode(data)),
+        )
 
     def _set_task(self, run_id, stage, status, detail=None):
-        self.db.execute("UPDATE tasks SET status = ?, detail = ? WHERE run_id = ? AND stage = ?",
-                        (status, detail, run_id, stage))
+        self.db.execute(
+            "UPDATE tasks SET status = ?, detail = ? WHERE run_id = ? AND stage = ?",
+            (status, detail, run_id, stage),
+        )
 
-    def _claim(self, run_id, execution, retry, recover):
+    def _claim(self, run_id, execution, retry, recover, *, preview=False):
         with self.transaction():
             run = self._run(run_id)
             if run["execution"] != execution:
                 raise HarnessError("adapter execution mode differs from the stored run")
+            if not preview:
+                self._refresh_market(run_id, run["decision_id"])
+                run = self._run(run_id)
             tasks = {t["stage"]: t for t in self._tasks(run_id)}
-            task = next((t for t in tasks.values() if t["status"] not in {"succeeded", "blocked"}
-                         and all(tasks[p]["status"] == "succeeded" for p in PARENTS[t["stage"]] if p in tasks)), None)
+            task = next(
+                (
+                    t
+                    for t in tasks.values()
+                    if t["status"] not in {"succeeded", "blocked"}
+                    and all(
+                        tasks[p]["status"] == "succeeded"
+                        for p in PARENTS[t["stage"]]
+                        if p in tasks
+                    )
+                ),
+                None,
+            )
             if task is None:
                 return None
             stage, status = task["stage"], task["status"]
             if status == "running" and not recover:
-                raise HarnessError("attempt is running; use explicit recovery after interruption")
+                raise HarnessError(
+                    "attempt is running; use explicit recovery after interruption"
+                )
             if status == "failed" and not retry:
                 raise HarnessError("attempt failed; use explicit retry")
             inputs = self._inputs()
             pins = json.loads(run["registry"])
-            base = {"project_id": self._project()["id"], "run_id": run_id, "stage": stage,
-                    "skill": pins[stage], "tool_policy": "deny_external_writes"}
+            base = {
+                "project_id": self._project()["id"],
+                "run_id": run_id,
+                "stage": stage,
+                "skill": pins[stage],
+                "tool_policy": "deny_external_writes",
+            }
 
             def request(fields):
-                return {**base, "context": {f: inputs[f][0] for f in fields},
-                        "evidence": [inputs[f][1] for f in fields]}
+                return {
+                    **base,
+                    "context": {f: inputs[f][0] for f in fields},
+                    "evidence": [inputs[f][1] for f in fields],
+                }
 
             if stage == "strategy":
                 requests = [request(STRATEGY_FIELDS)]
+                if "market_sources" in inputs:
+                    requests[0]["evidence"].append(inputs["market_sources"][1])
+                requests[0]["market_review"] = review(
+                    inputs.get("market_sources", ([], None))[0]
+                )
             else:
-                decision = self.db.execute("SELECT data FROM decisions WHERE id = ?",
-                                           (run["decision_id"],)).fetchone()
+                decision = self.db.execute(
+                    "SELECT data FROM decisions WHERE id = ?", (run["decision_id"],)
+                ).fetchone()
                 current = self._active(run_id)
                 kinds = [kind for kind in self._kinds(stage) if kind not in current]
                 required = {f for kind in kinds for f in DRAFT_FIELDS[kind]}
                 missing = sorted(required - inputs.keys())
+                if missing and preview:
+                    return None
                 if missing:
-                    self._set_task(run_id, stage, "blocked", "missing evidence: " + ", ".join(missing))
+                    self._set_task(
+                        run_id,
+                        stage,
+                        "blocked",
+                        "missing evidence: " + ", ".join(missing),
+                    )
                     return None
                 requests = []
                 for kind in kinds:
@@ -185,28 +334,66 @@ class Harness(Store):
                         if upstream in current:
                             row = current[upstream]
                             artifact = json.loads(row["data"])
-                            fields.update(ref["field"] for ref in artifact["dependencies"])
-                            handoffs.append({"id": row["id"], "kind": upstream, "markdown": artifact["markdown"]})
-                    item = {**request(sorted(fields)), "artifact_kind": kind}
+                            fields.update(
+                                ref["field"]
+                                for ref in artifact["dependencies"]
+                                if ref["field"] in inputs
+                            )
+                            handoffs.append(
+                                {
+                                    "id": row["id"],
+                                    "kind": upstream,
+                                    "markdown": artifact["markdown"],
+                                }
+                            )
+                    item = {
+                        **request(sorted(fields - {"market_sources"})),
+                        "artifact_kind": kind,
+                    }
                     if handoffs:
                         item["handoffs"] = handoffs
+                    if kind not in {"pricing", "capabilities"} and (
+                        decision or "market_sources" in fields
+                    ):
+                        if "market_sources" in inputs:
+                            item["evidence"].append(inputs["market_sources"][1])
                     if decision and kind not in {"pricing", "capabilities"}:
-                        item["decision"] = {"id": run["decision_id"],
-                                            "recommendation": json.loads(decision["data"])["recommendation"]}
+                        item["decision"] = {
+                            "id": run["decision_id"],
+                            "recommendation": json.loads(decision["data"])[
+                                "recommendation"
+                            ],
+                        }
+                    if decision and "decision" in item:
+                        item["market_review"] = review(
+                            inputs.get("market_sources", ([], None))[0]
+                        )
                     requests.append(item)
             for item in requests:
                 validate("task-input", item)
             attempt = task["attempt"] + 1
-            self.db.execute("""
+            if preview:
+                return stage, attempt, requests
+            self.db.execute(
+                """
                 UPDATE tasks SET status = 'running', attempt = ?, detail = NULL
                 WHERE run_id = ? AND stage = ?
-            """, (attempt, run_id, stage))
-            self._event(run_id, stage, attempt, {"status": "running", "input_digest": digest(requests)})
+            """,
+                (attempt, run_id, stage),
+            )
+            self._event(
+                run_id,
+                stage,
+                attempt,
+                {"status": "running", "input_digest": digest(requests)},
+            )
             return stage, attempt, requests
 
     def _owns_attempt(self, run_id, stage, attempt):
-        row = self.db.execute("SELECT status, attempt FROM tasks WHERE run_id = ? AND stage = ?",
-                              (run_id, stage)).fetchone()
+        row = self.db.execute(
+            "SELECT status, attempt FROM tasks WHERE run_id = ? AND stage = ?",
+            (run_id, stage),
+        ).fetchone()
         return row["status"] == "running" and row["attempt"] == attempt
 
     def step(self, run_id, adapter, *, retry=False, recover=False):
@@ -215,65 +402,159 @@ class Harness(Store):
             return self.status(run_id)
         stage, attempt, requests = claim
         try:
-            results = [validate("strategy-result" if stage == "strategy" else "content-result",
-                                adapter.execute(json.loads(encode(item)))) for item in requests]
+            results = []
+            for item in requests:
+                try:
+                    result = adapter.execute(json.loads(encode(item)))
+                finally:
+                    receipt = getattr(adapter, "last_receipt", None)
+                    if receipt is not None:
+                        validate("host-receipt", receipt)
+                        with self.transaction():
+                            self._event(
+                                run_id, stage, attempt, {"host_receipt": receipt}
+                            )
+                results.append(
+                    validate(
+                        "strategy-result" if stage == "strategy" else "content-result",
+                        result,
+                    )
+                )
+            if stage == "strategy" and not set(results[0].get("citations", [])) <= set(
+                requests[0]["market_review"]["citation_ids"]
+            ):
+                raise HarnessError("citation is missing, stale or contradicted")
             if stage != "strategy" and any(
-                req["artifact_kind"] != result["kind"] for req, result in zip(requests, results)
+                req["artifact_kind"] != result["kind"]
+                for req, result in zip(requests, results)
             ):
                 raise HarnessError("adapter returned an unexpected artifact kind")
         except Exception as exc:
             with self.transaction():
                 if self._owns_attempt(run_id, stage, attempt):
-                    detail = "invalid adapter result" if isinstance(exc, HarnessError) else type(exc).__name__
+                    detail = (
+                        "invalid adapter result"
+                        if isinstance(exc, HarnessError)
+                        else type(exc).__name__
+                    )
                     self._set_task(run_id, stage, "failed", detail)
-                    self._event(run_id, stage, attempt, {"status": "failed", "error": detail})
-            raise HarnessError(f"{stage} attempt failed; inspect status and retry") from None
+                    self._event(
+                        run_id, stage, attempt, {"status": "failed", "error": detail}
+                    )
+            raise HarnessError(
+                f"{stage} attempt failed; inspect status and retry"
+            ) from None
 
         with self.transaction():
             if not self._owns_attempt(run_id, stage, attempt):
                 raise HarnessError("attempt superseded; results discarded")
             for req, result in zip(requests, results):
-                refs = [{key: item[key] for key in ("field", "revision")} for item in req["evidence"]]
+                refs = [
+                    {key: item[key] for key in ("field", "revision")}
+                    for item in req["evidence"]
+                ]
                 data = {**result, "dependencies": refs, "execution": adapter.execution}
+                if stage == "strategy" or "decision" in req:
+                    if not any(ref["field"] == "market_sources" for ref in refs):
+                        refs.append({"field": "market_sources", "revision": 0})
                 if stage == "strategy":
-                    ident = self.db.execute("INSERT INTO decisions(run_id,data) VALUES (?,?)",
-                                            (run_id, encode(validate("decision", data)))).lastrowid
-                    self.db.execute("UPDATE runs SET decision_id = ? WHERE id = ?", (ident, run_id))
+                    market = req["market_review"]
+                    data.update(
+                        market_status=market["status"],
+                        citation_ids=result.get("citations", []),
+                        eligible_citation_ids=market["citation_ids"],
+                        contradictions=market["contradictions"],
+                    )
+                    data.pop("citations", None)
+                    ident = self.db.execute(
+                        "INSERT INTO decisions(run_id,data) VALUES (?,?)",
+                        (run_id, encode(validate("decision", data))),
+                    ).lastrowid
+                    self.db.execute(
+                        "UPDATE runs SET decision_id = ? WHERE id = ?", (ident, run_id)
+                    )
                     self._set_task(run_id, "content", "queued")
                 else:
+                    if req.get("market_review"):
+                        data["market_status"] = req["market_review"]["status"]
                     if "decision" in req:
                         data["decision_id"] = req["decision"]["id"]
                     if req.get("handoffs"):
-                        data["handoff_ids"] = [handoff["id"] for handoff in req["handoffs"]]
+                        data["handoff_ids"] = [
+                            handoff["id"] for handoff in req["handoffs"]
+                        ]
                     data.update(status="draft", sha256=digest(result["markdown"]))
-                    self.db.execute("INSERT INTO artifacts(run_id,kind,data) VALUES (?,?,?)",
-                                    (run_id, result["kind"], encode(validate("artifact", data))))
+                    self.db.execute(
+                        "INSERT INTO artifacts(run_id,kind,data) VALUES (?,?,?)",
+                        (run_id, result["kind"], encode(validate("artifact", data))),
+                    )
             self._set_task(run_id, stage, "succeeded")
-            self._event(run_id, stage, attempt, {"status": "succeeded", "calls": len(requests)})
+            self._event(
+                run_id, stage, attempt, {"status": "succeeded", "calls": len(requests)}
+            )
         return self.status(run_id)
 
     def status(self, run_id):
         with self.transaction():
             run = self._run(run_id)
             project = self._project()
-            context = validate("context", {"project_id": project["id"], "revision": project["revision"],
-                                           "values": {k: v for k, (v, _) in self._inputs().items()}})
-            tasks = [validate("task-state", {k: v for k, v in dict(t).items()
-                                           if k != "run_id" and v is not None}) for t in self._tasks(run_id)]
-            decisions = [{"id": r["id"], **json.loads(r["data"])} for r in self.db.execute(
-                "SELECT id,data FROM decisions WHERE run_id = ? ORDER BY id", (run_id,))]
+            context = validate(
+                "context",
+                {
+                    "project_id": project["id"],
+                    "revision": project["revision"],
+                    "values": {k: v for k, (v, _) in self._inputs().items()},
+                },
+            )
+            tasks = [
+                validate(
+                    "task-state",
+                    {
+                        k: v
+                        for k, v in dict(t).items()
+                        if k != "run_id" and v is not None
+                    },
+                )
+                for t in self._tasks(run_id)
+            ]
+            decisions = [
+                {"id": r["id"], **json.loads(r["data"])}
+                for r in self.db.execute(
+                    "SELECT id,data FROM decisions WHERE run_id = ? ORDER BY id",
+                    (run_id,),
+                )
+            ]
             artifacts = []
-            for row in self.db.execute("SELECT * FROM artifacts WHERE run_id = ? ORDER BY id", (run_id,)):
+            for row in self.db.execute(
+                "SELECT * FROM artifacts WHERE run_id = ? ORDER BY id", (run_id,)
+            ):
                 artifact = json.loads(row["data"])
                 if row["stale"]:
                     artifact["status"] = "stale"
                 artifacts.append({"id": row["id"], **artifact})
-            return {"run_id": run_id, "execution": run["execution"], "context": context,
-                    "schema_version": 1, "workflow_version": 2 if run["plan"] else 1,
-                    "plan": self._plan(run_id),
-                    "history": [{**dict(row), "data": json.loads(row["data"])} for row in self.db.execute(
-                        "SELECT stage,attempt,data FROM events WHERE run_id=? ORDER BY id", (run_id,))],
-                    "skill_pins": json.loads(run["registry"]), "tasks": tasks, "decisions": decisions,
-                    "evidence": [json.loads(r["data"]) for r in self.db.execute(
-                        "SELECT data FROM evidence ORDER BY revision, field")],
-                    "active_decision_id": run["decision_id"], "artifacts": artifacts}
+            return {
+                "run_id": run_id,
+                "execution": run["execution"],
+                "context": context,
+                "schema_version": 1,
+                "workflow_version": 2 if run["plan"] else 1,
+                "plan": self._plan(run_id),
+                "history": [
+                    {**dict(row), "data": json.loads(row["data"])}
+                    for row in self.db.execute(
+                        "SELECT stage,attempt,data FROM events WHERE run_id=? ORDER BY id",
+                        (run_id,),
+                    )
+                ],
+                "skill_pins": json.loads(run["registry"]),
+                "tasks": tasks,
+                "decisions": decisions,
+                "evidence": [
+                    json.loads(r["data"])
+                    for r in self.db.execute(
+                        "SELECT data FROM evidence ORDER BY revision, field"
+                    )
+                ],
+                "active_decision_id": run["decision_id"],
+                "artifacts": artifacts,
+            }

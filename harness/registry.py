@@ -14,8 +14,9 @@ ROLES = {
 def skill_registry():
     catalog = {item["skill"]: item for item in load_catalog()}
     return {
-        stage: {"skill_id": skill, **{
-            key: catalog[skill][key] for key in ("revision", "repository", "path")
-        }}
+        stage: {
+            "skill_id": skill,
+            **{key: catalog[skill][key] for key in ("revision", "repository", "path")},
+        }
         for stage, skill in ROLES.items()
     }

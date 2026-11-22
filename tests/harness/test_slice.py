@@ -13,7 +13,9 @@ from harness.adapters import FixtureAdapter
 from harness.contracts import HarnessError, ROOT
 from harness.orchestrator import Harness
 
-PROJECT = json.loads((ROOT / "examples/harness/project.json").read_text(encoding="utf-8"))
+PROJECT = json.loads(
+    (ROOT / "examples/harness/project.json").read_text(encoding="utf-8")
+)
 NEW_PRICE = {"price": {**PROJECT["values"]["price"], "amount_minor": 3000}}
 
 
@@ -42,14 +44,19 @@ class HarnessTests(unittest.TestCase):
         self.assertEqual(len(result["evidence"]), 5)
         catalog = json.loads((ROOT / "catalog.json").read_text(encoding="utf-8"))
         self.assertEqual(
-            result["skill_pins"]["strategy"]["revision"], catalog["skills"][0]["revision"]
+            result["skill_pins"]["strategy"]["revision"],
+            catalog["skills"][0]["revision"],
         )
 
     def test_price_invalidates_only_pricing_and_resume_is_idempotent(self):
         before = self.finish()
         ids = {a["kind"]: a["id"] for a in before["artifacts"]}
-        self.assertEqual(self.h.update(NEW_PRICE)["stale_artifact_ids"], [ids["pricing"]])
-        self.assertEqual(self.h.update(NEW_PRICE), {"revision": 2, "stale_artifact_ids": []})
+        self.assertEqual(
+            self.h.update(NEW_PRICE)["stale_artifact_ids"], [ids["pricing"]]
+        )
+        self.assertEqual(
+            self.h.update(NEW_PRICE), {"revision": 2, "stale_artifact_ids": []}
+        )
         self.h.start("run")
         result = self.h.step("run", self.adapter)
         self.assertEqual(result, self.h.step("run", self.adapter))
@@ -57,16 +64,21 @@ class HarnessTests(unittest.TestCase):
         self.assertEqual(active["positioning"]["id"], ids["positioning"])
         self.assertEqual(active["capabilities"]["id"], ids["capabilities"])
         self.assertNotEqual(active["pricing"]["id"], ids["pricing"])
-        self.assertEqual(active["pricing"]["dependencies"], [{"field": "price", "revision": 2}])
+        self.assertEqual(
+            active["pricing"]["dependencies"], [{"field": "price", "revision": 2}]
+        )
         self.assertIn("3000", active["pricing"]["markdown"])
         update = self.h.update({"capabilities": []})
         self.assertEqual(update["stale_artifact_ids"], [ids["capabilities"]])
         refreshed = self.h.step("run", self.adapter)
-        current = {a["kind"]: a for a in refreshed["artifacts"] if a["status"] == "draft"}
+        current = {
+            a["kind"]: a for a in refreshed["artifacts"] if a["status"] == "draft"
+        }
         self.assertEqual(current["positioning"], active["positioning"])
         self.assertEqual(current["pricing"], active["pricing"])
         self.assertEqual(
-            current["capabilities"]["dependencies"], [{"field": "capabilities", "revision": 3}]
+            current["capabilities"]["dependencies"],
+            [{"field": "capabilities", "revision": 3}],
         )
         self.assertIn("None declared", current["capabilities"]["markdown"])
 
@@ -221,14 +233,18 @@ class HarnessTests(unittest.TestCase):
         self.assertEqual(self.h.status("run")["artifacts"], [])
         self.assertEqual(self.tasks(), ["succeeded", "running"])
         self.h.db.execute("DROP TRIGGER reject_pricing")
-        self.assertEqual(len(self.h.step("run", self.adapter, recover=True)["artifacts"]), 3)
+        self.assertEqual(
+            len(self.h.step("run", self.adapter, recover=True)["artifacts"]), 3
+        )
 
     def test_cli_init_start_change_and_resume(self):
         path = self.path.parent / "cli.sqlite"
 
         def cli(*args):
             output = subprocess.check_output(
-                [sys.executable, "-m", "harness", "--db", str(path), *args], cwd=ROOT, text=True
+                [sys.executable, "-m", "harness", "--db", str(path), *args],
+                cwd=ROOT,
+                text=True,
             )
             return json.loads(output)
 
@@ -239,7 +255,8 @@ class HarnessTests(unittest.TestCase):
         first = cli("resume", "cli")
         price_id = next(a["id"] for a in first["artifacts"] if a["kind"] == "pricing")
         self.assertEqual(
-            cli("change", "examples/harness/price-change.json")["stale_artifact_ids"], [price_id]
+            cli("change", "examples/harness/price-change.json")["stale_artifact_ids"],
+            [price_id],
         )
         second = cli("resume", "cli")
         self.assertEqual([t["attempt"] for t in second["tasks"]], [1, 2])
