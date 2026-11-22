@@ -36,9 +36,14 @@ class CodexHostTests(unittest.TestCase):
         self.adapter = CodexAdapter({"strategy": self.checkout}, model="fixture-model")
 
     def test_claim_output_schemas_allow_only_required_draft_fields(self):
-        for stage in ("strategy", "launch"):
-            schema = output_schema(stage)
-            self.assertEqual(set(schema["properties"]), set(schema["required"]))
+        strategy = output_schema("strategy")
+        self.assertEqual(set(strategy["properties"]), set(strategy["required"]))
+        self.assertIn("contract", strategy["required"])
+        launch = output_schema("launch")
+        self.assertEqual(
+            set(launch["properties"]) - {"constraint_refs"}, set(launch["required"])
+        )
+        for schema in (strategy, launch):
             fields = schema["properties"]["claims"]["items"]
             self.assertEqual(set(fields["properties"]), set(fields["required"]))
             self.assertEqual(set(fields["required"]), {"source_id", "quote", "text"})
@@ -49,7 +54,14 @@ class CodexHostTests(unittest.TestCase):
         self.assertNotIn("Uncommitted text", prompt)
         self.assertEqual(
             schema["required"],
-            ["recommendation", "citations", "claims", "assumptions", "evidence_gaps"],
+            [
+                "recommendation",
+                "contract",
+                "citations",
+                "claims",
+                "assumptions",
+                "evidence_gaps",
+            ],
         )
         self.assertEqual(schema["properties"]["claims"]["items"]["properties"]["text"], {"type": "string"})
         self.assertEqual(len(digest), 64)
