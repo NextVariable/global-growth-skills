@@ -11,16 +11,34 @@
     "verified_head": "b7b71e9d56b41f9b46707a7d4b0ea9915636f628",
     "verified_head_role": "audit-fix commit; 172 harness tests, 10 installer tests, privacy, static analysis and CI ran here",
     "post_verification_paths": [
-      "validation/v1.1-readiness.json"
+      "validation/v1.1-readiness.json",
+      "docs/product-scope.md"
     ],
-    "post_verification_note": "The only change after the verified commit is this readiness record; no code, schema, test or workflow file differs."
+    "post_verification_note": "After the verified code commit, this readiness record and a documentation-only product-scope file changed; no code, schema, test or workflow file differs."
   },
   "prepared_at": "2026-11-23",
   "release_gate": "DRAFT",
+  "feature_freeze": {
+    "status": "frozen",
+    "frozen_at": "2026-11-23",
+    "code_baseline": "b7b71e9d56b41f9b46707a7d4b0ea9915636f628",
+    "scope_document": "docs/product-scope.md",
+    "kept_capabilities": [
+      "multi-source research: GitHub, Hacker News and operator-captured public web",
+      "evidence versus signal grading",
+      "nine-area GTM decision brief",
+      "GTM package enhancements",
+      "host contract",
+      "cost telemetry",
+      "benchmark framework"
+    ],
+    "allowed_changes": "P0 security or data-integrity fixes and P1 fixes that unblock a core GTM task only",
+    "note": "No sixth skill, new provider, runtime rewrite, schema rewrite or SaaS surface is in scope."
+  },
   "verification": {
     "harness_tests": 172,
     "installer_tests": 10,
-    "tracked_files": 135,
+    "tracked_files": 136,
     "checker": "python3 scripts/check_release_gate.py"
   },
   "real_model_evaluation": {
@@ -28,7 +46,7 @@
     "arms": ["V1.0 at 7112a7d", "V1.1 at the Draft PR head"],
     "status": "NOT TESTED",
     "calls": 0,
-    "reason": "No authenticated model was used in this pass; no token, timing or cost data was produced."
+    "reason": "No codex executable, no GTM_MODEL value and no model API credential were available; no paid endpoint was called and no token, timing or cost data exists."
   },
   "ci": {
     "head": "b7b71e9d56b41f9b46707a7d4b0ea9915636f628",
@@ -62,7 +80,7 @@
     {
       "id": "harness-tests",
       "result": "pass",
-      "detail": "171/171 tests, python3 scripts/validate_harness.py"
+      "detail": "172/172 tests, python3 scripts/validate_harness.py"
     },
     {
       "id": "installer-tests",
@@ -77,7 +95,7 @@
     {
       "id": "privacy-scan-current",
       "result": "pass",
-      "detail": "135 tracked files, 0 current findings"
+      "detail": "136 tracked files, 0 current findings"
     },
     {
       "id": "privacy-scan-history",
@@ -92,7 +110,7 @@
     {
       "id": "offline-workflow-export",
       "result": "pass",
-      "detail": "init, start, step, resume, change, resume, export all exit 0; markdown package 10984 bytes"
+      "detail": "both arms: init, start, resume, change, export exit 0; fixture export 7619 bytes (V1.0) and 16763 bytes (V1.1)"
     },
     {
       "id": "cost-report",
@@ -100,9 +118,14 @@
       "detail": "aggregates host receipts; fixture run reports 0 calls, cost status not_estimated"
     },
     {
+      "id": "real-model-preflight",
+      "result": "pass",
+      "detail": "protocol rehearsal: two databases, 5/5 pinned checkouts at exact revisions, shared research patch import, fixture execution, export and cost-report all exit 0; 0 model calls"
+    },
+    {
       "id": "clean-directory-install",
-      "result": "blocked_environment",
-      "detail": "github.com git endpoint is unreachable from the preparation environment (HTTPS 443 times out; api.github.com works). The installer and catalog did not change in V1.1; the V1.0 gate recorded a passing clean install of the same five pinned revisions."
+      "result": "pass",
+      "detail": "prepare-pins installed all five pinned Skill revisions (b9a3f9d, d3d8aa3, a5bfa7c, 7c20100, fb1060e) into a fresh directory; one GitHub git timeout occurred and succeeded on retry"
     },
     {
       "id": "structural-benchmark",
@@ -112,7 +135,7 @@
     {
       "id": "live-community-source",
       "result": "pass",
-      "detail": "research-community market \"AI meeting notes\" --limit 2 returned 2 public Hacker News snapshots (hn-d367bc1ab7b301cd464e, hn-cd371a32ef0c2572ea0a) with observation and validity dates"
+      "detail": "research market \"AI meeting notes\" --limit 2 returned 2 public snapshots; prior pass returned Hacker News captures with observation and validity dates"
     },
     {
       "id": "decision-grade-evidence",
@@ -160,7 +183,7 @@
   },
   "evidence_boundaries": {
     "engineering_validation": "pass",
-    "live_public_research_source": "pass_hacker_news_public_snapshot",
+    "live_public_research_source": "pass_public_snapshot",
     "real_model_execution": "NOT TESTED",
     "model_token_cost": "not_measured",
     "business_outcome": "not_measured"
@@ -169,12 +192,12 @@
     "No real-model V1.0 vs V1.1 comparison was run in this pass; model quality and token cost are NOT TESTED.",
     "Structural benchmark scores do not measure commercial quality.",
     "Hacker News points and comments are public discussion activity, not demand, adoption, paying customers or market size.",
-    "Clean-directory install could not be re-verified because github.com git transport was unreachable from the preparation environment.",
     "Competitive and market sections in the exported package only use captured sources; when none exist the package says so instead of inventing numbers.",
     "There is no independent semantic reviewer; verbatim quote matches stay unverified.",
     "Real publishing, outreach, CRM writes, ad spend and customer outcomes are not executed or measured.",
     "Capture verification is structural: a fabricated local web capture with a plausible hash is not detected without re-fetching the page.",
-    "The exported package groups mapped claims as external_evidence even when the decision brief labels the source external_signal."
+    "The exported package groups mapped claims as external_evidence even when the decision brief labels the source external_signal.",
+    "docs/product-scope.md lives on this Draft branch; if PR #3 is not merged, the scope document is not on main."
   ],
   "codex_final_audit": "ready_with_documented_p1_items",
   "independent_audit": {
