@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "project_id": "growth-skills-public",
+  "values": {
+    "product": "Global Growth Skills, the open-source collection at https://github.com/NextVariable/global-growth-skills",
+    "audience": "Hypothesis: English-speaking solo founders and developer marketers already using Agent Skills",
+    "market": "English-speaking open-source developer-tool communities, initially GitHub",
+    "goal": "Assess whether to run a small opt-in pilot for an English GTM tutorial, and produce launch, adoption and measurement drafts. No customer interviews, adoption or market-size data supplied.",
+    "price": {"amount_minor": 0, "currency": "USD", "unit": "open-source software license; excludes model usage"},
+    "budget": {"amount_minor": 0, "currency": "USD", "unit": "paid promotion for the proposed pilot"},
+    "capabilities": ["five standalone Agent Skills", "a fixed-version catalog and installer", "SQLite checkpoints for the optional Harness"]
+  }
+}

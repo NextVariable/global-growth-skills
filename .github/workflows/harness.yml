@@ -24,10 +24,12 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: python -m pip install -r requirements-harness.txt
       - run: python scripts/validate_harness.py --report harness-results/unittest.txt
+      - run: python scripts/evaluate_product.py --report harness-results/fixture-matrix.json
+        if: always()
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: harness-fixture-${{ matrix.os }}-${{ matrix.python }}
-          path: harness-results/unittest.txt
+          path: harness-results/
           if-no-files-found: error
           retention-days: 14

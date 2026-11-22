@@ -12,7 +12,7 @@ from harness.codex_host import CodexAdapter
 from harness.contracts import HarnessError, ROOT, digest, validate
 from harness.orchestrator import Harness, STRATEGY_FIELDS
 from harness.registry import skill_registry
-from harness.research import review
+from harness.research import review, source_dependencies
 
 
 def baseline(adapter, project, result):
@@ -23,6 +23,8 @@ def baseline(adapter, project, result):
         ("strategy", STRATEGY_FIELDS),
         ("launch", (*STRATEGY_FIELDS, "capabilities")),
     ):
+        fields = (*fields, *(key for key in ("market", "budget") if key in values))
+        market = review(values.get("market_sources", []))
         request = {
             "project_id": project["project_id"],
             "run_id": "manual-replay",
@@ -39,7 +41,7 @@ def baseline(adapter, project, result):
                 }
                 for key in fields
             ],
-            "market_review": review([]),
+            "market_review": market,
         }
         if stage == "launch":
             request.update(
@@ -60,8 +62,9 @@ def baseline(adapter, project, result):
                 "strategy-result" if stage == "strategy" else "content-result",
                 adapter.execute(request),
             )
-            if row["output"].get("citations"):
-                raise HarnessError("case has no eligible citations")
+            source_dependencies(
+                market, row["output"].get("claims", []), row["output"].get("citations", [])
+            )
             if stage == "launch" and row["output"]["kind"] != "launch-plan":
                 raise HarnessError("unexpected artifact kind")
         finally:
@@ -74,15 +77,29 @@ def main():
     parser.add_argument("--strategy-checkout", required=True)
     parser.add_argument("--launch-checkout", required=True)
     parser.add_argument("--model", required=True)
+    parser.add_argument("--project", type=Path, default=ROOT / "evals/v1/public-project.json")
+    parser.add_argument(
+        "--evidence",
+        type=Path,
+        action="append",
+        default=[],
+        help="Saved research result from the same public case",
+    )
     parser.add_argument("--output-dir", required=True, type=Path)
     args = parser.parse_args()
     target = args.output_dir.resolve()
     if target.is_relative_to(ROOT):
         parser.error("use a temporary output directory outside the repository")
     target.mkdir()
-    project = json.loads(
-        (ROOT / "evals/v1/public-project.json").read_text(encoding="utf-8")
-    )
+    project = json.loads(args.project.read_text(encoding="utf-8"))
+    if args.evidence:
+        sources = {
+            row["id"]: row
+            for path in args.evidence
+            for row in json.loads(path.read_text(encoding="utf-8"))["retrieved"]
+        }
+        project["values"]["market_sources"] = list(sources.values())
+    validate("project-input", project)
     adapter = CodexAdapter(
         {"strategy": args.strategy_checkout, "launch": args.launch_checkout},
         model=args.model,
@@ -94,6 +111,8 @@ def main():
         "steps": [],
         "requested_model": args.model,
         "pricing": "unknown",
+        "operator_interventions": None,
+        "comparison": "fixed handoff field replay; no human labor time measured",
     }
     started = time.monotonic()
     db = None

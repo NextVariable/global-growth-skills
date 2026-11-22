@@ -1,0 +1,12 @@
+[
+  {"id":"public-full","data":"public","goal":"full workflow","expected":["strategy","content","launch","sales","experiments"],"review":"ICP and decision, positioning and landing page, channel choice, retention sequence and measurable experiment agree."},
+  {"id":"public-icp","data":"public","goal":"market strategy","expected":["strategy"],"review":"Explain observable constraints and mark English-speaking solo founders as an unverified segment."},
+  {"id":"public-messaging","data":"public","goal":"landing copy","expected":["content"],"review":"Lead with a reproducible first task and preserve independent installs and model cost boundaries."},
+  {"id":"public-competitor","data":"public","goal":"strategy and copy","expected":["strategy","content"],"review":"GitHub activity can inform a competitor shortlist. Demand and market-size statements need independent evidence."},
+  {"id":"public-channels","data":"public","goal":"channel acquisition","expected":["launch"],"review":"Choose one opt-in channel with participation permission and a feasible zero paid-promotion pilot."},
+  {"id":"saas-sales","data":"synthetic","goal":"sales","expected":["sales"],"review":"Separate discovery, buying authority and proof of payment. Define retention handoff without sending anything."},
+  {"id":"saas-retention","data":"synthetic","goal":"retention experiment","expected":["sales","experiments"],"review":"Define cohort and observation window. Proposed retention is a hypothesis."},
+  {"id":"saas-measurement","data":"synthetic","goal":"experiment","expected":["experiments"],"review":"Include metric formula, owner, source, decision threshold and guardrail."},
+  {"id":"saas-reprice","data":"synthetic","goal":"full workflow","expected":["strategy","content","launch","sales","experiments"],"change":"price","expected_stale":["pricing","sales-plan","experiment-plan"],"review":"Retain IDs of unrelated drafts and rebuild only stale results."},
+  {"id":"saas-checkpoint","data":"synthetic","goal":"full workflow","expected":["strategy","content","launch","sales","experiments"],"interrupt":true,"review":"Resume from a fresh process and retain the first confirmed decision ID."}
+]

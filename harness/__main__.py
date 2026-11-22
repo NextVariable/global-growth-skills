@@ -8,10 +8,12 @@ import sqlite3
 from . import __version__
 from .adapters import FixtureAdapter, HandoffAdapter
 from .codex_host import CodexAdapter, handoff
-from .contracts import digest
+from .contracts import HarnessError, digest
 from .gateway import Gateway
-from .contracts import HarnessError
 from .orchestrator import Harness
+from .package import markdown, snapshot
+from .pins import prepare_pins
+from .registry import ROLES
 
 
 def input_json(path):
@@ -21,11 +23,10 @@ def input_json(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--version", action="version", version=__version__)
-    parser.add_argument(
-        "--db", required=True, help="SQLite file outside this repository"
-    )
+    parser.add_argument("--db", required=True, help="SQLite file outside this repository")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("init").add_argument("project")
+    commands.add_parser("prepare-pins").add_argument("directory")
     commands.add_parser("change").add_argument("patch")
     commands.add_parser("restore").add_argument("revision", type=int)
     approve = commands.add_parser("approve-mock")
@@ -33,7 +34,17 @@ def main():
     approve.add_argument("--ttl", type=int, default=300)
     commands.add_parser("revoke-mock").add_argument("operation_id")
     commands.add_parser("execute-mock").add_argument("operation")
+    prepare = commands.add_parser("prepare")
+    prepare.add_argument("operation")
     commands.add_parser("receipts")
+    research = commands.add_parser("research", help="retrieve and store public GitHub evidence")
+    research.add_argument("topic", choices=("market", "competitor", "icp", "channel"))
+    research.add_argument("term", help="public search keywords; do not include private data")
+    research.add_argument("--repository", help="exact public OWNER/REPO lookup")
+    research.add_argument("--limit", type=int, default=3)
+    export = commands.add_parser("export")
+    export.add_argument("run_id")
+    export.add_argument("--format", choices=("json", "markdown"), default="markdown")
     for name in ("start", "step", "resume", "status", "handoff"):
         command = commands.add_parser(name)
         command.add_argument("run_id")
@@ -48,8 +59,9 @@ def main():
             selection.add_argument("--goal")
         if name in {"step", "resume", "handoff"}:
             command.add_argument(
-                "--checkout", action="append", default=[], metavar="STAGE=DIR"
+                "--checkouts-dir", type=Path, help="directory with Skill repos named by stage"
             )
+            command.add_argument("--checkout", action="append", default=[], metavar="STAGE=DIR")
         if name in {"step", "resume"}:
             command.add_argument("--model")
             command.add_argument("--results")
@@ -60,6 +72,13 @@ def main():
     args = parser.parse_args()
     harness = None
     try:
+        if args.command == "prepare-pins":
+            print(json.dumps(prepare_pins(args.directory), indent=2))
+            return 0
+        if getattr(args, "checkouts_dir", None):
+            args.checkout = [
+                f"{stage}={args.checkouts_dir / stage}" for stage in ROLES
+            ] + args.checkout
         if args.command != "init" and not Path(args.db).is_file():
             raise HarnessError("initialize a project first")
         harness = Harness(args.db)
@@ -72,9 +91,7 @@ def main():
         elif args.command == "restore":
             result = harness.restore(args.revision)
         elif args.command == "start":
-            harness.start(
-                args.run_id, args.execution, stages=args.stages, goal=args.goal
-            )
+            harness.start(args.run_id, args.execution, stages=args.stages, goal=args.goal)
             result = harness.status(args.run_id)
         elif args.command == "status":
             result = harness.status(args.run_id)
@@ -83,9 +100,18 @@ def main():
             "revoke-mock",
             "execute-mock",
             "receipts",
+            "research",
+            "prepare",
         }:
             gateway = Gateway(harness)
-            if args.command == "approve-mock":
+            if args.command == "research":
+                query = {"topic": args.topic, "term": args.term, "limit": args.limit}
+                if args.repository:
+                    query["repository"] = args.repository
+                result = gateway.research(query)
+            elif args.command == "prepare":
+                result = gateway.prepare(input_json(args.operation))
+            elif args.command == "approve-mock":
                 gateway.approve(input_json(args.operation), args.ttl)
                 result = {"status": "approved", "executor": "mock"}
             elif args.command == "revoke-mock":
@@ -95,12 +121,15 @@ def main():
                 result = gateway.write(input_json(args.operation))
             else:
                 result = gateway.receipts()
+        elif args.command == "export":
+            result = snapshot(harness.status(args.run_id), Gateway(harness).receipts())
+            if args.format == "markdown":
+                print(markdown(result), end="")
+                return 0
         elif args.command == "handoff":
             checkouts = dict(value.split("=", 1) for value in args.checkout)
             state = harness.status(args.run_id)
-            claim = harness._claim(
-                args.run_id, state["execution"], False, False, preview=True
-            )
+            claim = harness._claim(args.run_id, state["execution"], False, False, preview=True)
             requests = [] if claim is None else claim[2]
             result = {"status": "manual_handoff", "tasks": []}
             for request in requests:
@@ -121,18 +150,12 @@ def main():
             adapter = FixtureAdapter()
             if result["execution"] == "model":
                 if not args.model or args.timeout <= 0:
-                    raise HarnessError(
-                        "model mode requires --model and a positive timeout"
-                    )
+                    raise HarnessError("model mode requires --model and a positive timeout")
                 checkouts = dict(value.split("=", 1) for value in args.checkout)
-                adapter = CodexAdapter(
-                    checkouts, model=args.model, timeout=args.timeout
-                )
+                adapter = CodexAdapter(checkouts, model=args.model, timeout=args.timeout)
             if result["execution"] == "handoff":
                 if not args.results or args.command != "step":
-                    raise HarnessError(
-                        "handoff mode imports one stage with step --results"
-                    )
+                    raise HarnessError("handoff mode imports one stage with step --results")
                 adapter = HandoffAdapter(input_json(args.results))
             limit = len(result["tasks"]) if args.command == "resume" else 1
             for index in range(limit):
@@ -148,9 +171,7 @@ def main():
                 ):
                     break
         print(json.dumps(result, ensure_ascii=True, indent=2))
-        if args.command == "resume" and any(
-            t["status"] == "blocked" for t in result["tasks"]
-        ):
+        if args.command == "resume" and any(t["status"] == "blocked" for t in result["tasks"]):
             return 2
         return 0
     except (HarnessError, OSError, ValueError, sqlite3.Error) as exc:
