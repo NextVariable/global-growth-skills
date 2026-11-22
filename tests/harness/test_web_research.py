@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import ssl
 import unittest
 from unittest import mock
 
@@ -148,6 +149,8 @@ class PinnedTransportTests(unittest.TestCase):
         calls = {}
 
         class Context:
+            verify_mode = ssl.CERT_REQUIRED
+
             def wrap_socket(self, sock, server_hostname):
                 calls["sni"] = server_hostname
                 return sock
