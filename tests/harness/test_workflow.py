@@ -1,3 +1,4 @@
+from contextlib import closing
 from pathlib import Path
 import sqlite3
 from tempfile import TemporaryDirectory
@@ -62,7 +63,7 @@ class WorkflowTests(unittest.TestCase):
 
     def test_migrates_v1_and_preserves_saved_checkpoint(self):
         old = self.path.parent / "old.sqlite"
-        with sqlite3.connect(old) as db:
+        with closing(sqlite3.connect(old)) as db, db:
             db.executescript(DDL)
             db.execute("INSERT INTO project VALUES ('old', 1)")
             db.execute("INSERT INTO runs VALUES ('old', '{}', 'fixture', NULL)")
