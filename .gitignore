@@ -9,3 +9,6 @@ local-audits/
 **/local-audits/
 .private-backups/
 .validation-output/
+
+.venv/
+/harness-results/

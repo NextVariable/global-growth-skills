@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "project_id": "meeting-demo",
+  "values": {
+    "product": "Meeting follow-up tracker",
+    "audience": "small consulting teams",
+    "goal": "validate a first paid workflow",
+    "price": {"amount_minor": 2000, "currency": "USD", "unit": "team per month"},
+    "capabilities": ["manual CSV export"]
+  }
+}

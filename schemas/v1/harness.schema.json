@@ -1,0 +1,584 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GTM Harness contracts v1",
+  "$defs": {
+    "project-input": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "project_id",
+        "values"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "project_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$"
+        },
+        "values": {
+          "type": "object",
+          "required": [
+            "product",
+            "audience",
+            "goal"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "product": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "audience": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "goal": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "price": {
+              "type": "object",
+              "required": [
+                "amount_minor",
+                "currency",
+                "unit"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "amount_minor": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "currency": {
+                  "type": "string",
+                  "pattern": "^[A-Z]{3}$"
+                },
+                "unit": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 20000
+                }
+              }
+            },
+            "capabilities": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "minItems": 0
+            }
+          }
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "revision",
+        "values"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "values": {
+          "type": "object",
+          "required": [
+            "product",
+            "audience",
+            "goal"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "product": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "audience": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "goal": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "price": {
+              "type": "object",
+              "required": [
+                "amount_minor",
+                "currency",
+                "unit"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "amount_minor": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "currency": {
+                  "type": "string",
+                  "pattern": "^[A-Z]{3}$"
+                },
+                "unit": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 20000
+                }
+              }
+            },
+            "capabilities": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "minItems": 0
+            }
+          }
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "required": [
+        "field",
+        "revision",
+        "source",
+        "sha256"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "enum": [
+            "product",
+            "audience",
+            "goal",
+            "price",
+            "capabilities"
+          ]
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "source": {
+          "const": "operator_input"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "dependency": {
+      "type": "object",
+      "required": [
+        "field",
+        "revision"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "enum": [
+            "product",
+            "audience",
+            "goal",
+            "price",
+            "capabilities"
+          ]
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "required": [
+        "recommendation",
+        "dependencies",
+        "execution"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "recommendation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dependency"
+          },
+          "minItems": 1
+        },
+        "execution": {
+          "enum": [
+            "fixture",
+            "model"
+          ]
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "required": [
+        "kind",
+        "markdown",
+        "dependencies",
+        "status",
+        "execution",
+        "sha256"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "positioning",
+            "pricing",
+            "capabilities"
+          ]
+        },
+        "markdown": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dependency"
+          },
+          "minItems": 1
+        },
+        "decision_id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "stale"
+          ]
+        },
+        "execution": {
+          "enum": [
+            "fixture",
+            "model"
+          ]
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "task-state": {
+      "type": "object",
+      "required": [
+        "stage",
+        "status",
+        "attempt"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "stage": {
+          "enum": [
+            "strategy",
+            "content"
+          ]
+        },
+        "status": {
+          "enum": [
+            "queued",
+            "running",
+            "failed",
+            "blocked",
+            "succeeded",
+            "pending"
+          ]
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "detail": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      }
+    },
+    "strategy-result": {
+      "type": "object",
+      "required": [
+        "recommendation"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "recommendation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      }
+    },
+    "content-result": {
+      "type": "object",
+      "required": [
+        "kind",
+        "markdown"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "positioning",
+            "pricing",
+            "capabilities"
+          ]
+        },
+        "markdown": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      }
+    },
+    "skill": {
+      "type": "object",
+      "required": [
+        "skill_id",
+        "revision",
+        "repository",
+        "path"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "skill_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "repository": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      }
+    },
+    "task-input": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "run_id",
+        "stage",
+        "skill",
+        "context",
+        "evidence",
+        "tool_policy"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$"
+        },
+        "run_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$"
+        },
+        "stage": {
+          "enum": [
+            "strategy",
+            "content"
+          ]
+        },
+        "skill": {
+          "$ref": "#/$defs/skill"
+        },
+        "context": {
+          "type": "object",
+          "required": [],
+          "additionalProperties": false,
+          "properties": {
+            "product": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "audience": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "goal": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "price": {
+              "type": "object",
+              "required": [
+                "amount_minor",
+                "currency",
+                "unit"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "amount_minor": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "currency": {
+                  "type": "string",
+                  "pattern": "^[A-Z]{3}$"
+                },
+                "unit": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 20000
+                }
+              }
+            },
+            "capabilities": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "minItems": 0
+            }
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "minItems": 1
+        },
+        "tool_policy": {
+          "const": "deny_external_writes"
+        },
+        "decision": {
+          "type": "object",
+          "required": [
+            "id",
+            "recommendation"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "recommendation": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20000
+            }
+          }
+        },
+        "artifact_kind": {
+          "enum": [
+            "positioning",
+            "pricing",
+            "capabilities"
+          ]
+        }
+      }
+    },
+    "context-patch": {
+      "type": "object",
+      "required": [],
+      "additionalProperties": false,
+      "properties": {
+        "product": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "audience": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "goal": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "price": {
+          "type": "object",
+          "required": [
+            "amount_minor",
+            "currency",
+            "unit"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "amount_minor": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "currency": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}$"
+            },
+            "unit": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20000
+            }
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "minItems": 0
+        }
+      },
+      "minProperties": 1
+    },
+    "run-id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$"
+    }
+  }
+}
