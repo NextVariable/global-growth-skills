@@ -52,9 +52,11 @@ class CodexHostTests(unittest.TestCase):
         reference = self.checkout / "skills/example/references/market.md"
         reference.parent.mkdir(parents=True)
         reference.write_text("Market reference", encoding="utf-8")
-        git = lambda *args: subprocess.check_output(
-            ["git", "-C", str(self.checkout), *args], text=True
-        )
+        def git(*args):
+            return subprocess.check_output(
+                ["git", "-C", str(self.checkout), *args], text=True
+            )
+
         git("add", "skills/example/references/market.md")
         git("-c", "commit.gpgsign=false", "commit", "-qm", "reference")
         revision = git("rev-parse", "HEAD").strip()

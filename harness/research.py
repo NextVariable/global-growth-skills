@@ -2,7 +2,7 @@
 
 from datetime import date, datetime, timezone
 import re
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+from urllib.parse import parse_qsl, urlencode, urlsplit
 
 from .contracts import HarnessError, digest, validate
 

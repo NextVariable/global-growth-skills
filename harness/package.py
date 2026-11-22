@@ -24,13 +24,15 @@ def snapshot(state, receipts):
     active = [item for item in state["artifacts"] if item["status"] == "draft"]
     records = ([("strategy", decision)] if decision else []) + [(a["kind"], a) for a in active]
     audits = [item.get("evidence_audit") or {} for _, item in records]
+    quality = assess(state)
     if not all(t["status"] == "succeeded" for t in state["tasks"]):
         status = "incomplete"
     elif any(audit.get("status") == "missing_claims" for audit in audits):
         status = "incomplete_evidence"
+    elif quality["status"] == "fail":
+        status = "needs_quality_review"
     else:
         status = "ready_for_internal_review"
-    quality = assess(state)
     return {
         "schema_version": 1,
         "run_id": state["run_id"],
@@ -81,6 +83,14 @@ def _text(value):
     return escape(value, quote=False).replace("![", r"\!\[")
 
 
+def _field_value(value):
+    if isinstance(value, dict) and "amount_minor" in value:
+        amount = f"{value.get('currency', '')} {value['amount_minor'] / 100:,.2f}".strip()
+        unit = value.get("unit")
+        return f"{amount} · {unit}" if unit else amount
+    return value
+
+
 def _claim_lines(item):
     lines = []
     for claim in item.get("claims", []):
@@ -115,7 +125,7 @@ def markdown(package):
     ]
     for field in ("product", "market", "audience", "goal", "budget"):
         if field in context["values"]:
-            lines.append(f"- **{field}** · {_text(context['values'][field])}")
+            lines.append(f"- **{field}** · {_text(_field_value(context['values'][field]))}")
     lines += ["", *[f"- `{t['stage']}` · {t['status']}" for t in package["tasks"]], ""]
     decision = package["decision"]
     if decision:

@@ -24,7 +24,7 @@ def input_json(path):
 
 
 def doctor(db):
-    import jsonschema
+    from importlib.metadata import version
 
     checks = [
         {
@@ -32,7 +32,7 @@ def doctor(db):
             "ok": sys.version_info >= (3, 10),
             "detail": sys.version.split()[0],
         },
-        {"check": "jsonschema", "ok": True, "detail": jsonschema.__version__},
+        {"check": "jsonschema", "ok": True, "detail": version("jsonschema")},
     ]
     target = Path(db).expanduser().resolve()
     checks.append(

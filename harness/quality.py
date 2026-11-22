@@ -5,13 +5,13 @@ import re
 
 CHECKS = {
     "strategy": {
-        "market_or_icp": r"(?:ICP|segment|audience|market|customer|市场|细分|客户)",
+        "market_or_icp": r"(?:ICP|segment|audience|market|customer|buyer|teams?|founders?|users?|workers?|professionals?|consumers?|households?|B2B|B2C|SaaS|市场|细分|客户)",
         "constraints": r"(?:constraint|budget|limit|assumption|约束|预算|限制|假设)",
         "decision": r"(?:recommend|decision|choose|enter|recommendation|建议|决策|选择)",
     },
     "positioning": {
         "value_proposition": r"(?:value|benefit|why|outcome|价值|收益|为什么)",
-        "audience": r"(?:team|founder|developer|buyer|customer|audience|团队|开发者|客户|用户)",
+        "audience": r"(?:team|founder|developer|buyer|customer|audience|workers?|professionals?|consumers?|households?|团队|开发者|客户|用户)",
         "call_to_action": r"(?:CTA|call to action|sign up|start|book|register|download|预约|注册|开始|试用)",
     },
     "pricing": {
