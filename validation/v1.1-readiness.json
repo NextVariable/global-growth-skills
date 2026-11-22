@@ -6,7 +6,7 @@
   "repository": "https://github.com/NextVariable/global-growth-skills",
   "branch": "feat/v1.1-gtm-intelligence",
   "base_commit": "7112a7df48d59419594619d51d279e6d0f20fb00",
-  "head_commit": "7f85083de7e6002e7ba24e21716071a12e6c1fa0",
+  "head_commit": "ee52be28f888c0cd5171e1f1bb701c99b496f216",
   "prepared_at": "2026-11-23",
   "release_gate": "DRAFT",
   "verification": {
@@ -23,18 +23,18 @@
     "reason": "No authenticated model was used in this pass; no token, timing or cost data was produced."
   },
   "ci": {
-    "head": "7f85083de7e6002e7ba24e21716071a12e6c1fa0",
+    "head": "ee52be28f888c0cd5171e1f1bb701c99b496f216",
     "total": 18,
     "success": 18,
     "failure": 0,
     "runs": [
       {
         "workflow": "Validate",
-        "url": "https://github.com/NextVariable/global-growth-skills/actions/runs/45049682185"
+        "url": "https://github.com/NextVariable/global-growth-skills/actions/runs/45053187641"
       },
       {
         "workflow": "Harness fixture tests",
-        "url": "https://github.com/NextVariable/global-growth-skills/actions/runs/45049682178"
+        "url": "https://github.com/NextVariable/global-growth-skills/actions/runs/45053187647"
       }
     ]
   },
