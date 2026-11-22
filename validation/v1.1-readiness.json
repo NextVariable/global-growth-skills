@@ -44,7 +44,7 @@
     {
       "id": "privacy-scan-history",
       "result": "pass",
-      "detail": "historical blobs and commit metadata scanned; 0 findings after the V1.1 commit author/committer email fix"
+      "detail": "historical blobs and commit metadata scanned; 0 findings. The scanner now ignores reserved, non-routable domains such as host.local, which had been flagged from local commit identities."
     },
     {
       "id": "static-analysis",
