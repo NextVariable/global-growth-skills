@@ -590,9 +590,34 @@ class Harness(Store):
                     )
                 checks.append(outcome)
             audits = []
+            built_contract = None
+            if stage == "strategy":
+                contract_request, contract_result = requests[0], results[0]
+                built_contract = decision_contract.build(
+                    contract_result.get("contract"),
+                    "dec-"
+                    + digest(
+                        {
+                            "run": run_id,
+                            "recommendation": contract_result["recommendation"],
+                            "goal": contract_request["context"].get("goal"),
+                        }
+                    )[:16],
+                    {
+                        "goal": contract_request["context"].get("goal"),
+                        "budget": contract_request["context"].get("budget"),
+                    },
+                    contract_result.get("claims", []),
+                    contract_result.get("assumptions", []),
+                )
             for req, result in zip(requests, results):
                 market = req.get("market_review", {"citation_ids": [], "sources": []})
                 text = result.get("recommendation") if stage == "strategy" else result.get("markdown")
+                contract = (
+                    built_contract
+                    if stage == "strategy"
+                    else (req.get("decision") or {}).get("contract")
+                )
                 audit = audit_evidence(
                     market,
                     result.get("claims", []),
@@ -600,31 +625,16 @@ class Harness(Store):
                     text,
                     execution=adapter.execution,
                     gaps=result.get("evidence_gaps", []),
+                    context=req.get("context"),
+                    contract=contract,
+                    assumptions=result.get("assumptions", []),
+                    proposals=(result.get("constraint_refs") or {}).get("proposals", []),
                 )
                 audits.append(audit)
             if stage != "strategy" and any(
                 req["artifact_kind"] != result["kind"] for req, result in zip(requests, results)
             ):
                 raise HarnessError("adapter returned an unexpected artifact kind")
-            if stage == "strategy":
-                req, result = requests[0], results[0]
-                built_contract = decision_contract.build(
-                    result.get("contract"),
-                    "dec-"
-                    + digest(
-                        {
-                            "run": run_id,
-                            "recommendation": result["recommendation"],
-                            "goal": req["context"].get("goal"),
-                        }
-                    )[:16],
-                    {
-                        "goal": req["context"].get("goal"),
-                        "budget": req["context"].get("budget"),
-                    },
-                    result.get("claims", []),
-                    result.get("assumptions", []),
-                )
         except Exception as exc:
             with self.transaction():
                 if self._owns_attempt(run_id, stage, attempt):

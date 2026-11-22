@@ -9,6 +9,7 @@ human review supplies a verdict.
 from datetime import datetime, timezone
 import re
 
+from . import provenance
 from .contracts import HarnessError, digest
 from .research import PROSE_PATTERNS, freshness, prose_review
 
@@ -130,7 +131,20 @@ def build_claim_map(market, claims, citations=(), today=None, *, trust_reviews=T
     }
 
 
-def audit_evidence(market, claims, citations, text, *, execution, today=None, gaps=()):
+def audit_evidence(
+    market,
+    claims,
+    citations,
+    text,
+    *,
+    execution,
+    today=None,
+    gaps=(),
+    context=None,
+    contract=None,
+    assumptions=(),
+    proposals=(),
+):
     """Combine exact claim validation with visible prose and source risk."""
     market = market or {"citation_ids": [], "sources": [], "contradictions": [], "status": "needs_review"}
     today = today or datetime.now(timezone.utc).date()
@@ -138,6 +152,9 @@ def audit_evidence(market, claims, citations, text, *, execution, today=None, ga
         market, claims, citations, today, trust_reviews=execution == "fixture"
     )
     prose_flags = prose_review(text)
+    facts = provenance.internal_facts(context, contract)
+    classified = provenance.classify(text, prose_flags, facts)
+    external_flags = classified["external_flags"]
     eligible = list(market["citation_ids"])
     contradictions = sorted(market.get("contradictions") or [])
     injection = sorted(
@@ -149,8 +166,7 @@ def audit_evidence(market, claims, citations, text, *, execution, today=None, ga
     )
     mapped_claims = mapped["claims"]
     semantic = [item["semantic_support"] for item in mapped_claims]
-    # Pattern matches flag drafts for review and can include legitimate budget or target figures.
-    missing_claims = not mapped_claims and bool(prose_flags) and (
+    missing_claims = not mapped_claims and bool(external_flags) and (
         bool(eligible) or execution in {"model", "handoff"}
     )
     if contradictions:
@@ -165,7 +181,7 @@ def audit_evidence(market, claims, citations, text, *, execution, today=None, ga
         status = "no_claims"
     elif "rejected" in semantic:
         status = "unsupported_claims"
-    elif prose_flags:
+    elif external_flags:
         status = "partial"
     elif any(label != "supported" for label in semantic):
         status = "needs_review"
@@ -173,19 +189,25 @@ def audit_evidence(market, claims, citations, text, *, execution, today=None, ga
         status = "verified"
 
     diagnostics = list(gaps or [])
+    operator_fields = sorted({item["field"] for item in classified["operator_input"]})
     if missing_claims:
         diagnostics.append(
             "No structured claim maps the external-fact statements in this output to an eligible source. Check whether the flagged statements are project inputs or proposed targets."
         )
-    elif eligible and not mapped_claims:
+    elif eligible and not mapped_claims and not operator_fields:
         diagnostics.append(
             "No structured claim was supplied; treat factual statements as assumptions."
         )
     if contradictions:
         diagnostics.append("Conflicting sources for: " + ", ".join(contradictions))
-    if prose_flags:
+    if external_flags:
         diagnostics.append(
-            "Unmapped external-fact patterns in prose: " + ", ".join(prose_flags)
+            "Unmapped external-fact patterns in prose: " + ", ".join(external_flags)
+        )
+    if operator_fields:
+        diagnostics.append(
+            "Operator-provided facts do not require external citations: "
+            + ", ".join(operator_fields)
         )
     unverified = [
         item["claim_id"]
@@ -209,12 +231,44 @@ def audit_evidence(market, claims, citations, text, *, execution, today=None, ga
     if injection:
         diagnostics.append("Source text contains instruction-like content: " + ", ".join(injection))
 
+    provenance_record = {
+        "operator_input": classified["operator_input"],
+        "external_evidence": [
+            {
+                "category": "external_evidence",
+                "label": (item.get("text") or item["quote"])[:500],
+                "field": item["claim_key"],
+                "source_id": item["source_id"],
+                "claim_id": item["claim_id"],
+            }
+            for item in mapped_claims
+        ],
+        "inference": [
+            {"category": "inference", "label": normalize(str(item))[:500]}
+            for item in assumptions
+            if normalize(str(item))
+        ],
+        "proposal": [
+            {
+                "category": "proposal",
+                "label": normalize(
+                    str(item.get("reason") or item.get("value") or "proposed change")
+                )[:500],
+                "field": str(item["field"]),
+            }
+            for item in proposals
+            if isinstance(item, dict) and item.get("field")
+        ],
+        "unmapped_external_flags": external_flags,
+    }
+
     return {
         "status": status,
         "execution": execution,
         "eligible_source_count": len(eligible),
         "missing_claims": missing_claims,
         "prose_flags": prose_flags,
+        "provenance": provenance_record,
         "claims": mapped_claims,
         "duplicates_removed": mapped["duplicates_removed"],
         "source_ids": mapped["source_ids"],

@@ -1572,6 +1572,90 @@
         }
       }
     },
+    "provenance-item": {
+      "type": "object",
+      "required": [
+        "category",
+        "label"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "enum": [
+            "operator_input",
+            "external_evidence",
+            "inference",
+            "proposal"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "field": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "flag": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "source_id": {
+          "$ref": "#/$defs/run-id"
+        },
+        "claim_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "operator_input",
+        "external_evidence",
+        "inference",
+        "proposal",
+        "unmapped_external_flags"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operator_input": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/provenance-item"
+          }
+        },
+        "external_evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/provenance-item"
+          }
+        },
+        "inference": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/provenance-item"
+          }
+        },
+        "proposal": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/provenance-item"
+          }
+        },
+        "unmapped_external_flags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "evidence-audit": {
       "type": "object",
       "required": [
@@ -1580,6 +1664,7 @@
         "eligible_source_count",
         "missing_claims",
         "prose_flags",
+        "provenance",
         "claims",
         "duplicates_removed",
         "source_ids",
@@ -1622,6 +1707,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
         },
         "claims": {
           "type": "array",
