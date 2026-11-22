@@ -18,6 +18,135 @@ HEADING = {
 }
 
 
+def _money_label(field, value):
+    amount = value.get("amount_minor")
+    currency = value.get("currency")
+    if type(amount) is not int or not isinstance(currency, str):
+        return f"{field} = unknown"
+    major = amount // 100 if amount % 100 == 0 else amount / 100
+    label = f"{field} = {major} {currency.upper()}"
+    unit = value.get("unit")
+    if isinstance(unit, str) and unit.strip():
+        label += f" ({unit.strip()})"
+    return label
+
+
+def _slot_label(field, slot):
+    if field == "budget_constraints":
+        return _money_label(field, slot)
+    if field == "observation_window":
+        return f"{field} = {slot.get('value')} {slot.get('unit')}"
+    if field == "independence_conditions":
+        values = slot.get("values") or []
+        return f"{field} = " + "; ".join(str(value) for value in values)
+    value = slot.get("value")
+    unit = slot.get("unit")
+    return f"{field} = {value}" + (f" {unit}" if unit else "")
+
+
+def _dedupe(items):
+    seen = set()
+    unique = []
+    for item in items:
+        key = (item["category"], item.get("field"), item["label"])
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(item)
+    return unique
+
+
+def _provenance(state, decision, active):
+    operator = []
+    external = []
+    inference = []
+    proposals = []
+    values = state["context"]["values"]
+    for field in ("goal", "budget", "price"):
+        value = values.get(field)
+        if isinstance(value, dict):
+            operator.append(
+                {
+                    "category": "operator_input",
+                    "label": _money_label(field, value),
+                    "field": field,
+                }
+            )
+        elif isinstance(value, str) and value.strip():
+            operator.append(
+                {
+                    "category": "operator_input",
+                    "label": f"{field} = {value.strip()[:300]}",
+                    "field": field,
+                }
+            )
+    records = ([("strategy", decision)] if decision else []) + [
+        (item["kind"], item) for item in active
+    ]
+    for label, item in records:
+        contract = item.get("contract") if label == "strategy" else None
+        if contract:
+            approved = contract.get("approval_status") == "approved"
+            for field in (
+                "target_value",
+                "sample_size",
+                "observation_window",
+                "independence_conditions",
+            ):
+                slot = contract.get(field)
+                if not isinstance(slot, dict):
+                    continue
+                if slot.get("state") == "decided" and approved:
+                    operator.append(
+                        {
+                            "category": "operator_input",
+                            "label": _slot_label(field, slot),
+                            "field": field,
+                        }
+                    )
+                elif slot.get("state") == "proposed":
+                    proposals.append(
+                        {
+                            "category": "proposal",
+                            "label": _slot_label(field, slot) + " (unapproved)",
+                            "field": field,
+                        }
+                    )
+        for assumption in item.get("assumptions") or []:
+            inference.append(
+                {"category": "inference", "label": str(assumption)[:500]}
+            )
+        for claim in item.get("claims", []):
+            external.append(
+                {
+                    "category": "external_evidence",
+                    "label": str(claim.get("text") or claim.get("quote") or "")[:500],
+                    "field": str(claim.get("claim_key") or "claim"),
+                    "source_id": claim["source_id"],
+                    "claim_id": claim["claim_id"],
+                }
+            )
+        check = item.get("constraint_check") or {}
+        for proposal in check.get("proposals") or []:
+            if isinstance(proposal, dict) and proposal.get("field"):
+                proposals.append(
+                    {
+                        "category": "proposal",
+                        "label": (
+                            f"{proposal['field']} · "
+                            f"{proposal.get('reason') or 'proposed change'}"
+                        )[:500],
+                        "field": proposal["field"],
+                    }
+                )
+    return {
+        "operator_input": _dedupe(operator),
+        "external_evidence": _dedupe(external),
+        "inference": _dedupe(inference),
+        "proposal": _dedupe(proposals),
+    }
+
+
 def snapshot(state, receipts):
     sources = review(state["context"]["values"].get("market_sources", []))
     decisions = state["decisions"]
@@ -69,6 +198,7 @@ def snapshot(state, receipts):
         "artifacts": active,
         "quality": quality,
         "decision_review": decision_review,
+        "provenance": _provenance(state, decision, active),
         "historical_artifact_ids": [a["id"] for a in state["artifacts"] if a["status"] == "stale"],
         "tasks": state["tasks"],
         "evidence_review": sources,
@@ -93,6 +223,7 @@ def snapshot(state, receipts):
                 if item.get("claims") or item.get("citation_ids")
                 else [],
                 "prose_flags": prose_review(item.get("markdown", item.get("recommendation", ""))),
+                "provenance": (item.get("evidence_audit") or {}).get("provenance", {}),
                 "evidence_gaps": (item.get("evidence_audit") or {}).get("evidence_gaps", []),
             }
             for label, item in records
@@ -214,6 +345,25 @@ def markdown(package):
             "",
         ]
     lines += markdown_lines(package["quality"], format_text=_text) + [""]
+    provenance = package.get("provenance") or {}
+    if any(
+        provenance.get(key)
+        for key in ("operator_input", "external_evidence", "inference", "proposal")
+    ):
+        lines += ["## Provenance and source classes", ""]
+        for key, label in (
+            ("operator_input", "Operator input"),
+            ("external_evidence", "External evidence"),
+            ("inference", "Inference (unverified)"),
+            ("proposal", "Proposal (unapproved)"),
+        ):
+            items = provenance.get(key) or []
+            lines.append(f"- {label} · {len(items)}")
+            for entry in items[:5]:
+                lines.append(f"  - {_text(entry['label'])}")
+            if len(items) > 5:
+                lines.append(f"  - … {len(items) - 5} more")
+        lines.append("")
     lines += ["## Evidence and decision log", ""]
     for item in package["claim_audit"]:
         flags = ", ".join(item["prose_flags"]) or "none detected"
