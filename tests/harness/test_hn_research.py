@@ -131,5 +131,34 @@ class HackerNewsResearchTests(unittest.TestCase):
         self.assertNotIn(hn["id"], market["citation_ids"])
 
 
+class ProviderRegistryTests(unittest.TestCase):
+    def test_unknown_provider_is_rejected(self):
+        from harness.providers import module
+
+        with self.assertRaises(HarnessError):
+            module("unknown-provider")
+
+    def test_capture_provider_must_match_its_verifier(self):
+        record = fetch(
+            {"topic": "market", "term": "analytics", "limit": 1},
+            get=get_ok(),
+            clock=lambda: NOW,
+        )[0]
+        forged = {**record, "capture": {**record["capture"], "provider": "web-public"}}
+        with self.assertRaises(HarnessError):
+            verify_capture(forged)
+
+    def test_capture_signal_cannot_be_relabelled(self):
+        record = fetch(
+            {"topic": "market", "term": "analytics", "limit": 1},
+            get=get_ok(),
+            clock=lambda: NOW,
+        )[0]
+        self.assertEqual(record["capture"]["signal"], "community_discussion")
+        forged = {**record, "capture": {**record["capture"], "signal": "demand"}}
+        with self.assertRaises(HarnessError):
+            verify_capture(forged)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -3,12 +3,14 @@
 ## 1.1.0 — GTM Intelligence (in development)
 
 - 统一只读研究 Provider，并接入 Hacker News 公共讨论快照；保留来源、时间、URL、摘要、捕获校验与冲突/时效/去重检查。
-- 新增九领域 GTM 决策 brief，所有判断可追溯到项目输入或外部证据；缺失依据时保持 `needs_evidence`。
+- 新增九领域 GTM 决策 brief，所有判断可追溯到项目输入或外部证据；缺失依据时保持 `needs_evidence`。GitHub 仓库与 Hacker News 讨论仅记为 `external_signal`，不能单独把领域标为 `decision_ready`；只有显式抓取的公开网页快照是 `external_evidence`。
 - 导出包新增 Executive Summary、Market & ICP、Competitive Landscape、Decision Register、KPI Framework 和 Action Register。
 - 草稿支持结构化 actions：owner、前置条件、资源、指标与下一步。
 - 新增 `TaskInput` / `TaskResult` 与可替换 `HostAdapter`，声明不同宿主的工具与上下文能力。
 - 证据按预算打包进 prompt；新增 `cost-report` 聚合真实 host receipt。
 - 新增 AI SaaS / Developer Tools / Smart Hardware 的确定性 A/B/C 结构基准。
+- 新增 `scripts/check_release_gate.py`，校验发布记录声明的提交、catalog 版本和文件/测试统计是否与当前候选提交一致。
+- 新增真实模型评测协议 `evals/v1.1/real-model-protocol.md`（本次未执行，状态 NOT TESTED）。
 - 边界：真实模型对比 NOT TESTED；真实商业效果未测量；结构评分不代表商业质量。
 
 ## 1.0.0

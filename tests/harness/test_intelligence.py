@@ -18,6 +18,16 @@ def source(ident, topic, claim_key=None):
     }
 
 
+def signal_source(ident, topic, provider="hn-public", signal="community_discussion"):
+    row = source(ident, topic)
+    capture = {"provider": provider, "topic": topic}
+    if signal:
+        capture["signal"] = signal
+    row["capture"] = capture
+    row["excerpt"] = "A public discussion snapshot."
+    return row
+
+
 def market(rows=(), contradictions=()):
     return {
         "sources": list(rows),
@@ -61,6 +71,26 @@ class DecisionBriefTests(unittest.TestCase):
         by_area = {row["area"]: row for row in brief["areas"]}
         self.assertEqual(by_area["competitive_positioning"]["status"], "needs_evidence")
         self.assertNotIn("web-a", [item["ref"] for item in by_area["competitive_positioning"]["basis"]])
+
+    def test_community_signal_never_closes_an_area(self):
+        brief = build_brief(INPUTS, market([signal_source("hn-a", "market")]))
+        area = next(row for row in brief["areas"] if row["area"] == "market_prioritization")
+        self.assertEqual(area["status"], "needs_evidence")
+        self.assertEqual(
+            [item["kind"] for item in area["basis"] if item["ref"] == "hn-a"],
+            ["external_signal"],
+        )
+        self.assertTrue(any("signals" in item for item in area["unresolved"]))
+        self.assertEqual(brief["summary"]["decision_ready"], 0)
+
+    def test_repository_signal_never_closes_an_area(self):
+        brief = build_brief(INPUTS, market([signal_source("gh-a", "competitor", "gh-public", None)]))
+        area = next(row for row in brief["areas"] if row["area"] == "competitive_positioning")
+        self.assertEqual(area["status"], "needs_evidence")
+        self.assertEqual(
+            [item["kind"] for item in area["basis"] if item["ref"] == "gh-a"],
+            ["external_signal"],
+        )
 
     def test_approved_measurement_slots_close_experiment_gaps(self):
         contract = {

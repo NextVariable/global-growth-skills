@@ -6,11 +6,24 @@
   "repository": "https://github.com/NextVariable/global-growth-skills",
   "branch": "feat/v1.1-gtm-intelligence",
   "base_commit": "7112a7df48d59419594619d51d279e6d0f20fb00",
-  "head_commit": "81ee02a778bf232e5fff0ab6d63dbbfcd408cd63",
+  "head_commit": "7f85083de7e6002e7ba24e21716071a12e6c1fa0",
   "prepared_at": "2026-11-23",
   "release_gate": "DRAFT",
+  "verification": {
+    "harness_tests": 171,
+    "installer_tests": 10,
+    "tracked_files": 135,
+    "checker": "python3 scripts/check_release_gate.py"
+  },
+  "real_model_evaluation": {
+    "protocol": "evals/v1.1/real-model-protocol.md",
+    "arms": ["V1.0 at 7112a7d", "V1.1 at the Draft PR head"],
+    "status": "NOT TESTED",
+    "calls": 0,
+    "reason": "No authenticated model was used in this pass; no token, timing or cost data was produced."
+  },
   "ci": {
-    "head": "81ee02a778bf232e5fff0ab6d63dbbfcd408cd63",
+    "head": "7f85083de7e6002e7ba24e21716071a12e6c1fa0",
     "total": 18,
     "success": 18,
     "failure": 0,
@@ -40,7 +53,7 @@
     {
       "id": "harness-tests",
       "result": "pass",
-      "detail": "163/163 tests, python3 scripts/validate_harness.py"
+      "detail": "171/171 tests, python3 scripts/validate_harness.py"
     },
     {
       "id": "installer-tests",
@@ -55,7 +68,7 @@
     {
       "id": "privacy-scan-current",
       "result": "pass",
-      "detail": "124 tracked files, 0 current findings"
+      "detail": "135 tracked files, 0 current findings"
     },
     {
       "id": "privacy-scan-history",
@@ -91,6 +104,16 @@
       "id": "live-community-source",
       "result": "pass",
       "detail": "research-community market \"AI meeting notes\" --limit 2 returned 2 public Hacker News snapshots (hn-d367bc1ab7b301cd464e, hn-cd371a32ef0c2572ea0a) with observation and validity dates"
+    },
+    {
+      "id": "decision-grade-evidence",
+      "result": "pass",
+      "detail": "Hacker News and GitHub captures are external_signal; they never make a brief area decision_ready. Only a captured public web page counts as external_evidence."
+    },
+    {
+      "id": "release-gate-consistency",
+      "result": "pass",
+      "detail": "scripts/check_release_gate.py verifies declared commits are ancestors of HEAD, catalog revisions match catalog.json, and tracked-file and test counts match the checkout; wired into validate.yml and harness.yml"
     }
   ],
   "benchmark": {
@@ -129,13 +152,15 @@
     "business_outcome": "not_measured"
   },
   "known_limitations": [
-    "No real-model A/B/C comparison was run in this pass; model quality and token cost are NOT TESTED.",
+    "No real-model V1.0 vs V1.1 comparison was run in this pass; model quality and token cost are NOT TESTED.",
     "Structural benchmark scores do not measure commercial quality.",
     "Hacker News points and comments are public discussion activity, not demand, adoption, paying customers or market size.",
     "Clean-directory install could not be re-verified because github.com git transport was unreachable from the preparation environment.",
     "Competitive and market sections in the exported package only use captured sources; when none exist the package says so instead of inventing numbers.",
+    "There is no independent semantic reviewer; verbatim quote matches stay unverified.",
     "Real publishing, outreach, CRM writes, ad spend and customer outcomes are not executed or measured."
   ],
+  "codex_final_audit": "ready_with_documented_p1_items",
   "release_actions": {
     "draft_pull_request": "https://github.com/NextVariable/global-growth-skills/pull/3",
     "merge_main": "not_performed_pending_product_owner_authorization",

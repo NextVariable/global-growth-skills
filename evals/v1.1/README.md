@@ -35,6 +35,8 @@ python3 scripts/benchmark_v11.py --live --report /tmp/v11-benchmark-live.json
 
 `decision_ready` and `external_basis_refs` stay at zero in offline mode because no sources are captured. They rise only when sources are supplied, which is the intended behaviour: missing evidence stays `needs_evidence` rather than being filled with invented numbers.
 
+Repository metadata and Hacker News discussions are recorded as `external_signal`. They never make an area `decision_ready` on their own; only an explicitly captured public web page counts as `external_evidence`.
+
 ## Boundaries
 
 - Real model execution: **NOT TESTED** in this pass. No model tokens or cost were produced.

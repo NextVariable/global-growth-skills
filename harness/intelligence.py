@@ -44,6 +44,16 @@ GUARDRAILS = {
     "activation_retention": "Do not promise retention lift before a measured baseline exists.",
 }
 
+# Only an explicitly snapshotted public page can ground a commercial decision.
+# Repository metadata and public discussion are context signals: stars, points and
+# comments do not establish demand, adoption, market size or willingness to pay.
+DECISION_GRADE_PROVIDERS = {"web-public"}
+
+
+def _evidence_kind(row):
+    provider = (row.get("capture") or {}).get("provider")
+    return "external_evidence" if provider in DECISION_GRADE_PROVIDERS else "external_signal"
+
 
 def _operator_refs(inputs, contract):
     refs = []
@@ -70,16 +80,28 @@ def build_brief(inputs, market, contract=None):
     for area, question in AREAS:
         topics = TOPIC_HINTS[area]
         evidence = [
-            {"kind": "external_evidence", "ref": row["id"], "topic": (row.get("capture") or {}).get("topic")}
+            {
+                "kind": _evidence_kind(row),
+                "ref": row["id"],
+                "topic": (row.get("capture") or {}).get("topic"),
+            }
             for row in sources
             if (row.get("capture") or {}).get("topic") in topics
             and row.get("claim_key") not in contradictions
         ]
+        decision_grade = [item for item in evidence if item["kind"] == "external_evidence"]
+        signals = [item for item in evidence if item["kind"] == "external_signal"]
         basis = [*operator, *evidence]
         unresolved = []
-        if not evidence:
-            unresolved.append("No captured public source matches this area yet.")
-        if area in {"pricing_packaging", "competitive_positioning"} and not evidence:
+        if not decision_grade:
+            if signals:
+                unresolved.append(
+                    "Only community or repository signals match this area; they do not "
+                    "establish demand, adoption, market size or a commercial decision."
+                )
+            else:
+                unresolved.append("No captured public source matches this area yet.")
+        if area in {"pricing_packaging", "competitive_positioning"} and not decision_grade:
             unresolved.append("Competitor pricing or positioning must not be asserted without a source.")
         if area in {"acquisition_experiment", "activation_retention"}:
             for field, label in (

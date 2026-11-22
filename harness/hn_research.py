@@ -158,6 +158,7 @@ def _record(item, at, topic, endpoint):
         ),
         "capture": {
             "provider": PROVIDER,
+            "signal": "community_discussion",
             "retrieved_at": at.isoformat(),
             "topic": topic,
             "endpoint": endpoint,
@@ -181,6 +182,8 @@ def verify_capture(row):
     facts = capture.get("facts") or {}
     if capture.get("provider") != PROVIDER:
         raise HarnessError("capture does not use the discussion provider")
+    if "signal" in capture and capture["signal"] != "community_discussion":
+        raise HarnessError("capture does not declare a discussion signal")
     object_id = str(facts.get("object_id", ""))
     discussion = f"https://news.ycombinator.com/item?id={object_id}"
     expected = "hn-" + digest(object_id)[:20]

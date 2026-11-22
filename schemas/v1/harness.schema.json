@@ -1640,6 +1640,9 @@
         "provider": {
           "const": "hn-public"
         },
+        "signal": {
+          "const": "community_discussion"
+        },
         "retrieved_at": {
           "type": "string",
           "maxLength": 40
