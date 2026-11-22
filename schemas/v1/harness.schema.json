@@ -1608,6 +1608,44 @@
         "rationale",
         "uncertainty"
       ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "reviewer": {
+                "const": "model"
+              }
+            },
+            "required": [
+              "reviewer"
+            ]
+          },
+          "then": {
+            "required": [
+              "model"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "reviewer": {
+                "const": "human"
+              }
+            },
+            "required": [
+              "reviewer"
+            ]
+          },
+          "then": {
+            "not": {
+              "required": [
+                "model"
+              ]
+            }
+          }
+        }
+      ],
       "additionalProperties": false,
       "properties": {
         "reviewer": {

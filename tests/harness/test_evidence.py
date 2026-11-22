@@ -2,7 +2,7 @@ import copy
 from datetime import date
 import unittest
 
-from harness.contracts import HarnessError, digest
+from harness.contracts import HarnessError, digest, validate
 from harness.evidence import audit_evidence, build_claim_map, requires_claim_mapping
 from harness.research import dependencies_changed, review, source_fingerprint
 
@@ -219,6 +219,36 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual(audit["status"], "conflict")
         self.assertEqual(audit["contradictions"], ["demand"])
         self.assertFalse(requires_claim_mapping(audit))
+
+    def test_review_schema_requires_a_model_name_only_for_model_reviewers(self):
+        claim = {
+            "source_id": "price-1",
+            "quote": "$49 per month",
+            "review": {
+                "reviewer": "model",
+                "verdict": "supported",
+                "rationale": "The price matches.",
+                "uncertainty": "low",
+            },
+        }
+        with self.assertRaises(Exception):
+            validate("claim-list", [claim])
+        claim["review"]["model"] = "gpt-test"
+        self.assertEqual(validate("claim-list", [claim])[0]["review"]["model"], "gpt-test")
+        human = {
+            "source_id": "price-1",
+            "quote": "$49 per month",
+            "review": {
+                "reviewer": "human",
+                "verdict": "supported",
+                "rationale": "Reviewed against the page.",
+                "uncertainty": "low",
+            },
+        }
+        self.assertEqual(validate("claim-list", [human])[0]["review"]["reviewer"], "human")
+        human["review"]["model"] = "gpt-test"
+        with self.assertRaises(Exception):
+            validate("claim-list", [human])
 
     def test_incomplete_semantic_review_is_refused(self):
         market = self.market([source("price-1", "price")])
