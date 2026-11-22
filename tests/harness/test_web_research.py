@@ -159,6 +159,7 @@ class PinnedTransportTests(unittest.TestCase):
 
         class Context:
             verify_mode = ssl.CERT_REQUIRED
+            check_hostname = True
 
             def wrap_socket(self, sock, server_hostname):
                 calls["sni"] = server_hostname
