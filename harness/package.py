@@ -4,6 +4,7 @@ from html import escape
 import re
 
 from .decision import markdown_lines as contract_lines
+from .provenance import format_money
 from .quality import assess, markdown_lines
 from .research import prose_review, review, source_dependencies
 
@@ -23,8 +24,7 @@ def _money_label(field, value):
     currency = value.get("currency")
     if type(amount) is not int or not isinstance(currency, str):
         return f"{field} = unknown"
-    major = amount // 100 if amount % 100 == 0 else amount / 100
-    label = f"{field} = {major} {currency.upper()}"
+    label = f"{field} = {format_money(amount, currency.upper())}"
     unit = value.get("unit")
     if isinstance(unit, str) and unit.strip():
         label += f" ({unit.strip()})"
@@ -116,7 +116,10 @@ def _provenance(state, decision, active):
             inference.append(
                 {"category": "inference", "label": str(assumption)[:500]}
             )
-        for claim in item.get("claims", []):
+        # Stored result claims are raw model data. Link the validated claim map.
+        for claim in (item.get("evidence_audit") or {}).get("claims", []):
+            if not claim.get("source_id") or not claim.get("claim_id"):
+                continue
             external.append(
                 {
                     "category": "external_evidence",

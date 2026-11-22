@@ -9,28 +9,32 @@ external fact. External market assertions still need a claim and a source.
 from decimal import Decimal, InvalidOperation
 import re
 
+# ISO 4217 minor-unit precision for money spellings recognized below.
+# Unknown codes stay in minor units and are not eligible for numeric exemption.
+MINOR_DIGITS = dict.fromkeys(("USD", "EUR", "GBP", "CNY", "CAD", "AUD", "CHF"), 2)
+MINOR_DIGITS.update(dict.fromkeys(("JPY", "KRW", "VND", "CLP"), 0))
+MINOR_DIGITS.update(dict.fromkeys(("KWD", "BHD", "JOD", "OMR", "TND", "IQD", "LYD"), 3))
+AMOUNT = r"(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?"
+CODES = "|".join(MINOR_DIGITS) + r"|RMB|dollars?|euros?|pounds?|yuan|yen|美元|欧元|日元|人民币|英镑"
 MONEY_PATTERN = re.compile(
-    r"(?P<symbol>[$€£¥])\s?(?P<symbol_amount>\d[\d,.]*)\s?(?P<suffix>[kKmMbB])?"
-    r"|\b(?P<code_amount>\d[\d,.]*)\s*"
-    r"(?P<code>USD|EUR|GBP|CNY|RMB|dollars?|euros?|pounds?|yuan)\b",
+    rf"(?P<symbol>[$€£¥])\s*(?P<symbol_amount>{AMOUNT})(?P<suffix>[kKmMbB])?(?!\d|[.,]\d)"
+    rf"|\b(?P<prefix>{'|'.join(MINOR_DIGITS)})\s*(?P<prefix_amount>{AMOUNT})(?!\d|[.,]\d)"
+    rf"|(?<![\d.,])(?P<code_amount>{AMOUNT})\s*(?P<code>{CODES})(?![a-z])",
     re.IGNORECASE,
 )
-PERCENT_PATTERN = re.compile(r"(?P<value>\d+(?:\.\d+)?)\s*%")
+PERCENT_PATTERN = re.compile(r"(?P<value>\d+(?:\.\d+)?)\s*[%％]")
 SYMBOL_CURRENCY = {"$": {"USD"}, "€": {"EUR"}, "£": {"GBP"}, "¥": {"CNY", "JPY"}}
-WORD_CURRENCY = {
-    "usd": {"USD"},
-    "eur": {"EUR"},
-    "gbp": {"GBP"},
-    "cny": {"CNY"},
-    "rmb": {"CNY"},
-    "dollar": {"USD"},
-    "dollars": {"USD"},
-    "euro": {"EUR"},
-    "euros": {"EUR"},
-    "pound": {"GBP"},
-    "pounds": {"GBP"},
-    "yuan": {"CNY"},
+CURRENCY_ALIASES = {
+    "rmb": "CNY", "dollar": "USD", "dollars": "USD", "euro": "EUR", "euros": "EUR",
+    "pound": "GBP", "pounds": "GBP", "yuan": "CNY", "yen": "JPY",
+    "美元": "USD", "欧元": "EUR", "日元": "JPY", "人民币": "CNY", "英镑": "GBP",
 }
+EXTERNAL_SUBJECT = re.compile(
+    r"\b(?:competitors?|rivals?|vendors?|third.party|market size|TAM|paying customers?)\b"
+    r"|竞品|竞争对手|供应商|第三方|市场规模|付费客户", re.I,
+)
+CLAUSE_BOUNDARY = re.compile(r"[\n;；。！？|]|[.!?](?=\s|$)|,(?=\s)|，|\b(?:and|but|while)\b", re.I)
+
 SUFFIX = {"k": Decimal(1000), "m": Decimal(1000000), "b": Decimal(1000000000)}
 NUMBER_WORDS = {
     "one": 1,
@@ -61,10 +65,11 @@ def _normalize(text):
     return re.sub(r"\s+", " ", str(text)).strip()
 
 
-def _format_money(amount_minor, currency):
-    major = Decimal(amount_minor) / Decimal(100)
-    if major == major.to_integral():
-        return f"{int(major)} {currency}"
+def format_money(amount_minor, currency):
+    digits = MINOR_DIGITS.get(currency)
+    if digits is None:
+        return f"{amount_minor} {currency} minor units"
+    major = Decimal(amount_minor).scaleb(-digits)
     return f"{major.normalize():f} {currency}"
 
 
@@ -74,7 +79,7 @@ def _money_fact(field, value):
     if type(amount) is not int or not isinstance(currency, str) or not currency.strip():
         return None
     currency = currency.strip().upper()
-    label = f"{field} = {_format_money(amount, currency)}"
+    label = f"{field} = {format_money(amount, currency)}"
     unit = value.get("unit")
     if isinstance(unit, str) and unit.strip():
         label += f" ({unit.strip()})"
@@ -169,23 +174,75 @@ def _money_token(match):
         suffix = (match.group("suffix") or "").casefold()
         currencies = SYMBOL_CURRENCY[match.group("symbol")]
     else:
-        raw = match.group("code_amount")
+        raw = match.group("prefix_amount") or match.group("code_amount")
+        code = match.group("prefix") or match.group("code")
         suffix = ""
-        currencies = WORD_CURRENCY[match.group("code").casefold()]
+        currencies = {CURRENCY_ALIASES.get(code.casefold(), code.upper())}
     try:
         amount = Decimal(raw.replace(",", ""))
     except InvalidOperation:
         return None
     if suffix:
         amount *= SUFFIX[suffix]
-    return {"amount_minor": amount * 100, "currencies": currencies}
+    return amount, currencies
 
 
-def _match_money(token, facts):
-    for fact in facts:
-        if fact["kind"] != "money" or fact["currency"] not in token["currencies"]:
-            continue
-        if Decimal(fact["amount_minor"]) == token["amount_minor"]:
+def _clause(text, match):
+    start = 0
+    for separator in CLAUSE_BOUNDARY.finditer(text, 0, match.start()):
+        start = separator.end()
+    following = CLAUSE_BOUNDARY.search(text, match.end())
+    end = following.start() if following else len(text)
+    before = text[start:match.start()].strip().casefold()
+    after = text[match.end():end].strip().casefold()
+    return before, after
+
+
+def _money_role(text, match):
+    before, after = _clause(text, match)
+    if EXTERNAL_SUBJECT.search(before + " " + after):
+        return None
+    if (
+        re.search(r"(?:试点|本轮|本项目|推广)?(?:总|现金|投放|推广)?预算\s*(?:为|是|上限为|[:：=])?\s*$", before)
+        or re.search(r"(?:^|\b(?:our|the|this|approved|pilot|total|cash|trial|promotion) )"
+                     r"(?:(?:our|the|this|approved|pilot|total|cash|trial|promotion|project) ){0,4}budget\s*(?:(?:is|of|at)\b|[:=])?\s*$", before)
+        or (
+            re.search(r"^\s*(?:(?:cash|total|pilot|promotion)\s+)*budget\b", after)
+            and re.search(r"^(?:a |the |our |approved |keep |run |with |use |set )|\b(?:pilot|budget)\b", before)
+        )
+        or (
+            re.search(r"^\s*(?:pilot|trial)\b", after)
+            and re.search(r"\b(?:run|plan|propose|design|use|our|approved)\b", before)
+        )
+        or re.search(r"^(?:试点|推广|现金|总)*预算", after)
+    ):
+        return "budget"
+    if (
+        re.search(r"^(?:[-#> ]+)?(?:开源软件许可|软件许可|本产品(?:定价|价格|订阅)|许可费用)"
+                  r"[^0-9.,;]{0,20}$", before)
+        or re.search(r"\bour (?:price|pricing|licen[cs]e|subscription)[^0-9.,;]{0,25}$", before)
+        or re.search(r"^(?:[-#> ]+)?(?:the )?(?:open.source software |software |open.source )"
+                     r"licen[cs]e[^0-9.,;]{0,25}$", before)
+        or (
+            re.search(r"^\s*(?:for\s+)?(?:our|this project's)\s+(?:software\s+)?licen[cs]e\b", after)
+            and not re.search(r"[a-z]", before)
+        )
+    ):
+        return "price"
+    return None
+
+
+def _match_money(token, facts, role):
+    if token is None or role is None:
+        return None
+    amount, currencies = token
+    fields = {"budget", "budget_constraints"} if role == "budget" else {"price"}
+    candidates = [f for f in facts if f["kind"] == "money" and f["field"] in fields]
+    for fact in candidates:
+        currency = fact["currency"]
+        if currency in currencies and currency in MINOR_DIGITS and (
+            Decimal(fact["amount_minor"]) == amount.scaleb(MINOR_DIGITS[currency])
+        ):
             return fact
     return None
 
@@ -208,17 +265,14 @@ def _number_pattern(value):
 
 
 def _window_token(fact, text):
-    days = fact["days"]
-    pattern = rf"\b(?:\d+|{'|'.join(NUMBER_WORDS)})\b[\s-]*(?:days?|weeks?|周|天)"
+    pattern = rf"(?<!\d)(?P<number>\d+|{'|'.join(NUMBER_WORDS)})[\s-]*(?P<unit>days?|weeks?|周|天)"
     for match in re.finditer(pattern, text, re.IGNORECASE):
-        token = _normalize(match.group(0))
-        if re.search(rf"\b{days}\b", token):
-            return token
-        if days % 7 == 0 and re.search(rf"\b{days // 7}\b", token):
-            return token
-        words = [w for w, n in NUMBER_WORDS.items() if n in {days, days // 7}]
-        if words and any(re.search(rf"\b{word}\b", token, re.IGNORECASE) for word in words):
-            return token
+        number = match.group("number").casefold()
+        duration = int(number) if number.isdecimal() else NUMBER_WORDS[number]
+        if match.group("unit").casefold() in {"week", "weeks", "周"}:
+            duration *= 7
+        if duration == fact["days"] and not EXTERNAL_SUBJECT.search(" ".join(_clause(text, match))):
+            return _normalize(match.group(0))
     return None
 
 
@@ -229,14 +283,14 @@ def _number_token(fact, text):
     pattern = _number_pattern(value)
     for match in re.finditer(pattern, text, re.IGNORECASE):
         nearby = text[max(0, match.start() - 40) : match.end() + 40]
-        if PARTICIPANT.search(nearby):
+        if PARTICIPANT.search(nearby) and not EXTERNAL_SUBJECT.search(" ".join(_clause(text, match))):
             return _normalize(match.group(0))
     return None
 
 
 def classify(text, flags, facts):
     """Split prose flags into explained operator inputs and external facts."""
-    text = text or ""
+    text = re.sub(r"[*`_]", "", text or "")
     operator = []
     external = []
     external_flags = set()
@@ -264,7 +318,7 @@ def classify(text, flags, facts):
                 continue
             for match in found:
                 token = _money_token(match)
-                fact = _match_money(token, facts) if token else None
+                fact = _match_money(token, facts, _money_role(text, match))
                 if fact:
                     explain(fact, match.group(0), flag)
                 else:
@@ -283,7 +337,13 @@ def classify(text, flags, facts):
                 external_flags.add(flag)
                 continue
             for match in found:
-                fact = _match_percent(match, facts)
+                before, after = _clause(text, match)
+                fact = None
+                if not EXTERNAL_SUBJECT.search(before + " " + after) and re.search(
+                    r"approved.{0,35}(?:target|threshold|gate)|已批准.{0,20}(?:门槛|目标)",
+                    before,
+                ):
+                    fact = _match_percent(match, facts)
                 if fact:
                     explain(fact, match.group(0), flag)
                 else:

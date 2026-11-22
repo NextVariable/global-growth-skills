@@ -154,6 +154,47 @@ class ProvenanceClassificationTests(unittest.TestCase):
         self.assertEqual(result["status"], "missing_claims")
         self.assertIn("price_in_prose", result["provenance"]["unmapped_external_flags"])
 
+    def test_minor_unit_precision_and_provenance_labels(self):
+        from harness.package import _money_label
+
+        for currency, minor, major in (
+            ("JPY", 1234, "1,234"),
+            ("USD", 1234, "12.34"),
+            ("KWD", 1234, "1.234"),
+        ):
+            with self.subTest(currency=currency):
+                budget = {"amount_minor": minor, "currency": currency, "unit": "total"}
+                result = audit(f"Approved budget is {major} {currency}.", context={"budget": budget})
+                self.assertFalse(result["missing_claims"])
+                self.assertEqual(result["provenance"]["operator_input"][0]["field"], "budget")
+                self.assertEqual(_money_label("budget", budget), f"budget = {major.replace(',', '')} {currency} (total)")
+                wrong = audit(f"Approved budget is {minor + 1} {currency}.", context={"budget": budget})
+                self.assertTrue(wrong["missing_claims"])
+
+    def test_same_amount_cannot_substitute_for_source_or_field(self):
+        facts = {"budget": copy.deepcopy(BUDGET_ZERO)}
+        for text in (
+            "The competitor charges 0 USD.",
+            "Acme charges 0 USD. Our approved pilot budget is 0 USD.",
+            "Our approved pilot budget is 0 USD and the competitor charges 0 USD.",
+            "试点总预算 0 美元，但竞品收费 0 美元",
+            "The market size is 0 USD. The approved budget is 0 USD.",
+            "Our software license price is 0 USD.",
+            "Acme's software license price is 0 USD.",
+            "0 paying customers are on record. The approved budget is 0 USD.",
+        ):
+            with self.subTest(text=text):
+                result = audit(text, context=facts)
+                self.assertTrue(result["missing_claims"])
+                self.assertTrue(result["provenance"]["unmapped_external_flags"])
+
+    def test_window_provenance_distinguishes_days_and_weeks(self):
+        for text in ("Observe 2 days.", "Observe 14 weeks."):
+            result = audit(text, contract=approved_contract())
+            self.assertNotIn("observation_window", {p["field"] for p in result["provenance"]["operator_input"]})
+        result = audit("Observe for two weeks.", contract=approved_contract())
+        self.assertIn("observation_window", {p["field"] for p in result["provenance"]["operator_input"]})
+
     def test_unverified_paying_customer_count_still_needs_a_source(self):
         result = audit(
             "20 paying customers already renew the product.",
@@ -312,6 +353,31 @@ class ProvenanceWorkflowTests(unittest.TestCase):
         self.assertTrue(package["provenance"]["inference"])
         self.assertTrue(package["provenance"]["proposal"])
         self.assertIn("0 USD", markdown(package))
+
+    def test_package_provenance_uses_validated_claim_ids(self):
+        adapter = self.adapter()
+        execute = adapter.execute
+
+        def with_claim(request):
+            result = execute(request)
+            if request["stage"] == "strategy":
+                result["claims"] = [{
+                    "source_id": SOURCE["id"],
+                    "quote": SOURCE["excerpt"],
+                    "text": "The approved source supplied a synthetic survey entry.",
+                }]
+                result["citations"] = [SOURCE["id"]]
+            return result
+
+        adapter.execute = with_claim
+        state = self.h.step("run", adapter)
+        decision = state["decisions"][0]
+        package = snapshot(state, [])
+        row = package["provenance"]["external_evidence"][0]
+        self.assertEqual(row["claim_id"], decision["evidence_audit"]["claims"][0]["claim_id"])
+        self.assertEqual(row["source_id"], SOURCE["id"])
+        self.assertNotIn("claim_id", decision["claims"][0])
+        self.assertIn(row["label"], markdown(package))
 
     def test_evidence_change_invalidates_downstream_drafts(self):
         state = self.h.step("run", self.adapter())

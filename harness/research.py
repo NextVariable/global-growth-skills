@@ -4,6 +4,7 @@ from datetime import date, datetime, timezone
 import re
 from urllib.parse import parse_qsl, urlencode, urlsplit
 
+from .provenance import MONEY_PATTERN
 from .contracts import HarnessError, digest, validate
 
 EXPIRING_DAYS = 30
@@ -186,14 +187,19 @@ def dependencies_changed(market, saved):
 # These patterns flag candidate claims for review; they do not grade general prose.
 PROSE_PATTERNS = {
     "repository_metric_in_prose": r"\b\d[\d,.]*\s*(?:k|m)?\s*(?:stars?|forks?|stargazers)\b|\d[\d,.]*\s*(?:星标|星級|分叉)",
-    "market_size_in_prose": r"(?:market size|(?:the )?TAM|市场规模)\s*(?:is|of|:|：|为)?\s*[$€£¥]\s*\d",
-    "adoption_count_in_prose": r"\b\d[\d,.]*\s*(?:k|m|million|billion)?\s*(?:active|paying)\s+(?:users|customers)\b",
+    "market_size_in_prose": r"(?:market size|\bTAM\b|市场规模)\s*(?:is|of|:|：|为|达)?\s*(?:[$€£¥]|[A-Z]{3}\s*)?\s*\d",
+    "adoption_count_in_prose": r"\b\d[\d,.]*\s*(?:k|m|million|billion)?\s*(?:active|paying)\s+(?:users|customers)\b|(?:\d[\d,.]*\s*(?:万|亿)?\s*(?:名|位|个)?\s*(?:活跃用户|付费客户|付费用户))",
     "percentage_claim_in_prose": r"\b\d+(?:\.\d+)?\s*%\s*(?:of|increase|decrease|growth|conversion|churn|retention)",
     "cited_research_in_prose": r"\b(?:according to|per the|a \d{4} (?:report|survey|study)|(?:report|survey|study) (?:found|shows?))\b",
     "forecast_in_prose": r"\b(?:forecast|projected to|expected to reach|CAGR)\b",
-    "price_in_prose": r"(?:[$€£¥]\s?\d[\d,.]*|\b\d[\d,.]*\s*(?:USD|EUR|GBP|CNY|RMB|dollars?|euros?)\b)",
+    "price_in_prose": MONEY_PATTERN,
 }
 
 
 def prose_review(text):
-    return [name for name, pattern in PROSE_PATTERNS.items() if re.search(pattern, text, re.I)]
+    text = re.sub(r"[*`_]", "", text)
+    return [
+        name
+        for name, pattern in PROSE_PATTERNS.items()
+        if (pattern.search(text) if isinstance(pattern, re.Pattern) else re.search(pattern, text, re.I))
+    ]
