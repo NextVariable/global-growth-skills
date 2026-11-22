@@ -23,6 +23,10 @@ def main():
     for name in ("start", "step", "resume", "status"):
         command = commands.add_parser(name)
         command.add_argument("run_id")
+        if name == "start":
+            selection = command.add_mutually_exclusive_group()
+            selection.add_argument("--stages", nargs="+")
+            selection.add_argument("--goal")
         if name in {"step", "resume"}:
             command.add_argument("--retry", action="store_true")
             command.add_argument("--recover", action="store_true")
@@ -40,14 +44,19 @@ def main():
         elif args.command == "change":
             result = harness.update(input_json(args.patch))
         elif args.command == "start":
-            harness.start(args.run_id)
+            harness.start(args.run_id, stages=args.stages, goal=args.goal)
             result = harness.status(args.run_id)
         elif args.command == "status":
             result = harness.status(args.run_id)
         else:
-            result = harness.step(args.run_id, FixtureAdapter(), retry=args.retry, recover=args.recover)
-            if args.command == "resume" and result["tasks"][1]["status"] == "queued":
-                result = harness.step(args.run_id, FixtureAdapter())
+            result = harness.status(args.run_id)
+            limit = len(result["tasks"]) if args.command == "resume" else 1
+            for index in range(limit):
+                previous = result
+                result = harness.step(args.run_id, FixtureAdapter(),
+                                      retry=args.retry and index == 0, recover=args.recover and index == 0)
+                if result == previous or all(task["status"] == "succeeded" for task in result["tasks"]):
+                    break
         print(json.dumps(result, ensure_ascii=True, indent=2))
         if args.command == "resume" and any(t["status"] == "blocked" for t in result["tasks"]):
             return 2

@@ -50,8 +50,15 @@ class Store:
                     for statement in DDL.split(";"):
                         if statement.strip():
                             self.db.execute(statement)
-                elif version != 1:
+                elif version not in (1, 2):
                     raise HarnessError("unsupported database version")
+                if version < 2:
+                    self.db.execute("ALTER TABLE runs ADD COLUMN plan TEXT")
+                    self.db.execute("""CREATE TABLE events (
+                        id INTEGER PRIMARY KEY, run_id TEXT NOT NULL REFERENCES runs(id),
+                        stage TEXT NOT NULL, attempt INTEGER NOT NULL, data TEXT NOT NULL
+                    )""")
+                    self.db.execute("PRAGMA user_version = 2")
         except BaseException:
             self.db.close()
             raise

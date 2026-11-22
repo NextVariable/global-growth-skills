@@ -204,7 +204,7 @@ class HarnessTests(unittest.TestCase):
 
     def test_future_db_is_rejected(self):
         conn = sqlite3.connect(self.path.parent / "future.sqlite")
-        conn.execute("PRAGMA user_version=2")
+        conn.execute("PRAGMA user_version=99")
         conn.close()
         with self.assertRaisesRegex(HarnessError, "unsupported database"):
             Harness(self.path.parent / "future.sqlite")

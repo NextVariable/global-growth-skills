@@ -5,6 +5,9 @@ from scripts.install import load_catalog
 ROLES = {
     "strategy": "global-gtm-strategy-skill",
     "content": "global-growth-content",
+    "launch": "global-launch-acquisition",
+    "sales": "global-sales-retention",
+    "experiments": "global-growth-experiments",
 }
 
 

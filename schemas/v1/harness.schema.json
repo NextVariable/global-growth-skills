@@ -257,7 +257,10 @@
           "enum": [
             "positioning",
             "pricing",
-            "capabilities"
+            "capabilities",
+            "launch-plan",
+            "sales-plan",
+            "experiment-plan"
           ]
         },
         "markdown": {
@@ -291,6 +294,13 @@
         "sha256": {
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
+        },
+        "handoff_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
         }
       }
     },
@@ -306,7 +316,10 @@
         "stage": {
           "enum": [
             "strategy",
-            "content"
+            "content",
+            "launch",
+            "sales",
+            "experiments"
           ]
         },
         "status": {
@@ -356,7 +369,10 @@
           "enum": [
             "positioning",
             "pricing",
-            "capabilities"
+            "capabilities",
+            "launch-plan",
+            "sales-plan",
+            "experiment-plan"
           ]
         },
         "markdown": {
@@ -421,7 +437,10 @@
         "stage": {
           "enum": [
             "strategy",
-            "content"
+            "content",
+            "launch",
+            "sales",
+            "experiments"
           ]
         },
         "skill": {
@@ -515,8 +534,34 @@
           "enum": [
             "positioning",
             "pricing",
-            "capabilities"
+            "capabilities",
+            "launch-plan",
+            "sales-plan",
+            "experiment-plan"
           ]
+        },
+        "handoffs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "markdown": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "markdown"
+            ],
+            "additionalProperties": false
+          }
         }
       }
     },
