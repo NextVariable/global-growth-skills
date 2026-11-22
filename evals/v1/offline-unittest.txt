@@ -1,0 +1,36 @@
+test_reads_pinned_blob_over_worktree (test_codex_host.CodexHostTests.test_reads_pinned_blob_over_worktree) ... ok
+test_receipt_and_host_invocation_are_read_only (test_codex_host.CodexHostTests.test_receipt_and_host_invocation_are_read_only) ... ok
+test_timeout_records_failure_without_fabricated_tokens (test_codex_host.CodexHostTests.test_timeout_records_failure_without_fabricated_tokens) ... ok
+test_expiry_and_revocation (test_gateway_research.GatewayTests.test_expiry_and_revocation) ... ok
+test_unapproved_mutated_cross_project_and_duplicate_are_denied (test_gateway_research.GatewayTests.test_unapproved_mutated_cross_project_and_duplicate_are_denied) ... ok
+test_unknown_result_is_not_retried (test_gateway_research.GatewayTests.test_unknown_result_is_not_retried) ... ok
+test_block_stale_conflicted_and_unverified_as_citations (test_gateway_research.ResearchTests.test_block_stale_conflicted_and_unverified_as_citations) ... ok
+test_handoff_accepts_operator_results_without_model_receipt (test_gateway_research.ResearchTests.test_handoff_accepts_operator_results_without_model_receipt) ... ok
+test_handoff_result_requires_exact_request (test_gateway_research.ResearchTests.test_handoff_result_requires_exact_request) ... ok
+test_read_allowlist_and_failure_receipt (test_gateway_research.ResearchTests.test_read_allowlist_and_failure_receipt) ... ok
+test_restore_appends_new_version_and_marks_changed_draft (test_gateway_research.ResearchTests.test_restore_appends_new_version_and_marks_changed_draft) ... ok
+test_restore_removes_fields_added_since_snapshot (test_gateway_research.ResearchTests.test_restore_removes_fields_added_since_snapshot) ... ok
+test_unknown_citation_fails_and_no_market_output_is_marked (test_gateway_research.ResearchTests.test_unknown_citation_fails_and_no_market_output_is_marked) ... ok
+test_change_during_execution_discards_old_result (test_slice.HarnessTests.test_change_during_execution_discards_old_result) ... ok
+test_cli_init_start_change_and_resume (test_slice.HarnessTests.test_cli_init_start_change_and_resume) ... ok
+test_commit_failure_rolls_back_all_artifacts (test_slice.HarnessTests.test_commit_failure_rolls_back_all_artifacts) ... ok
+test_external_action_in_result_is_rejected (test_slice.HarnessTests.test_external_action_in_result_is_rejected) ... ok
+test_failure_leaves_no_partial_drafts_and_is_retryable (test_slice.HarnessTests.test_failure_leaves_no_partial_drafts_and_is_retryable) ... ok
+test_future_db_is_rejected (test_slice.HarnessTests.test_future_db_is_rejected) ... ok
+test_interrupted_attempt_requires_recover (test_slice.HarnessTests.test_interrupted_attempt_requires_recover) ... ok
+test_invalid_patch_has_no_side_effects (test_slice.HarnessTests.test_invalid_patch_has_no_side_effects) ... ok
+test_missing_evidence_blocks_then_resumes (test_slice.HarnessTests.test_missing_evidence_blocks_then_resumes) ... ok
+test_price_invalidates_only_pricing_and_resume_is_idempotent (test_slice.HarnessTests.test_price_invalidates_only_pricing_and_resume_is_idempotent) ... ok
+test_recovery_fences_out_old_attempt (test_slice.HarnessTests.test_recovery_fences_out_old_attempt) ... ok
+test_restart_cli_uses_saved_strategy_checkpoint (test_slice.HarnessTests.test_restart_cli_uses_saved_strategy_checkpoint) ... ok
+test_scope_and_mode_are_explicit (test_slice.HarnessTests.test_scope_and_mode_are_explicit) ... ok
+test_strategy_change_invalidates_dependent_positioning (test_slice.HarnessTests.test_strategy_change_invalidates_dependent_positioning) ... ok
+test_strategy_queues_content_and_pins_catalog (test_slice.HarnessTests.test_strategy_queues_content_and_pins_catalog) ... ok
+test_full_handoff_and_selective_invalidation (test_workflow.WorkflowTests.test_full_handoff_and_selective_invalidation) ... ok
+test_goal_routes_only_launch (test_workflow.WorkflowTests.test_goal_routes_only_launch) ... ok
+test_migrates_v1_and_preserves_saved_checkpoint (test_workflow.WorkflowTests.test_migrates_v1_and_preserves_saved_checkpoint) ... ok
+
+----------------------------------------------------------------------
+Ran 31 tests in 1.129s
+
+OK

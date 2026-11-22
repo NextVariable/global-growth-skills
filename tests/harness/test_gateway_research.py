@@ -166,3 +166,27 @@ class ResearchTests(SharedTests):
         with self.assertRaises(HarnessError):
             self.h.step("run", adapter)
         self.assertEqual(self.h.status("run")["decisions"], [])
+
+    def test_handoff_accepts_operator_results_without_model_receipt(self):
+        self.h.start("run", "handoff", stages=["strategy"])
+        request = self.h._claim("run", "handoff", False, False, preview=True)[2][0]
+        adapter = HandoffAdapter(
+            [
+                {
+                    "input_digest": digest(request),
+                    "result": {"recommendation": "Manual draft"},
+                }
+            ]
+        )
+        state = self.h.step("run", adapter)
+        self.assertEqual(state["decisions"][0]["execution"], "handoff")
+        self.assertFalse(any("host_receipt" in e["data"] for e in state["history"]))
+
+    def test_restore_removes_fields_added_since_snapshot(self):
+        self.h.update({"market_sources": [SOURCE]})
+        self.h.start("run", stages=["strategy"])
+        self.h.step("run", FixtureAdapter())
+        self.h.restore(1)
+        state = self.h.step("run", FixtureAdapter())
+        self.assertNotIn("market_sources", state["context"]["values"])
+        self.assertEqual(state["decisions"][-1]["market_status"], "needs_review")

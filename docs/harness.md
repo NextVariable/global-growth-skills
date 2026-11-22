@@ -1,42 +1,61 @@
-# GTM Harness Vertical Slice
+# GTM Harness 1.0.0-rc.1
 
-## 运行基线
+## 架构与任务选择
 
-合集 `catalog.json` 仍由现有安装器管理。Registry 复用同一套 catalog 校验，启动运行时只保存战略和内容两个角色的固定版本。Fixture Adapter 生成合成结果，运行记录中的 Skill SHA 是预定工作流基线。它没有读取或执行这些固定版本的 Skill 指令。接入真实宿主时需核验其实际加载的安装单元与运行记录相符。
-
-| Skill | 合集固定 SHA | 2026-11-22 核对的 GitHub main | 本轮运行范围 |
-|---|---|---|---|
-| 战略 | `b9a3f9d46e68e6959211ac5ebccb4a5bd35ead12` | `beb359e0ccf1afb5535ff8d42bc904e682afbc7e` | Fixture 战略 |
-| 内容 | `d3d8aa367ace0e9ff27ce7a8a21e3ebd5e28140e` | `d05f6813e46973fc2a10cb64e7e096d55d040958` | Fixture 内容 |
-| 获客 | `a5bfa7c3d5a64b61bcb17491ad96a9b34269b96e` | `b4070afa5d2e6351a1be9d1b5e4eebc3fa0d86cc` | 可独立安装和使用 |
-| 销售留存 | `7c201004d3aba3896808660e56ba4a74b64322b6` | `5e62b33cc6581468c07eff352575dbae4d5b45fc` | 可独立安装和使用 |
-| 实验 | `fb1060e4ff5c80dcfb00b2c68099a511b1e5eed4` | `e873fc413d0b7a1b075271b15db0ff06cd0c7fb5` | 可独立安装和使用 |
-
-## 契约与依赖
-
-[版本化 JSON Schema](../schemas/v1/harness.schema.json) 定义项目上下文、逐字段操作员证据、决策、草稿、任务状态和适配器输入输出。SQLite 用一库一项目约束项目范围，数据库及契约初版为 v1，未知数据库版本会被拒绝。证据保存值、来源和版本，决策和草稿保存明确的证据引用。内容哈希使用规范化 JSON 编码的 SHA-256。
-
-这个切片只完成从产品、目标和目标用户生成战略建议。定位草稿使用这三项及战略决策，价格草稿只接收价格，能力草稿只接收能力清单。价格格式保留最小货币单位和币种，避免假定所有货币均为两位小数。能力按整份清单版本化。更新先对比字段值，再在一次事务写入新证据、使相关草稿失效与重新排队。读取状态可见旧草稿、当前草稿、最新决策和证据版本。
-
-和审计方案相比，MVP 直接把短 Markdown 草稿存入 SQLite，产物、引用和任务完成能够一次提交。暂不引入文件对象存储、通用图引擎或战略旧账本导入。独立战略 Skill 的研究账本仍由原协作流程维护，Harness v1 不作为其替代。
-
-## 恢复、重试与权限
-
-`step` 每次推进一个阶段，`resume` 最多推进两阶段。SQLite 持久化运行固定版本、执行模式、当前决策和每阶段状态与尝试编号。提交结果前重新核对尝试编号和状态。进程死亡后显式 `--recover` 可重新执行纯计算，更新输入或其他进程接手后旧响应无法提交。适配器失败通过 `--retry` 重试，缺字段在补齐后重新排队。无变化的更新、同 ID 的启动和已完成状态下的恢复保持幂等。命令 `resume` 遇缺证据退出 2，其他错误退出 1。
-
-CLI 只装载 Fixture Adapter。请求始终带 `deny_external_writes`，严格结果 Schema 拒绝发布等额外动作字段，Harness 没有外部写操作接口。适配器协议可承接 Codex 或 Claude Code 的结构化调用，但 Python 插件本身属于受信代码，宿主若接入模型，必须在工具和进程边界落实同样的权限规则，单靠数据字段无法约束宿主工具。
-
-项目数据库须放在仓库之外，里面含用户显式输入的内容与生成结果。密钥应由宿主凭证机制管理，不应写入示例、项目输入或 SQLite。
-
-## 覆盖范围与验收
-
-已实现策略到内容、受影响产物失效、事务与恢复、离线适配器及安装回归。尚未实现旧研究账本迁移、真实宿主启动与模型记录、人工批准和真实外部动作、获客/销售/实验编排。真实模型质量、成本、业务效果与原始 Skill 的对比仍无本轮数据。
-
-```sh
-python scripts/validate.py
-python scripts/validate_harness.py --report /tmp/gtm-harness-unittest.txt
+```mermaid
+flowchart LR
+  CLI --> Plan["按目标或显式阶段规划"]
+  Catalog["固定版本 catalog"] --> Plan
+  Plan --> Steps["战略、内容、获客、销售、实验"]
+  Steps --> Adapter["Fixture、Codex 或手工交接"]
+  Steps <--> State["项目 SQLite"]
+  State --> Gate["独立审批与 Mock 执行"]
 ```
 
-Harness CI 在 Linux、macOS、Windows 运行离线测试，上传完整 unittest 日志（含失败详情）。安装器 CI 独立运行。验收覆盖跨进程恢复、强制恢复后的旧尝试失效、输入变化期间旧响应拒绝、提交中途失败的事务回滚、只更新相关草稿、缺证据、格式错误、执行模式混用和模型结果中的越权写入请求。
+运行时只调度所选角色，并在所选节点之间检查上游完成状态。内容可单独用项目背景起草，获客可单独做渠道方案，销售不依赖获客。实验接收所选且已完成的上游产物。`--goal` 使用可检查的关键词规则，未匹配时要求 `--stages`。默认 `start` 维持旧双阶段兼容行为。五个固定 SHA 继续从合集安装目录清单读取，见[发布验收](../V1_RELEASE_READINESS.md)。
 
-扩展判断：固定版本 Registry、事务 checkpoint 与草稿依赖可以沿用。接入 03–05 前先验证真实宿主的固定版本装载与只读权限，再为渠道计划、销售草稿和实验设计各自定义最小输入及产物契约。具备实际外部写入能力的阶段需要独立的审批与回执核对测试。
+## Codex 宿主
+
+先在仓库外准备 Skill 仓库的 Git 克隆，并保证 catalog 对应提交对象存在。示例从已有 SQLite 项目开始。
+
+```sh
+python -m harness --db "$db" start model-demo --execution model --stages strategy launch
+python -m harness --db "$db" resume model-demo --model YOUR_AVAILABLE_CODEX_MODEL \
+  --checkout "strategy=$strategy_repo" --checkout "launch=$launch_repo" --timeout 180
+```
+
+Codex CLI 必须已经认证。Harness 从固定 Git 对象读取 `SKILL.md`、Markdown 参考和模板。调用发起前关闭 shell、统一执行、插件、MCP 和 Web Search，宿主只读，无审批升级。代码检查宿主是否报告被禁用的工具活动。回执保留文档摘要、请求模型、宿主完成事件、收到的 token 计数和耗时。缺失 token 与实际货币费用按未知处理。
+
+若 Codex 不可用，用 `start manual --execution handoff --stages strategy launch` 创建手工运行。请将下列输出与结果文件放到仓库外已有的工作目录。
+
+```sh
+python -m harness --db "$db" handoff manual --checkout "strategy=$strategy_repo" > "$work/request.json"
+python -m harness --db "$db" step manual --results "$work/results.json"
+```
+
+把 `tasks[].prompt` 和 `output_schema` 交给受控宿主，结果文件写成数组 `[{"input_digest":"从请求复制","result":{"recommendation":"...","citations":[]}}]`。为下一阶段再生成一份请求并填入对应结果。导入时核对输入摘要，输出归类为 `handoff`。手工宿主的工具权限由操作者负责。
+
+## 状态、升级与回滚
+
+SQLite `user_version=3`。打开旧双阶段数据库会事务迁移，保留原计划、固定版本和已提交结果。迁移前停止其他进程并备份。需要回滚程序时恢复迁移前的数据库备份，旧二进制无法读取新版库。活跃数据库请通过 SQLite backup API 创建一致副本。
+
+`restore REVISION` 追加新的上下文版本，恢复指定版本的值和字段存在性。已保存的历史版本和产物保留。任务完成、引用和草稿用同一事务提交。输入变化或另一尝试接手后，提交边界拒绝旧响应。`status` 列出计划、项目版本、证据索引、决策、草稿和尝试历史。短 Markdown 与状态存于同库。
+
+## 证据与权限
+
+`change` 接收带 `market_sources` 的项目补丁。来源可由操作者从有权使用的搜索、浏览或 MCP 导出，也可由 Python 调用者向 `Gateway(readers=...)` 注入已审查的只读提供方。自动化测试使用本地 provider。Codex 子进程目前没有直接的研究工具。
+
+缺证据或有冲突时，战略与相关草稿标记 `needs_review`。未知或过期引用会失败。矛盾检查基于操作者声明的 claim ID 与立场，网页内容、自然语言论断与引文之间的支持关系仍需人工核验。
+
+审批命令 `approve-mock`、`revoke-mock`、`execute-mock` 与 `receipts` 专用于 Mock Executor。授权来自受信的本机 POSIX 账户，绑定项目版本和完整操作摘要。操作与上下文变动后授权失效。提交前消耗授权并记录结果未知，确认后再写回执。超时或崩溃不会自动重试同一操作 ID。真实发布、触达、CRM 和广告仍待独立接入。本机数据库只提供给受信操作者。新库在 POSIX 上按账户读写权限创建。
+
+[Schema 与 Skill 输入输出契约](harness-contract.md)
+
+可在示例项目验证本机授权。第一次执行应报拒绝，批准后仅产生一条模拟成功回执，再次执行会被拒绝。
+
+```sh
+python -m harness --db "$db" execute-mock examples/harness/mock-operation.json
+python -m harness --db "$db" approve-mock examples/harness/mock-operation.json --ttl 300
+python -m harness --db "$db" execute-mock examples/harness/mock-operation.json
+python -m harness --db "$db" receipts
+```

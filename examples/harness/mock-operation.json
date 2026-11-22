@@ -1,0 +1,7 @@
+{
+  "id": "example-mock-publish",
+  "project_id": "meeting-demo",
+  "kind": "publish",
+  "target": "simulated-channel",
+  "payload": {"text": "Synthetic draft for permission testing"}
+}

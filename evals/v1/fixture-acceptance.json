@@ -1,0 +1,110 @@
+{
+  "execution": "fixture",
+  "input": "examples/harness/project.json",
+  "initial_tasks": [
+    {
+      "stage": "strategy",
+      "status": "succeeded",
+      "attempt": 1
+    },
+    {
+      "stage": "content",
+      "status": "succeeded",
+      "attempt": 1
+    },
+    {
+      "stage": "launch",
+      "status": "succeeded",
+      "attempt": 1
+    },
+    {
+      "stage": "sales",
+      "status": "succeeded",
+      "attempt": 1
+    },
+    {
+      "stage": "experiments",
+      "status": "succeeded",
+      "attempt": 1
+    }
+  ],
+  "partial_tasks": [
+    {
+      "stage": "launch",
+      "status": "succeeded",
+      "attempt": 1
+    }
+  ],
+  "checkpoint_tasks": [
+    {
+      "stage": "strategy",
+      "status": "succeeded",
+      "attempt": 1
+    },
+    {
+      "stage": "content",
+      "status": "queued",
+      "attempt": 0
+    },
+    {
+      "stage": "launch",
+      "status": "pending",
+      "attempt": 0
+    },
+    {
+      "stage": "sales",
+      "status": "pending",
+      "attempt": 0
+    },
+    {
+      "stage": "experiments",
+      "status": "pending",
+      "attempt": 0
+    }
+  ],
+  "change": {
+    "revision": 2,
+    "stale_artifact_ids": [
+      6,
+      2,
+      5
+    ]
+  },
+  "stale": [
+    "pricing",
+    "sales-plan",
+    "experiment-plan"
+  ],
+  "retained": [
+    "capabilities",
+    "launch-plan",
+    "positioning"
+  ],
+  "final_tasks": [
+    {
+      "stage": "strategy",
+      "status": "succeeded",
+      "attempt": 1
+    },
+    {
+      "stage": "content",
+      "status": "succeeded",
+      "attempt": 2
+    },
+    {
+      "stage": "launch",
+      "status": "succeeded",
+      "attempt": 1
+    },
+    {
+      "stage": "sales",
+      "status": "succeeded",
+      "attempt": 2
+    },
+    {
+      "stage": "experiments",
+      "status": "succeeded",
+      "attempt": 2
+    }
+  ]
+}

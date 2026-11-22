@@ -1,0 +1,175 @@
+{
+  "arm": "manual-replay",
+  "execution": "model",
+  "project": {
+    "schema_version": 1,
+    "project_id": "global-growth-public",
+    "values": {
+      "product": "Global Growth Skills",
+      "audience": "English-speaking solo founders who use an Agent Skills client",
+      "goal": "Decide whether to test an English quick-start tutorial for an open-source GTM toolkit, then draft an opt-in acquisition pilot. No user counts, growth metrics or demand evidence are available.",
+      "capabilities": [
+        "five independently installable skills",
+        "pinned catalog installer",
+        "offline GTM Harness with SQLite checkpoints"
+      ]
+    }
+  },
+  "steps": [
+    {
+      "stage": "strategy",
+      "request": {
+        "project_id": "global-growth-public",
+        "run_id": "manual-replay",
+        "stage": "strategy",
+        "skill": {
+          "skill_id": "global-gtm-strategy-skill",
+          "revision": "b9a3f9d46e68e6959211ac5ebccb4a5bd35ead12",
+          "repository": "https://github.com/NextVariable/global-gtm-strategy-skill",
+          "path": "skills/global-gtm-strategy-skill"
+        },
+        "tool_policy": "deny_external_writes",
+        "context": {
+          "product": "Global Growth Skills",
+          "audience": "English-speaking solo founders who use an Agent Skills client",
+          "goal": "Decide whether to test an English quick-start tutorial for an open-source GTM toolkit, then draft an opt-in acquisition pilot. No user counts, growth metrics or demand evidence are available."
+        },
+        "evidence": [
+          {
+            "field": "product",
+            "revision": 1,
+            "source": "operator_input",
+            "sha256": "3b7af9edb5e45ff47faf584e2874afeb5b9baa0a82cf3c26f8ebafff39edbfba"
+          },
+          {
+            "field": "audience",
+            "revision": 1,
+            "source": "operator_input",
+            "sha256": "274df47bac0f6c5f122fb3c178338c990c85f769b605ca85580d948b5900827c"
+          },
+          {
+            "field": "goal",
+            "revision": 1,
+            "source": "operator_input",
+            "sha256": "22b5239b24373acf929112d8a08d6779049e1cb88f0f0978a12aa1072f40e35f"
+          }
+        ],
+        "market_review": {
+          "sources": [],
+          "contradictions": [],
+          "citation_ids": [],
+          "status": "needs_review"
+        }
+      },
+      "output": {
+        "citations": [],
+        "recommendation": "# Global Growth Skills 英文快速入门试点｜内部策略草案\n\n**建议有条件地试测英文快速入门教程，暂缓扩大获客投入。** 第一批验证对象是使用 Agent Skills 客户端、近期有一个具体出海决策要做的英语独立创始人。地理范围待定，按语言、工具和任务筛选。若能找到愿意自愿参加且有真实任务的创始人，并确认其客户端能运行拟测试的流程，就启动小规模试点。\n\n## 判断依据与缺口\n\n- **观察（项目输入）**：Global Growth Skills 是开源 GTM 工具包，目标受众由项目方指定。当前没有用户数、增长指标或需求证据，市场审查待完成，未提供可引用来源。\n- **推断**：把教程试点围绕一个真实 GTM 决策设计，可以同时观察教程能否引导首次使用，以及工具输出能否帮助参与者决定下一步。将范围限定在一个任务，可减少首次试测所需的支持工作。\n- **假设**：近期要决定先验证哪类海外客户的独立创始人，会自愿尝试教程，并能用自己的项目背景完成任务，得到一项可执行的验证动作。通用 AI、自用文档或表格、暂缓决策都是可能的替代，实际使用和保留理由未知。\n- **缺失证据**：任务频率和代价、用户现在怎么做、受众在哪里寻找这类帮助、不同客户端的实际兼容性、完成所需时间、支持成本及后续复用均未知。若参与者已能用现有方案轻松完成任务，或工具流程普遍需要人工指导，应撤回当前教程优先判断。市场规模暂不估算，本轮决策取决于能否触达合格用户并交付首次任务价值。\n\n## 自愿参与的获客试点设计\n\n- **触达与筛选**：把允许分享教程的英语 Agent Skills 社区作为一个待验证的触达渠道，具体社区和受众重合度待确认。参与者主动报名，说明所用客户端、近期真实 GTM 决策和当前做法，自愿提供去敏任务背景。\n- **首次评估**：参与者按教程自行启动工具，用自己的任务比较候选客户，留下一个优先验证对象或有理由的延期决定，并写出下一步验证动作。分别记录报名、符合筛选条件、成功启动、独立完成和实际采纳输出的情况及各自分母。记录人工协助、客户端卡点，以及参与者最终沿用或放弃原方案的理由。\n- **资源上限**：拟用一周、最多一个渠道、最多五位合格参与者和六小时团队工时，不投放付费广告。负责人待指定。这些上限是试验设计，实际可用工时待确认。\n- **判定与分支**：若至少两位合格参与者独立完成，并各自把输出用于一项具体的后续决定或行动，则继续做一轮小规模验证。两个独立案例用于判断结果是否值得复查。若招不到合格参与者，先调整渠道或筛选。若参与者在启动或操作上反复卡住，先修复相应步骤。若参与者能完成但输出未帮助其做决定，暂停扩大教程试点，优先核查任务选择与工具价值。试点只拟验证触达、首次使用与初步任务价值，留存和付费仍待验证。"
+      },
+      "receipt": {
+        "host": "codex",
+        "requested_model": "gpt-6.2-sol",
+        "skill_document_digest": "c6de1d3fe081cde3e4b1f4c658d7bc352d695b9b5d56e0c6f435641b1e502c80",
+        "status": "completed",
+        "calls": 1,
+        "tokens": {
+          "input_tokens": 37059,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 827,
+          "reasoning_output_tokens": 0
+        },
+        "exit_code": 0,
+        "duration_ms": 26225
+      }
+    },
+    {
+      "stage": "launch",
+      "request": {
+        "project_id": "global-growth-public",
+        "run_id": "manual-replay",
+        "stage": "launch",
+        "skill": {
+          "skill_id": "global-launch-acquisition",
+          "revision": "a5bfa7c3d5a64b61bcb17491ad96a9b34269b96e",
+          "repository": "https://github.com/NextVariable/global-launch-acquisition-skill",
+          "path": "skills/global-launch-acquisition"
+        },
+        "tool_policy": "deny_external_writes",
+        "context": {
+          "product": "Global Growth Skills",
+          "audience": "English-speaking solo founders who use an Agent Skills client",
+          "goal": "Decide whether to test an English quick-start tutorial for an open-source GTM toolkit, then draft an opt-in acquisition pilot. No user counts, growth metrics or demand evidence are available.",
+          "capabilities": [
+            "five independently installable skills",
+            "pinned catalog installer",
+            "offline GTM Harness with SQLite checkpoints"
+          ]
+        },
+        "evidence": [
+          {
+            "field": "product",
+            "revision": 1,
+            "source": "operator_input",
+            "sha256": "3b7af9edb5e45ff47faf584e2874afeb5b9baa0a82cf3c26f8ebafff39edbfba"
+          },
+          {
+            "field": "audience",
+            "revision": 1,
+            "source": "operator_input",
+            "sha256": "274df47bac0f6c5f122fb3c178338c990c85f769b605ca85580d948b5900827c"
+          },
+          {
+            "field": "goal",
+            "revision": 1,
+            "source": "operator_input",
+            "sha256": "22b5239b24373acf929112d8a08d6779049e1cb88f0f0978a12aa1072f40e35f"
+          },
+          {
+            "field": "capabilities",
+            "revision": 1,
+            "source": "operator_input",
+            "sha256": "adeafc16021780ea8eac98dd8bdf743dde869934b68b54df9b2c761ffc40285c"
+          }
+        ],
+        "market_review": {
+          "sources": [],
+          "contradictions": [],
+          "citation_ids": [],
+          "status": "needs_review"
+        },
+        "artifact_kind": "launch-plan",
+        "handoffs": [
+          {
+            "id": 1,
+            "kind": "manual-strategy-note",
+            "markdown": "Provisional strategy and evidence limitations:\n\n# Global Growth Skills 英文快速入门试点｜内部策略草案\n\n**建议有条件地试测英文快速入门教程，暂缓扩大获客投入。** 第一批验证对象是使用 Agent Skills 客户端、近期有一个具体出海决策要做的英语独立创始人。地理范围待定，按语言、工具和任务筛选。若能找到愿意自愿参加且有真实任务的创始人，并确认其客户端能运行拟测试的流程，就启动小规模试点。\n\n## 判断依据与缺口\n\n- **观察（项目输入）**：Global Growth Skills 是开源 GTM 工具包，目标受众由项目方指定。当前没有用户数、增长指标或需求证据，市场审查待完成，未提供可引用来源。\n- **推断**：把教程试点围绕一个真实 GTM 决策设计，可以同时观察教程能否引导首次使用，以及工具输出能否帮助参与者决定下一步。将范围限定在一个任务，可减少首次试测所需的支持工作。\n- **假设**：近期要决定先验证哪类海外客户的独立创始人，会自愿尝试教程，并能用自己的项目背景完成任务，得到一项可执行的验证动作。通用 AI、自用文档或表格、暂缓决策都是可能的替代，实际使用和保留理由未知。\n- **缺失证据**：任务频率和代价、用户现在怎么做、受众在哪里寻找这类帮助、不同客户端的实际兼容性、完成所需时间、支持成本及后续复用均未知。若参与者已能用现有方案轻松完成任务，或工具流程普遍需要人工指导，应撤回当前教程优先判断。市场规模暂不估算，本轮决策取决于能否触达合格用户并交付首次任务价值。\n\n## 自愿参与的获客试点设计\n\n- **触达与筛选**：把允许分享教程的英语 Agent Skills 社区作为一个待验证的触达渠道，具体社区和受众重合度待确认。参与者主动报名，说明所用客户端、近期真实 GTM 决策和当前做法，自愿提供去敏任务背景。\n- **首次评估**：参与者按教程自行启动工具，用自己的任务比较候选客户，留下一个优先验证对象或有理由的延期决定，并写出下一步验证动作。分别记录报名、符合筛选条件、成功启动、独立完成和实际采纳输出的情况及各自分母。记录人工协助、客户端卡点，以及参与者最终沿用或放弃原方案的理由。\n- **资源上限**：拟用一周、最多一个渠道、最多五位合格参与者和六小时团队工时，不投放付费广告。负责人待指定。这些上限是试验设计，实际可用工时待确认。\n- **判定与分支**：若至少两位合格参与者独立完成，并各自把输出用于一项具体的后续决定或行动，则继续做一轮小规模验证。两个独立案例用于判断结果是否值得复查。若招不到合格参与者，先调整渠道或筛选。若参与者在启动或操作上反复卡住，先修复相应步骤。若参与者能完成但输出未帮助其做决定，暂停扩大教程试点，优先核查任务选择与工具价值。试点只拟验证触达、首次使用与初步任务价值，留存和付费仍待验证。"
+          }
+        ]
+      },
+      "output": {
+        "kind": "launch-plan",
+        "markdown": "# Global Growth Skills 英文快速入门获客试点｜内部草案\n\n**建议有条件地试测英文快速入门教程，暂缓扩大获客。** 首轮面向使用 Agent Skills 客户端、近期要决定优先验证哪类海外客户的英语独立创始人。地域待定，先按语言、客户端和真实任务筛选。确认一个允许分享教程的社区、跑通首次使用路径并落实支持人手后，再开放自愿报名。\n\n## 判断依据\n\n- **观察**　项目资料将 Global Growth Skills 描述为开源 GTM 工具包，包含五个可独立安装的技能、固定版本的目录安装器，以及带 SQLite 检查点的离线 GTM Harness。目标受众由项目方指定。当前缺少用户数、增长指标和需求证据，市场审查待完成，未提供可引用来源。\n- **推断**　让参与者用自己的项目完成一个具体决策，可以分别观察他们能否自行启动、能否独立完成，以及是否把结果用于实际行动。限定一个任务也便于定位卡点和记录支持工时。\n- **假设**　符合条件的创始人愿意主动报名，并能按英文教程比较候选客户，选出优先验证的对象或说明为何暂缓，随后采取一个具体行动。通用 AI、自用文档或表格、暂缓决策都是可能的替代做法，实际采用情况未知。\n- **缺失证据**　任务出现的频率和处理成本、用户现有做法是否够用、社区内目标受众的活跃度、客户端兼容性、完成耗时、支持成本及后续复用均待验证。\n\n## 首轮渠道与承接\n\n| 项目 | 内部安排 |\n|---|---|\n| 唯一渠道 | 一个英语 Agent Skills 社区，具体目的地待核实。优先查看近期是否有人讨论如何选择首批海外客户、比较客户群或用 Agent Skills 做 GTM，并确认规则允许带产品关系披露的教程分享和自愿招募。首个动作是一条围绕该任务的帖子。 |\n| 帖子与主行动 | 简述参与者会用自己的项目比较候选客户，并写出下一步验证动作。披露发帖人与产品的关系，唯一主行动为 **Opt in to try the English quick-start**。帖子、教程版本及报名链接均待定。 |\n| 报名与筛选 | 报名页说明任务与参与方式，收集所用客户端、近期要做的决策和当前做法。去敏项目背景由参与者自愿提供。仅在参与者同意的范围内联系其进行试用安排和反馈。 |\n| 首次任务 | 报名符合条件后，按教程自行启动工具，用真实项目背景比较候选客户，留下一个优先验证对象或有理由的暂缓决定，并写出下一步验证动作。随后记录这项输出是否实际用于决定或行动。 |\n| 承接与支持 | 负责人待指定。发布前明确谁筛选报名、谁答疑、谁处理产品卡点。记录人工协助的步骤和用时，供判断独立完成及支持成本。 |\n\n暂缓付费广告、多社区同步分发和榜单发布。首轮用单一入口观察从报名到首次任务的路径，避免分散有限的支持工时。\n\n## 准备、招募与复盘\n\n1. **准备**　核实社区受众、发布规则与账号状态。锁定帖子、英文教程及工具版本，用拟纳入试点的客户端从报名入口走到任务完成，核对安装或启动、任务说明、输出和反馈入口。具体客户端、链接和复跑结果待确认。发布授权、负责人、日期和时区均待确认。\n2. **招募与试用**　拟议窗口为获准发帖起一周，覆盖报名、试用和采纳反馈。上限为一个渠道、五位合格参与者、六小时团队工时，付费广告预算为零，其他现金成本和实际可用工时待确认。满额或工时触顶时停止接收新报名。启动链路中断或社区拒绝时暂停招募，先处理对应问题。\n3. **复盘**　建议在一周窗口结束时汇总。由试点负责人记录实际渠道、素材与产品版本、观察起止、人工及现金成本，以及同期入口或产品改动。以报名记录、参与者任务反馈和支持记录为依据，逐项保留人数与分母。\n\n| 观察项 | 计数口径 |\n|---|---|\n| 报名与合格 | 分别记录去重报名人数和符合语言、客户端及近期真实任务条件的人数。合格比例以去重报名人数为分母。独立访问量若可取得，可用于计算报名比例，否则报名比例记为未知。 |\n| 成功启动与独立完成 | 分别记录成功启动人数、无需人工指导即交付决定及下一步动作的人数。两项均以收到教程的合格参与者为分母，并单列人工协助情况和客户端卡点。 |\n| 实际采纳 | 记录明确反馈已用输出做出一项具体决定或采取行动的人数，以独立完成人数为分母。单列待反馈，记录参与者沿用或放弃现有做法的理由。 |\n\n## 继续、调整或暂停\n\n- **继续小规模验证**　至少两位合格参与者独立完成，且各自把输出用于一项具体决定或行动。两例只支持再验证一轮，扩大投入仍需更多证据。\n- **调整触达或筛选**　若招不到合格参与者，先检查帖子触达、社区与目标受众的重合度，以及筛选流失点。低样本下保留判断，需求仍待验证。\n- **修复教程或启动链路**　若启动或操作反复卡住，先修复对应步骤并复跑。若普遍需要人工引导，撤回教程优先判断。\n- **暂停扩大**　若参与者能完成但输出未帮助决策，或现有做法已能轻松解决任务，先核查任务选择和工具价值。留存和付费仍待后续验证。\n\n**当前状态为内部草案。** 外部执行待授权，渠道、链接、排期与负责人均待确认。"
+      },
+      "receipt": {
+        "host": "codex",
+        "requested_model": "gpt-6.2-sol",
+        "skill_document_digest": "c451dc8906bcdf7f8a8adaab34e013fa84c1ae40d880fedcb55379695d5e5734",
+        "status": "completed",
+        "calls": 1,
+        "tokens": {
+          "input_tokens": 34102,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1498,
+          "reasoning_output_tokens": 0
+        },
+        "exit_code": 0,
+        "duration_ms": 38064
+      }
+    }
+  ],
+  "requested_model": "gpt-6.2-sol",
+  "pricing": "unknown",
+  "status": "succeeded",
+  "wall_ms": 64662
+}

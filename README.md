@@ -82,9 +82,9 @@ Five independent Agent Skills for international GTM: strategy, positioning and c
 
 维护与更新：[变更记录](CHANGELOG.md) · [升级与回退](docs/upgrading.md) · [安全问题反馈](SECURITY.md)。
 
-## GTM Harness · 离线快速开始
+## GTM Harness 1.0.0-rc.1
 
-可选 Harness 将战略交接、内容草稿、输入版本和恢复状态写入一个本地 SQLite 项目。下面的命令使用合成案例和确定性的 Fixture Adapter，适用于 Python 3.10+。
+五种 Skill 可按目标选择，也可用 `--stages` 显式组合。项目上下文、证据、任务状态和草稿存入仓库外的 SQLite。需要 Python 3.10+，以下为离线合成案例。
 
 ```sh
 python -m venv .venv
@@ -92,14 +92,13 @@ python -m venv .venv
 python -m pip install -r requirements-harness.txt
 db="$(mktemp -d)/project.sqlite"
 python -m harness --db "$db" init examples/harness/project.json
-python -m harness --db "$db" start demo
+python -m harness --db "$db" start demo --goal "完整 GTM"
 python -m harness --db "$db" step demo
 python -m harness --db "$db" resume demo
 python -m harness --db "$db" change examples/harness/price-change.json
-python -m harness --db "$db" status demo
 python -m harness --db "$db" resume demo
 ```
 
-第一条 `step` 提交战略决策，再启动进程运行 `resume` 可从已保存的检查点继续。改价后，`status` 中只有价格草稿变为 `stale`，下一次 `resume` 生成新价格草稿并保留历史版本。可将变动文件换成 `examples/harness/capability-change.json` 验证能力变化。失败任务用 `resume demo --retry`，已确认原进程中断时用 `resume demo --recover`。
+只处理渠道时用 `start channel --stages launch`。中断后的 `resume` 读取已提交结果。确认原进程已退出后，仍处于运行状态的任务可以加 `--recover` 恢复，适配器失败可以加 `--retry`。
 
-[支持范围、基线与测试说明](docs/harness.md)
+[Codex、手工交接与状态迁移](docs/harness.md) · [数据与 Skill 契约](docs/harness-contract.md) · [预发布验收](V1_RELEASE_READINESS.md)

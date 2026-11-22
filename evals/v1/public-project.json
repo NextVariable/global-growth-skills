@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "project_id": "global-growth-public",
+  "values": {
+    "product": "Global Growth Skills",
+    "audience": "English-speaking solo founders who use an Agent Skills client",
+    "goal": "Decide whether to test an English quick-start tutorial for an open-source GTM toolkit, then draft an opt-in acquisition pilot. No user counts, growth metrics or demand evidence are available.",
+    "capabilities": ["five independently installable skills", "pinned catalog installer", "offline GTM Harness with SQLite checkpoints"]
+  }
+}
