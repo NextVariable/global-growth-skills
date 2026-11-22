@@ -191,6 +191,7 @@ PROSE_PATTERNS = {
     "percentage_claim_in_prose": r"\b\d+(?:\.\d+)?\s*%\s*(?:of|increase|decrease|growth|conversion|churn|retention)",
     "cited_research_in_prose": r"\b(?:according to|per the|a \d{4} (?:report|survey|study)|(?:report|survey|study) (?:found|shows?))\b",
     "forecast_in_prose": r"\b(?:forecast|projected to|expected to reach|CAGR)\b",
+    "price_in_prose": r"(?:[$€£¥]\s?\d[\d,.]*|\b\d[\d,.]*\s*(?:USD|EUR|GBP|CNY|RMB|dollars?|euros?)\b)",
 }
 
 

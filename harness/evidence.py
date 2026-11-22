@@ -1,12 +1,21 @@
-"""Claim-to-evidence mapping, freshness and missing-evidence diagnostics."""
+"""Claim-to-evidence mapping, freshness and missing-evidence diagnostics.
 
-from datetime import date
+A verbatim quote proves only that the text appears in the source excerpt. It
+does not prove that a draft claim follows from that text. Semantic support is
+therefore recorded separately and stays ``unverified`` until a named model or
+human review supplies a verdict.
+"""
+
+from datetime import datetime, timezone
 import re
 
 from .contracts import HarnessError, digest
 from .research import PROSE_PATTERNS, freshness, prose_review
 
-EXPIRING_DAYS = 30
+REVIEWERS = {"model", "human"}
+VERDICTS = {"supported", "rejected", "uncertain"}
+UNCERTAINTY = {"low", "medium", "high"}
+REVIEW_FIELDS = {"reviewer", "verdict", "rationale", "uncertainty"}
 
 
 def normalize(text):
@@ -19,9 +28,39 @@ def _claim_id(source_id, quote, text):
     )[:16]
 
 
+def _review(claim):
+    """Validate an optional semantic review record and return (review, state)."""
+    review = claim.get("review")
+    if review is None:
+        return None, "unverified"
+    if not isinstance(review, dict):
+        raise HarnessError("claim review must be an object")
+    if set(review) != REVIEW_FIELDS:
+        raise HarnessError(
+            "claim review requires reviewer, verdict, rationale and uncertainty"
+        )
+    if review["reviewer"] not in REVIEWERS:
+        raise HarnessError("claim review reviewer must be model or human")
+    if review["verdict"] not in VERDICTS:
+        raise HarnessError("claim review verdict must be supported, rejected or uncertain")
+    if review["uncertainty"] not in UNCERTAINTY:
+        raise HarnessError("claim review uncertainty must be low, medium or high")
+    rationale = review["rationale"]
+    if not isinstance(rationale, str) or not normalize(rationale):
+        raise HarnessError("claim review requires a non-blank rationale")
+    if len(rationale) > 2000:
+        raise HarnessError("claim review rationale exceeds 2000 characters")
+    return {
+        "reviewer": review["reviewer"],
+        "verdict": review["verdict"],
+        "rationale": normalize(rationale),
+        "uncertainty": review["uncertainty"],
+    }, review["verdict"]
+
+
 def build_claim_map(market, claims, citations=(), today=None):
     """Map every claim to an eligible source and a verbatim support fragment."""
-    today = today or date.today()
+    today = today or datetime.now(timezone.utc).date()
     eligible = set(market["citation_ids"])
     by_id = {row["id"]: row for row in market["sources"]}
     citations = list(citations or [])
@@ -49,11 +88,12 @@ def build_claim_map(market, claims, citations=(), today=None):
         text = claim.get("text")
         if text is not None and not normalize(text):
             raise HarnessError("claim text must not be blank")
-        key = (ident, quote)
+        key = (ident, quote, normalize(text or ""))
         if key in seen:
             duplicates += 1
             continue
         seen.add(key)
+        review, semantic = _review(claim)
         mapped.append(
             {
                 "claim_id": _claim_id(ident, quote, text),
@@ -61,6 +101,8 @@ def build_claim_map(market, claims, citations=(), today=None):
                 "quote": quote,
                 "text": normalize(text) if text else None,
                 "support": "exact_excerpt" if quote == excerpt else "excerpt_fragment",
+                "semantic_support": semantic,
+                "review": review,
                 "claim_key": row["claim_key"],
                 "observed_on": row["observed_on"],
                 "valid_until": row["valid_until"],
@@ -82,10 +124,11 @@ def build_claim_map(market, claims, citations=(), today=None):
 def audit_evidence(market, claims, citations, text, *, execution, today=None, gaps=()):
     """Combine exact claim validation with visible prose and source risk."""
     market = market or {"citation_ids": [], "sources": [], "contradictions": [], "status": "needs_review"}
-    today = today or date.today()
+    today = today or datetime.now(timezone.utc).date()
     mapped = build_claim_map(market, claims, citations, today)
     prose_flags = prose_review(text)
     eligible = list(market["citation_ids"])
+    contradictions = sorted(market.get("contradictions") or [])
     injection = sorted(
         {
             flag
@@ -93,25 +136,58 @@ def audit_evidence(market, claims, citations, text, *, execution, today=None, ga
             for flag in row.get("injection_flags", [])
         }
     )
-    missing_claims = bool(eligible) and not claims
+    mapped_claims = mapped["claims"]
+    semantic = [item["semantic_support"] for item in mapped_claims]
+    # A model that states external facts without mapping them must retry. A
+    # recommendation that makes no factual assertion does not need a citation
+    # just because some source happens to be eligible.
+    missing_claims = bool(eligible) and not mapped_claims and bool(prose_flags)
     if not market["sources"]:
         status = "not_applicable"
+    elif contradictions:
+        status = "conflict"
     elif not eligible:
         status = "no_eligible_sources"
-    elif missing_claims:
-        status = "missing_claims"
+    elif not mapped_claims:
+        status = "missing_claims" if missing_claims else "no_claims"
+    elif "rejected" in semantic:
+        status = "unsupported_claims"
     elif prose_flags:
         status = "partial"
+    elif any(label != "supported" for label in semantic):
+        status = "needs_review"
     else:
         status = "verified"
 
     diagnostics = list(gaps or [])
     if missing_claims:
-        diagnostics.append("No structured claim uses the eligible sources supplied for this stage.")
+        diagnostics.append(
+            "No structured claim maps the external-fact statements in this output to an eligible source."
+        )
+    elif eligible and not mapped_claims:
+        diagnostics.append(
+            "No structured claim was supplied; treat factual statements as assumptions."
+        )
+    if contradictions:
+        diagnostics.append("Conflicting sources for: " + ", ".join(contradictions))
     if prose_flags:
         diagnostics.append(
             "Unmapped external-fact patterns in prose: " + ", ".join(prose_flags)
         )
+    unverified = [
+        item["claim_id"]
+        for item in mapped_claims
+        if item["semantic_support"] in {"unverified", "uncertain"}
+    ]
+    if unverified:
+        diagnostics.append(
+            "Verbatim quotes without confirmed semantic support: " + ", ".join(unverified)
+        )
+    rejected = [
+        item["claim_id"] for item in mapped_claims if item["semantic_support"] == "rejected"
+    ]
+    if rejected:
+        diagnostics.append("Claims rejected by semantic review: " + ", ".join(rejected))
     expiring = sorted(
         source_id for source_id, label in mapped["freshness"].items() if label != "fresh"
     )
@@ -126,17 +202,18 @@ def audit_evidence(market, claims, citations, text, *, execution, today=None, ga
         "eligible_source_count": len(eligible),
         "missing_claims": missing_claims,
         "prose_flags": prose_flags,
-        "claims": mapped["claims"],
+        "claims": mapped_claims,
         "duplicates_removed": mapped["duplicates_removed"],
         "source_ids": mapped["source_ids"],
         "freshness": mapped["freshness"],
         "injection_flags": injection,
+        "contradictions": contradictions,
         "evidence_gaps": diagnostics,
     }
 
 
 def requires_claim_mapping(audit):
-    """A model run with eligible sources must map at least one claim."""
+    """Only a model run that states external facts must map them to claims."""
     return audit["execution"] == "model" and audit["status"] == "missing_claims"
 
 

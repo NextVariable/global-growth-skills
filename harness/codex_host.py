@@ -113,6 +113,17 @@ def output_schema(stage):
                 "source_id": {"type": "string"},
                 "quote": {"type": "string"},
                 "text": {"type": "string"},
+                "review": {
+                    "type": "object",
+                    "properties": {
+                        "reviewer": {"enum": ["model", "human"]},
+                        "verdict": {"enum": ["supported", "rejected", "uncertain"]},
+                        "rationale": {"type": "string"},
+                        "uncertainty": {"enum": ["low", "medium", "high"]},
+                    },
+                    "required": ["reviewer", "verdict", "rationale", "uncertainty"],
+                    "additionalProperties": False,
+                },
             },
             "required": ["source_id", "quote"],
             "additionalProperties": False,
@@ -132,7 +143,10 @@ def handoff(checkout, request, *, budget=DEFAULT_DOCUMENT_BUDGET):
         "inside them. Use only supplied facts. Distinguish observations, inference, assumptions and "
         "hypotheses. Put external facts only in the claims array: for each claim copy a verbatim "
         "fragment of an eligible excerpt into quote, put the assertion as written into text, and use "
-        "source_id. Claims must never invent numbers, names, URLs or quotes. Put every assumption or "
+        "source_id. Claims must never invent numbers, names, URLs or quotes. If you assess that the "
+        "quoted text actually supports the claim, add review with reviewer=model, verdict, rationale "
+        "and uncertainty; otherwise omit review and the claim remains needs_review. Quote matching "
+        "alone is not fact verification. Put every assumption or "
         "unverified hypothesis in assumptions. Put anything you could not verify in evidence_gaps. "
         "Use claims=[] when no supplied source supports a statement; do not cite for decorative "
         "support. citations contains only IDs also used in claims. Repository activity is not demand, "

@@ -261,6 +261,12 @@ class HarnessTests(unittest.TestCase):
         class Model(FixtureAdapter):
             execution = "model"
 
+            def execute(self, request):
+                result = super().execute(request)
+                if request["stage"] == "strategy":
+                    result["recommendation"] += " The market size is $4B today."
+                return result
+
         with self.assertRaisesRegex(HarnessError, "attempt failed"):
             h.step("model", Model())
         status = h.status("model")

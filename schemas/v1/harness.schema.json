@@ -1409,6 +1409,9 @@
               "exact_excerpt",
               "excerpt_fragment"
             ]
+          },
+          "review": {
+            "$ref": "#/$defs/claim-review"
           }
         }
       }
@@ -1421,6 +1424,8 @@
         "quote",
         "text",
         "support",
+        "semantic_support",
+        "review",
         "claim_key",
         "observed_on",
         "valid_until",
@@ -1451,6 +1456,24 @@
           "enum": [
             "exact_excerpt",
             "excerpt_fragment"
+          ]
+        },
+        "semantic_support": {
+          "enum": [
+            "unverified",
+            "supported",
+            "rejected",
+            "uncertain"
+          ]
+        },
+        "review": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/claim-review"
+            }
           ]
         },
         "claim_key": {
@@ -1492,6 +1515,7 @@
         "source_ids",
         "freshness",
         "injection_flags",
+        "contradictions",
         "evidence_gaps"
       ],
       "additionalProperties": false,
@@ -1500,7 +1524,11 @@
           "enum": [
             "not_applicable",
             "no_eligible_sources",
+            "no_claims",
+            "conflict",
             "missing_claims",
+            "needs_review",
+            "unsupported_claims",
             "partial",
             "verified"
           ]
@@ -1557,12 +1585,55 @@
             "type": "string"
           }
         },
+        "contradictions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/run-id"
+          }
+        },
         "evidence_gaps": {
           "type": "array",
           "items": {
             "type": "string",
             "maxLength": 5000
           }
+        }
+      }
+    },
+    "claim-review": {
+      "type": "object",
+      "required": [
+        "reviewer",
+        "verdict",
+        "rationale",
+        "uncertainty"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "reviewer": {
+          "enum": [
+            "model",
+            "human"
+          ]
+        },
+        "verdict": {
+          "enum": [
+            "supported",
+            "rejected",
+            "uncertain"
+          ]
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "uncertainty": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
         }
       }
     }

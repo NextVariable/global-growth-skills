@@ -125,7 +125,7 @@ class EvidenceTests(unittest.TestCase):
         self.assertTrue(requires_claim_mapping(audit))
         self.assertIn("market_size_in_prose", audit["prose_flags"])
 
-    def test_audit_marks_verified_mapping(self):
+    def test_verbatim_mapping_without_semantic_review_is_not_verified(self):
         market = self.market([source("price-1", "price")])
         audit = audit_evidence(
             market,
@@ -135,9 +135,107 @@ class EvidenceTests(unittest.TestCase):
             execution="model",
             today=self.today,
         )
-        self.assertEqual(audit["status"], "verified")
+        self.assertEqual(audit["status"], "needs_review")
         self.assertFalse(requires_claim_mapping(audit))
+        self.assertEqual(audit["claims"][0]["support"], "excerpt_fragment")
+        self.assertEqual(audit["claims"][0]["semantic_support"], "unverified")
         self.assertEqual(audit["claims"][0]["claim_key"], "price")
+
+    def test_semantic_review_can_verify_a_mapping(self):
+        market = self.market([source("price-1", "price")])
+        audit = audit_evidence(
+            market,
+            [
+                {
+                    "source_id": "price-1",
+                    "quote": "$49 per month",
+                    "text": "Pro costs $49 per month.",
+                    "review": {
+                        "reviewer": "model",
+                        "verdict": "supported",
+                        "rationale": "The claim restates the quoted price without adding facts.",
+                        "uncertainty": "low",
+                    },
+                }
+            ],
+            ["price-1"],
+            "Launch the Pro plan at the observed price.",
+            execution="model",
+            today=self.today,
+        )
+        self.assertEqual(audit["status"], "verified")
+        self.assertEqual(audit["claims"][0]["semantic_support"], "supported")
+        self.assertEqual(audit["claims"][0]["review"]["reviewer"], "model")
+
+    def test_stars_do_not_support_a_paying_customer_claim(self):
+        market = self.market([source("repo-1", "demand", "The project has 1000 stars.")])
+        audit = audit_evidence(
+            market,
+            [
+                {
+                    "source_id": "repo-1",
+                    "quote": "1000 stars",
+                    "text": "The project has 1000 paying customers.",
+                    "review": {
+                        "reviewer": "human",
+                        "verdict": "rejected",
+                        "rationale": "Stars measure repository attention, not paying customers.",
+                        "uncertainty": "low",
+                    },
+                }
+            ],
+            ["repo-1"],
+            "Demand is proven.",
+            execution="model",
+            today=self.today,
+        )
+        self.assertEqual(audit["status"], "unsupported_claims")
+        self.assertEqual(audit["claims"][0]["support"], "excerpt_fragment")
+        self.assertEqual(audit["claims"][0]["semantic_support"], "rejected")
+
+    def test_no_factual_prose_does_not_require_a_citation(self):
+        market = self.market([source("price-1", "price")])
+        audit = audit_evidence(
+            market,
+            [],
+            [],
+            "Recommend a two-week pilot with weekly checkpoints.",
+            execution="model",
+            today=self.today,
+        )
+        self.assertEqual(audit["status"], "no_claims")
+        self.assertFalse(audit["missing_claims"])
+        self.assertFalse(requires_claim_mapping(audit))
+
+    def test_conflicting_sources_are_reported_as_conflict(self):
+        market = self.market(
+            [
+                source("a", "demand", "Demand is growing."),
+                source("b", "demand", "Demand is shrinking.", stance="contradicts"),
+            ]
+        )
+        audit = audit_evidence(market, [], [], "Draft.", execution="model", today=self.today)
+        self.assertEqual(audit["status"], "conflict")
+        self.assertEqual(audit["contradictions"], ["demand"])
+        self.assertFalse(requires_claim_mapping(audit))
+
+    def test_incomplete_semantic_review_is_refused(self):
+        market = self.market([source("price-1", "price")])
+        with self.assertRaisesRegex(HarnessError, "claim review"):
+            audit_evidence(
+                market,
+                [
+                    {
+                        "source_id": "price-1",
+                        "quote": "$49 per month",
+                        "review": {"reviewer": "model", "verdict": "supported"},
+                    }
+                ],
+                ["price-1"],
+                "Draft.",
+                execution="model",
+                today=self.today,
+            )
 
     def test_expiring_evidence_is_reported(self):
         market = self.market([source("price-1", "price", valid_until="2026-12-05")])
