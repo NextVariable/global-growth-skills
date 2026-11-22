@@ -113,7 +113,12 @@ def run_case(case, mode, checkouts, model):
                 }
             )
             execution = "model" if mode == "model" else "fixture"
-            harness.start(case["id"], execution)
+            stages = (
+                ("strategy", "content", "launch", "sales", "experiments")
+                if mode == "model"
+                else None
+            )
+            harness.start(case["id"], execution, stages=stages)
             adapter = (
                 CodexAdapter(checkouts=checkouts, model=model)
                 if mode == "model"
