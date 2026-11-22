@@ -3,7 +3,9 @@
 import argparse
 import json
 from pathlib import Path
+import shutil
 import sqlite3
+import sys
 
 from . import __version__
 from .adapters import FixtureAdapter, HandoffAdapter
@@ -14,10 +16,46 @@ from .orchestrator import Harness
 from .package import markdown, snapshot
 from .pins import prepare_pins
 from .registry import ROLES
+from .web_research import PROVIDER as WEB_PROVIDER
 
 
 def input_json(path):
     return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def doctor(db):
+    import jsonschema
+
+    checks = [
+        {
+            "check": "python",
+            "ok": sys.version_info >= (3, 10),
+            "detail": sys.version.split()[0],
+        },
+        {"check": "jsonschema", "ok": True, "detail": jsonschema.__version__},
+    ]
+    target = Path(db).expanduser().resolve()
+    checks.append(
+        {
+            "check": "database_path",
+            "ok": not str(target).startswith(str(Path.cwd().resolve()) + "/")
+            and target.parent.is_dir(),
+            "detail": str(target),
+        }
+    )
+    codex = shutil.which("codex")
+    checks.append(
+        {
+            "check": "codex_cli",
+            "ok": bool(codex),
+            "detail": codex or "not installed; fixture and handoff modes still work",
+        }
+    )
+    return {
+        "version": __version__,
+        "ok": all(check["ok"] for check in checks if check["check"] != "codex_cli"),
+        "checks": checks,
+    }
 
 
 def main():
@@ -42,6 +80,17 @@ def main():
     research.add_argument("term", help="public search keywords; do not include private data")
     research.add_argument("--repository", help="exact public OWNER/REPO lookup")
     research.add_argument("--limit", type=int, default=3)
+    web = commands.add_parser(
+        "research-web", help="snapshot one public HTTPS page (no redirects, no login)"
+    )
+    web.add_argument("url")
+    web.add_argument("--topic", choices=("market", "competitor", "icp", "channel"), required=True)
+    web.add_argument("--claim-key", help="group sources that make the same assertion")
+    web.add_argument("--quote", help="verbatim fragment to capture instead of the page summary")
+    web.add_argument("--valid-days", type=int, default=30)
+    commands.add_parser("doctor", help="check runtime, schema and CLI prerequisites")
+    audit = commands.add_parser("audit", help="evidence and quality audit for one run")
+    audit.add_argument("run_id")
     export = commands.add_parser("export")
     export.add_argument("run_id")
     export.add_argument("--format", choices=("json", "markdown"), default="markdown")
@@ -71,10 +120,15 @@ def main():
 
     args = parser.parse_args()
     harness = None
+    exit_code = 0
     try:
         if args.command == "prepare-pins":
             print(json.dumps(prepare_pins(args.directory), indent=2))
             return 0
+        if args.command == "doctor":
+            result = doctor(args.db)
+            print(json.dumps(result, indent=2))
+            return 0 if result["ok"] else 2
         if getattr(args, "checkouts_dir", None):
             args.checkout = [
                 f"{stage}={args.checkouts_dir / stage}" for stage in ROLES
@@ -101,6 +155,7 @@ def main():
             "execute-mock",
             "receipts",
             "research",
+            "research-web",
             "prepare",
         }:
             gateway = Gateway(harness)
@@ -109,6 +164,17 @@ def main():
                 if args.repository:
                     query["repository"] = args.repository
                 result = gateway.research(query)
+            elif args.command == "research-web":
+                query = {
+                    "url": args.url,
+                    "topic": args.topic,
+                    "valid_days": args.valid_days,
+                }
+                if args.claim_key:
+                    query["claim_key"] = args.claim_key
+                if args.quote:
+                    query["quote"] = args.quote
+                result = gateway.research(query, provider=WEB_PROVIDER)
             elif args.command == "prepare":
                 result = gateway.prepare(input_json(args.operation))
             elif args.command == "approve-mock":
@@ -126,6 +192,29 @@ def main():
             if args.format == "markdown":
                 print(markdown(result), end="")
                 return 0
+        elif args.command == "audit":
+            package = snapshot(harness.status(args.run_id), Gateway(harness).receipts())
+            result = {
+                "run_id": package["run_id"],
+                "status": package["status"],
+                "quality": package["quality"],
+                "claim_audit": package["claim_audit"],
+                "sources": [
+                    {
+                        key: row[key]
+                        for key in (
+                            "id",
+                            "status",
+                            "observed_on",
+                            "valid_until",
+                            "freshness",
+                            "injection_flags",
+                        )
+                    }
+                    for row in package["evidence_review"]["sources"]
+                ],
+            }
+            exit_code = 2 if package["status"] == "incomplete_evidence" else 0
         elif args.command == "handoff":
             checkouts = dict(value.split("=", 1) for value in args.checkout)
             state = harness.status(args.run_id)
@@ -136,12 +225,14 @@ def main():
                 checkout = checkouts.get(request["stage"])
                 if not checkout:
                     raise HarnessError("provide a checkout for the selected stage")
-                prompt, schema, skill_digest = handoff(checkout, request)
+                prompt, schema, skill_digest, selection = handoff(checkout, request)
                 result["tasks"].append(
                     {
                         "prompt": prompt,
                         "output_schema": schema,
                         "skill_document_digest": skill_digest,
+                        "skill_selection": selection,
+                        "prompt_bytes": len(prompt.encode("utf-8")),
                         "input_digest": digest(request),
                     }
                 )
@@ -173,7 +264,7 @@ def main():
         print(json.dumps(result, ensure_ascii=True, indent=2))
         if args.command == "resume" and any(t["status"] == "blocked" for t in result["tasks"]):
             return 2
-        return 0
+        return exit_code
     except (HarnessError, OSError, ValueError, sqlite3.Error) as exc:
         detail = str(exc) if isinstance(exc, HarnessError) else type(exc).__name__
         parser.exit(1, f"Harness error: {detail}\n")

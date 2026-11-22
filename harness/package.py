@@ -3,7 +3,9 @@
 from html import escape
 import re
 
+from .quality import assess, markdown_lines
 from .research import prose_review, review, source_dependencies
+
 
 HEADING = {
     "positioning": "Positioning, messaging and landing page draft",
@@ -20,13 +22,20 @@ def snapshot(state, receipts):
     decisions = state["decisions"]
     decision = next((item for item in decisions if item["id"] == state["active_decision_id"]), None)
     active = [item for item in state["artifacts"] if item["status"] == "draft"]
+    records = ([("strategy", decision)] if decision else []) + [(a["kind"], a) for a in active]
+    audits = [item.get("evidence_audit") or {} for _, item in records]
+    if not all(t["status"] == "succeeded" for t in state["tasks"]):
+        status = "incomplete"
+    elif any(audit.get("status") == "missing_claims" for audit in audits):
+        status = "incomplete_evidence"
+    else:
+        status = "ready_for_internal_review"
+    quality = assess(state)
     return {
         "schema_version": 1,
         "run_id": state["run_id"],
         "execution": state["execution"],
-        "status": "ready_for_internal_review"
-        if all(t["status"] == "succeeded" for t in state["tasks"])
-        else "incomplete",
+        "status": status,
         "scope": state["plan"],
         "context": {
             **state["context"],
@@ -36,13 +45,19 @@ def snapshot(state, receipts):
         },
         "decision": decision,
         "artifacts": active,
+        "quality": quality,
         "historical_artifact_ids": [a["id"] for a in state["artifacts"] if a["status"] == "stale"],
         "tasks": state["tasks"],
         "evidence_review": sources,
         "claim_audit": [
             {
                 "record": label,
+                "evidence_status": (item.get("evidence_audit") or {}).get("status", "not_applicable"),
                 "exact_excerpt_checks": len(item.get("claims", [])),
+                "support_checks": [
+                    claim["support"]
+                    for claim in (item.get("evidence_audit") or {}).get("claims", [])
+                ],
                 "source_ids": sorted(
                     source_dependencies(
                         sources, item.get("claims", []), item.get("citation_ids", [])
@@ -51,10 +66,9 @@ def snapshot(state, receipts):
                 if item.get("claims") or item.get("citation_ids")
                 else [],
                 "prose_flags": prose_review(item.get("markdown", item.get("recommendation", ""))),
+                "evidence_gaps": (item.get("evidence_audit") or {}).get("evidence_gaps", []),
             }
-            for label, item in (
-                ([("strategy", decision)] if decision else []) + [(a["kind"], a) for a in active]
-            )
+            for label, item in records
         ],
         "skill_pins": state["skill_pins"],
         "attempts": state["history"],
@@ -68,10 +82,22 @@ def _text(value):
 
 
 def _claim_lines(item):
-    return [
-        f"- Evidence `{_text(claim['source_id'])}` · {_text(claim['quote'])}"
-        for claim in item.get("claims", [])
-    ]
+    lines = []
+    for claim in item.get("claims", []):
+        text = f" · {_text(claim['text'])}" if claim.get("text") else ""
+        lines.append(
+            f"- Evidence `{_text(claim['source_id'])}` · {_text(claim['quote'])}{text}"
+        )
+    return lines
+
+
+def _note_lines(item):
+    lines = []
+    for assumption in item.get("assumptions") or []:
+        lines.append(f"- Assumption · {_text(assumption)}")
+    for gap in item.get("evidence_gaps") or []:
+        lines.append(f"- Evidence gap · {_text(gap)}")
+    return lines
 
 
 def markdown(package):
@@ -101,6 +127,7 @@ def markdown(package):
             _text(decision["recommendation"]),
             "",
             *_claim_lines(decision),
+            *_note_lines(decision),
             "",
         ]
     for a in package["artifacts"]:
@@ -112,8 +139,10 @@ def markdown(package):
             _text(a["markdown"]),
             "",
             *_claim_lines(a),
+            *_note_lines(a),
             "",
         ]
+    lines += markdown_lines(package["quality"]) + [""]
     lines += ["## Evidence and decision log", ""]
     for item in package["claim_audit"]:
         flags = ", ".join(item["prose_flags"]) or "none detected"
