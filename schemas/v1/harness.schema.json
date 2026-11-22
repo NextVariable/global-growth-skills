@@ -296,6 +296,9 @@
           "minLength": 1,
           "maxLength": 20000
         },
+        "contract": {
+          "$ref": "#/$defs/decision-contract"
+        },
         "dependencies": {
           "type": "array",
           "items": {
@@ -408,6 +411,20 @@
         "decision_id": {
           "type": "integer",
           "minimum": 1
+        },
+        "decision_revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "decision_contract_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "constraint_refs": {
+          "$ref": "#/$defs/constraint-declaration"
+        },
+        "constraint_check": {
+          "$ref": "#/$defs/constraint-check"
         },
         "status": {
           "enum": [
@@ -526,6 +543,9 @@
           "minLength": 1,
           "maxLength": 20000
         },
+        "contract": {
+          "$ref": "#/$defs/decision-draft"
+        },
         "citations": {
           "type": "array",
           "items": {
@@ -578,6 +598,9 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 20000
+        },
+        "constraint_refs": {
+          "$ref": "#/$defs/constraint-declaration"
         },
         "claims": {
           "$ref": "#/$defs/claim-list"
@@ -767,6 +790,10 @@
           "type": "object",
           "required": [
             "id",
+            "decision_id",
+            "decision_revision",
+            "contract_sha256",
+            "contract",
             "recommendation"
           ],
           "additionalProperties": false,
@@ -774,6 +801,21 @@
             "id": {
               "type": "integer",
               "minimum": 1
+            },
+            "decision_id": {
+              "type": "string",
+              "pattern": "^dec-[0-9a-f]{16}$"
+            },
+            "decision_revision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "contract_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "contract": {
+              "$ref": "#/$defs/decision-contract"
             },
             "recommendation": {
               "type": "string",
@@ -1677,6 +1719,679 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 200
+        }
+      }
+    },
+    "decision-field": {
+      "enum": [
+        "objective",
+        "primary_metric",
+        "metric_definition",
+        "unit",
+        "target_value",
+        "comparator",
+        "sample_size",
+        "independence_conditions",
+        "observation_window",
+        "budget_constraints"
+      ]
+    },
+    "decision-text-slot": {
+      "type": "object",
+      "required": ["state"],
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "enum": ["decided", "unknown", "proposed"]
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": ["decided", "proposed"]
+              }
+            },
+            "required": ["state"]
+          },
+          "then": {
+            "required": ["value"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "unknown"
+              }
+            },
+            "required": ["state"]
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": ["value"]
+                },
+                {
+                  "required": ["unit"]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "decision-number-slot": {
+      "type": "object",
+      "required": ["state"],
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "enum": ["decided", "unknown", "proposed"]
+        },
+        "value": {
+          "type": "number",
+          "minimum": 0
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": ["decided", "proposed"]
+              }
+            },
+            "required": ["state"]
+          },
+          "then": {
+            "required": ["value"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "unknown"
+              }
+            },
+            "required": ["state"]
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": ["value"]
+                },
+                {
+                  "required": ["unit"]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "decision-integer-slot": {
+      "type": "object",
+      "required": ["state"],
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "enum": ["decided", "unknown", "proposed"]
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": ["decided", "proposed"]
+              }
+            },
+            "required": ["state"]
+          },
+          "then": {
+            "required": ["value"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "unknown"
+              }
+            },
+            "required": ["state"]
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": ["value"]
+                },
+                {
+                  "required": ["unit"]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "decision-list-slot": {
+      "type": "object",
+      "required": ["state"],
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "enum": ["decided", "unknown", "proposed"]
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "minItems": 1,
+          "maxItems": 20
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": ["decided", "proposed"]
+              }
+            },
+            "required": ["state"]
+          },
+          "then": {
+            "required": ["values"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "unknown"
+              }
+            },
+            "required": ["state"]
+          },
+          "then": {
+            "not": {
+              "required": ["values"]
+            }
+          }
+        }
+      ]
+    },
+    "decision-window-slot": {
+      "type": "object",
+      "required": ["state"],
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "enum": ["decided", "unknown", "proposed"]
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "unit": {
+          "enum": ["days", "weeks"]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": ["decided", "proposed"]
+              }
+            },
+            "required": ["state"]
+          },
+          "then": {
+            "required": ["value", "unit"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "unknown"
+              }
+            },
+            "required": ["state"]
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": ["value"]
+                },
+                {
+                  "required": ["unit"]
+                },
+                {
+                  "required": ["description"]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "decision-budget-slot": {
+      "type": "object",
+      "required": ["state"],
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "enum": ["decided", "unknown", "proposed"]
+        },
+        "amount_minor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": ["decided", "proposed"]
+              }
+            },
+            "required": ["state"]
+          },
+          "then": {
+            "required": ["amount_minor", "currency", "unit"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "unknown"
+              }
+            },
+            "required": ["state"]
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": ["amount_minor"]
+                },
+                {
+                  "required": ["currency"]
+                },
+                {
+                  "required": ["unit"]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "decision-draft": {
+      "type": "object",
+      "required": [
+        "objective",
+        "primary_metric",
+        "metric_definition",
+        "unit",
+        "target_value",
+        "comparator",
+        "sample_size",
+        "independence_conditions",
+        "observation_window",
+        "budget_constraints"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "objective": {
+          "$ref": "#/$defs/decision-text-slot"
+        },
+        "primary_metric": {
+          "$ref": "#/$defs/decision-text-slot"
+        },
+        "metric_definition": {
+          "$ref": "#/$defs/decision-text-slot"
+        },
+        "unit": {
+          "$ref": "#/$defs/decision-text-slot"
+        },
+        "target_value": {
+          "$ref": "#/$defs/decision-number-slot"
+        },
+        "comparator": {
+          "$ref": "#/$defs/decision-text-slot"
+        },
+        "sample_size": {
+          "$ref": "#/$defs/decision-integer-slot"
+        },
+        "independence_conditions": {
+          "$ref": "#/$defs/decision-list-slot"
+        },
+        "observation_window": {
+          "$ref": "#/$defs/decision-window-slot"
+        },
+        "budget_constraints": {
+          "$ref": "#/$defs/decision-budget-slot"
+        }
+      }
+    },
+    "decision-contract": {
+      "type": "object",
+      "required": [
+        "decision_id",
+        "decision_revision",
+        "objective",
+        "primary_metric",
+        "metric_definition",
+        "unit",
+        "target_value",
+        "comparator",
+        "sample_size",
+        "independence_conditions",
+        "observation_window",
+        "budget_constraints",
+        "evidence_refs",
+        "assumptions",
+        "approval_status",
+        "change_reason",
+        "change_initiator",
+        "approved_by",
+        "supersedes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "decision_id": {
+          "type": "string",
+          "pattern": "^dec-[0-9a-f]{16}$"
+        },
+        "decision_revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "objective": {
+          "$ref": "#/$defs/decision-text-slot"
+        },
+        "primary_metric": {
+          "$ref": "#/$defs/decision-text-slot"
+        },
+        "metric_definition": {
+          "$ref": "#/$defs/decision-text-slot"
+        },
+        "unit": {
+          "$ref": "#/$defs/decision-text-slot"
+        },
+        "target_value": {
+          "$ref": "#/$defs/decision-number-slot"
+        },
+        "comparator": {
+          "$ref": "#/$defs/decision-text-slot"
+        },
+        "sample_size": {
+          "$ref": "#/$defs/decision-integer-slot"
+        },
+        "independence_conditions": {
+          "$ref": "#/$defs/decision-list-slot"
+        },
+        "observation_window": {
+          "$ref": "#/$defs/decision-window-slot"
+        },
+        "budget_constraints": {
+          "$ref": "#/$defs/decision-budget-slot"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/run-id"
+          },
+          "uniqueItems": true
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000
+          },
+          "maxItems": 20
+        },
+        "approval_status": {
+          "enum": ["pending", "approved"]
+        },
+        "change_reason": {
+          "type": ["string", "null"],
+          "maxLength": 2000
+        },
+        "change_initiator": {
+          "enum": ["model", "human"]
+        },
+        "approved_by": {
+          "type": ["string", "null"],
+          "maxLength": 200
+        },
+        "supersedes": {
+          "type": ["string", "null"],
+          "maxLength": 100
+        }
+      }
+    },
+    "decision-patch": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "objective": {
+          "$ref": "#/$defs/decision-text-slot"
+        },
+        "primary_metric": {
+          "$ref": "#/$defs/decision-text-slot"
+        },
+        "metric_definition": {
+          "$ref": "#/$defs/decision-text-slot"
+        },
+        "unit": {
+          "$ref": "#/$defs/decision-text-slot"
+        },
+        "target_value": {
+          "$ref": "#/$defs/decision-number-slot"
+        },
+        "comparator": {
+          "$ref": "#/$defs/decision-text-slot"
+        },
+        "sample_size": {
+          "$ref": "#/$defs/decision-integer-slot"
+        },
+        "independence_conditions": {
+          "$ref": "#/$defs/decision-list-slot"
+        },
+        "observation_window": {
+          "$ref": "#/$defs/decision-window-slot"
+        },
+        "budget_constraints": {
+          "$ref": "#/$defs/decision-budget-slot"
+        }
+      }
+    },
+    "constraint-declaration": {
+      "type": "object",
+      "required": ["decision_id", "decision_revision", "constraints"],
+      "additionalProperties": false,
+      "properties": {
+        "decision_id": {
+          "type": "string",
+          "pattern": "^dec-[0-9a-f]{16}$"
+        },
+        "decision_revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "constraints": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "objective": {
+              "$ref": "#/$defs/decision-text-slot"
+            },
+            "primary_metric": {
+              "$ref": "#/$defs/decision-text-slot"
+            },
+            "metric_definition": {
+              "$ref": "#/$defs/decision-text-slot"
+            },
+            "unit": {
+              "$ref": "#/$defs/decision-text-slot"
+            },
+            "target_value": {
+              "$ref": "#/$defs/decision-number-slot"
+            },
+            "comparator": {
+              "$ref": "#/$defs/decision-text-slot"
+            },
+            "sample_size": {
+              "$ref": "#/$defs/decision-integer-slot"
+            },
+            "independence_conditions": {
+              "$ref": "#/$defs/decision-list-slot"
+            },
+            "observation_window": {
+              "$ref": "#/$defs/decision-window-slot"
+            },
+            "budget_constraints": {
+              "$ref": "#/$defs/decision-budget-slot"
+            }
+          }
+        },
+        "proposals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["field", "reason"],
+            "additionalProperties": false,
+            "properties": {
+              "field": {
+                "$ref": "#/$defs/decision-field"
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              },
+              "value": {}
+            }
+          }
+        }
+      }
+    },
+    "constraint-check": {
+      "type": "object",
+      "required": ["status", "decision_revision"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "consistent",
+            "proposal_only",
+            "drifted",
+            "stale_version",
+            "not_declared"
+          ]
+        },
+        "decision_revision": {
+          "type": ["integer", "null"]
+        },
+        "drift": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "proposals": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         }
       }
     }
