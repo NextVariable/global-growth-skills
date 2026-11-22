@@ -29,6 +29,11 @@ def snapshot(state, receipts):
         status = "incomplete"
     elif any(audit.get("status") == "missing_claims" for audit in audits):
         status = "incomplete_evidence"
+    elif any(
+        audit.get("status") in {"needs_review", "unsupported_claims", "partial", "conflict"}
+        for audit in audits
+    ):
+        status = "needs_evidence_review"
     elif quality["status"] == "fail":
         status = "needs_quality_review"
     else:
@@ -58,6 +63,10 @@ def snapshot(state, receipts):
                 "exact_excerpt_checks": len(item.get("claims", [])),
                 "support_checks": [
                     claim["support"]
+                    for claim in (item.get("evidence_audit") or {}).get("claims", [])
+                ],
+                "semantic_support": [
+                    claim["semantic_support"]
                     for claim in (item.get("evidence_audit") or {}).get("claims", [])
                 ],
                 "source_ids": sorted(

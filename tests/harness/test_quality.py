@@ -109,6 +109,32 @@ class QualityTests(unittest.TestCase):
             any(item["evidence_status"] == "missing_claims" for item in package["quality"]["items"])
         )
 
+    def test_verbatim_only_claims_require_evidence_review(self):
+        state = strong_state()
+        state["artifacts"][0]["evidence_audit"] = {
+            "status": "needs_review",
+            "evidence_gaps": ["Verbatim quotes without confirmed semantic support: clm-1"],
+            "claims": [{"support": "excerpt_fragment", "semantic_support": "unverified"}],
+        }
+        package = snapshot(state, [])
+        self.assertEqual(package["status"], "needs_evidence_review")
+        self.assertEqual(
+            [item for item in package["claim_audit"] if item["semantic_support"]][0][
+                "semantic_support"
+            ],
+            ["unverified"],
+        )
+
+    def test_rejected_claims_require_evidence_review(self):
+        state = strong_state()
+        state["artifacts"][0]["evidence_audit"] = {
+            "status": "unsupported_claims",
+            "evidence_gaps": ["Claims rejected by semantic review: clm-1"],
+            "claims": [{"support": "excerpt_fragment", "semantic_support": "rejected"}],
+        }
+        package = snapshot(state, [])
+        self.assertEqual(package["status"], "needs_evidence_review")
+
 
 if __name__ == "__main__":
     unittest.main()
