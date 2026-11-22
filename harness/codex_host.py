@@ -117,6 +117,7 @@ def output_schema(stage):
                     "type": "object",
                     "properties": {
                         "reviewer": {"enum": ["model", "human"]},
+                        "model": {"type": "string"},
                         "verdict": {"enum": ["supported", "rejected", "uncertain"]},
                         "rationale": {"type": "string"},
                         "uncertainty": {"enum": ["low", "medium", "high"]},
@@ -144,8 +145,9 @@ def handoff(checkout, request, *, budget=DEFAULT_DOCUMENT_BUDGET):
         "hypotheses. Put external facts only in the claims array: for each claim copy a verbatim "
         "fragment of an eligible excerpt into quote, put the assertion as written into text, and use "
         "source_id. Claims must never invent numbers, names, URLs or quotes. If you assess that the "
-        "quoted text actually supports the claim, add review with reviewer=model, verdict, rationale "
-        "and uncertainty; otherwise omit review and the claim remains needs_review. Quote matching "
+        "quoted text actually supports the claim, add review with reviewer=model, model=<your model "
+        "name>, verdict, rationale and uncertainty; otherwise omit review and the claim remains "
+        "needs_review. Quote matching "
         "alone is not fact verification. Put every assumption or "
         "unverified hypothesis in assumptions. Put anything you could not verify in evidence_gaps. "
         "Use claims=[] when no supplied source supports a statement; do not cite for decorative "

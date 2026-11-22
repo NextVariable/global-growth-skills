@@ -16,6 +16,7 @@ REVIEWERS = {"model", "human"}
 VERDICTS = {"supported", "rejected", "uncertain"}
 UNCERTAINTY = {"low", "medium", "high"}
 REVIEW_FIELDS = {"reviewer", "verdict", "rationale", "uncertainty"}
+REVIEW_OPTIONAL = {"model"}
 
 
 def normalize(text):
@@ -35,12 +36,17 @@ def _review(claim):
         return None, "unverified"
     if not isinstance(review, dict):
         raise HarnessError("claim review must be an object")
-    if set(review) != REVIEW_FIELDS:
+    if set(review) - REVIEW_FIELDS - REVIEW_OPTIONAL or not REVIEW_FIELDS <= set(review):
         raise HarnessError(
             "claim review requires reviewer, verdict, rationale and uncertainty"
         )
     if review["reviewer"] not in REVIEWERS:
         raise HarnessError("claim review reviewer must be model or human")
+    if review["reviewer"] == "model":
+        if not isinstance(review.get("model"), str) or not normalize(review["model"]):
+            raise HarnessError("model claim review must name the reviewing model")
+    elif "model" in review:
+        raise HarnessError("human claim review must not name a model")
     if review["verdict"] not in VERDICTS:
         raise HarnessError("claim review verdict must be supported, rejected or uncertain")
     if review["uncertainty"] not in UNCERTAINTY:
@@ -50,12 +56,15 @@ def _review(claim):
         raise HarnessError("claim review requires a non-blank rationale")
     if len(rationale) > 2000:
         raise HarnessError("claim review rationale exceeds 2000 characters")
-    return {
+    recorded = {
         "reviewer": review["reviewer"],
         "verdict": review["verdict"],
         "rationale": normalize(rationale),
         "uncertainty": review["uncertainty"],
-    }, review["verdict"]
+    }
+    if "model" in review:
+        recorded["model"] = normalize(review["model"])[:200]
+    return recorded, review["verdict"]
 
 
 def build_claim_map(market, claims, citations=(), today=None):

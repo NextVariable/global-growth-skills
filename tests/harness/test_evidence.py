@@ -152,6 +152,7 @@ class EvidenceTests(unittest.TestCase):
                     "text": "Pro costs $49 per month.",
                     "review": {
                         "reviewer": "model",
+                        "model": "gpt-test",
                         "verdict": "supported",
                         "rationale": "The claim restates the quoted price without adding facts.",
                         "uncertainty": "low",
@@ -229,6 +230,26 @@ class EvidenceTests(unittest.TestCase):
                         "source_id": "price-1",
                         "quote": "$49 per month",
                         "review": {"reviewer": "model", "verdict": "supported"},
+                    }
+                ],
+                ["price-1"],
+                "Draft.",
+                execution="model",
+                today=self.today,
+            )
+        with self.assertRaisesRegex(HarnessError, "reviewing model"):
+            audit_evidence(
+                market,
+                [
+                    {
+                        "source_id": "price-1",
+                        "quote": "$49 per month",
+                        "review": {
+                            "reviewer": "model",
+                            "verdict": "supported",
+                            "rationale": "The price matches.",
+                            "uncertainty": "low",
+                        },
                     }
                 ],
                 ["price-1"],
