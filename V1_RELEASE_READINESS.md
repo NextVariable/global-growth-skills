@@ -78,7 +78,6 @@ RC1 的另一组真实模型配对数据（直接调用与自动编排各 2/2 �
 
 ## 发布动作
 
-- 本轮只推送文档修复到原分支，不新建 PR。
-- `main` 未改变，未创建 GitHub Release。
-- 建议使用 **merge commit** 合并，保留 `faa29ad`、`251a52f` 等证据提交的可追溯性。
-- 合并与创建 Release 需 Product Owner 单独授权。
+- PR [#1](https://github.com/NextVariable/global-growth-skills/pull/1) 已以 merge commit `7112a7df48d59419594619d51d279e6d0f20fb00` 合并到 `main`；`Harness fixture tests` 与 `Validate` 在该提交上均通过。
+- 运行时版本号已从 `1.0.0-rc.3` 对齐为 `1.0.0`，未改变运行时行为。
+- 尚未创建 GitHub Release 或 git tag；该动作需 Product Owner 单独授权。

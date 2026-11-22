@@ -22,7 +22,7 @@
 ### 未验证或受限
 
 - 真实模型验收已在 `faa29ad` 执行：三阶段 3/3、完整五阶段 10/10 次宿主调用；token、耗时与失败见下表。宿主未提供可核对账单，成本记为 `not_measured`，未伪造结果或费用。`251a52f` 的来源分类修复由 `tests/harness/test_provenance.py` 的 19 个用例覆盖，未重复执行五阶段模型评测。[验收命令与记录要求](evals/rc3/README.md#真实模型验收)
-- 开发分支已推送，PR [#1](https://github.com/NextVariable/global-growth-skills/pull/1) 保持 open，CI 通过，未合并。
+- 开发分支已通过 PR [#1](https://github.com/NextVariable/global-growth-skills/pull/1) 以 merge commit `7112a7d` 合并到 `main`，合并提交上的 CI 检查通过；尚未创建 GitHub Release。
 - 质量评分是确定性结构检查，不判断语义真伪；没有评审器时 claim 始终为 `needs_review`，不会被标为 `verified`。
 - 浏览器 DOM、JavaScript 渲染、登录页和代理传输不在 `research-web` 支持范围。
 - 决策契约的一致性判定只读取结构化声明；自由文本中的矛盾不会自动拦截，仍需人工审阅。单次真实运行中，下游逐字复制了已批准约束；样本有限，稳定性仍需更多运行验证。
