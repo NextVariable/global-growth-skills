@@ -3,6 +3,7 @@
 from html import escape
 import re
 
+from .decision import markdown_lines as contract_lines
 from .quality import assess, markdown_lines
 from .research import prose_review, review, source_dependencies
 
@@ -145,6 +146,22 @@ def markdown(package):
             "",
             _text(decision["recommendation"]),
             "",
+        ]
+        contract = decision.get("contract")
+        if contract:
+            lines += [
+                f"Decision contract `{contract['decision_id']}` · revision {contract['decision_revision']} · approval `{contract['approval_status']}`",
+                "",
+                *contract_lines(contract),
+                "",
+            ]
+            if contract.get("change_reason"):
+                lines += [
+                    f"- Change · {_text(contract['change_reason'])} · initiated by "
+                    f"{contract.get('change_initiator')} · approved by {contract.get('approved_by')}",
+                    "",
+                ]
+        lines += [
             *_claim_lines(decision),
             *_note_lines(decision),
             "",
@@ -155,6 +172,20 @@ def markdown(package):
             "",
             f"Draft `{a['id']}` · inputs {a.get('handoff_ids', [])}",
             "",
+        ]
+        check = a.get("constraint_check")
+        if check:
+            lines += [
+                f"Constraints `{check['status']}` · decision revision {check['decision_revision']}",
+                "",
+            ]
+            for proposal in check.get("proposals") or []:
+                lines.append(
+                    f"- Proposal only, not approved · {proposal['field']} · {_text(proposal.get('reason') or '')}"
+                )
+            if check.get("proposals"):
+                lines.append("")
+        lines += [
             _text(a["markdown"]),
             "",
             *_claim_lines(a),

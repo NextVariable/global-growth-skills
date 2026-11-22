@@ -67,6 +67,13 @@ def main():
     commands.add_parser("prepare-pins").add_argument("directory")
     commands.add_parser("change").add_argument("patch")
     commands.add_parser("restore").add_argument("revision", type=int)
+    revise = commands.add_parser(
+        "revise-decision", help="apply an operator-approved decision revision"
+    )
+    revise.add_argument("run_id")
+    revise.add_argument("patch", help="JSON file with the constraint fields to change")
+    revise.add_argument("--reason", required=True)
+    revise.add_argument("--actor", default="operator")
     approve = commands.add_parser("approve-mock")
     approve.add_argument("operation")
     approve.add_argument("--ttl", type=int, default=300)
@@ -144,6 +151,10 @@ def main():
             result = harness.update(input_json(args.patch))
         elif args.command == "restore":
             result = harness.restore(args.revision)
+        elif args.command == "revise-decision":
+            result = harness.revise_decision(
+                args.run_id, input_json(args.patch), reason=args.reason, actor=args.actor
+            )
         elif args.command == "start":
             harness.start(args.run_id, args.execution, stages=args.stages, goal=args.goal)
             result = harness.status(args.run_id)

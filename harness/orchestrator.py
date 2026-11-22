@@ -2,6 +2,7 @@
 
 import json
 
+from . import decision as decision_contract
 from .contracts import HarnessError, digest, encode, validate
 from .evidence import audit_evidence
 from .registry import skill_registry
@@ -214,6 +215,59 @@ class Harness(Store):
                 self._set_task(run_id, stage, "queued")
         return stale
 
+    def revise_decision(self, run_id, patch, *, reason, actor="operator"):
+        """Append an operator-approved revision and retire drafts bound to the old one."""
+        with self.transaction():
+            run = self._run(run_id)
+            if run["decision_id"] is None:
+                raise HarnessError("run has no active decision to revise")
+            row = self.db.execute(
+                "SELECT id, data FROM decisions WHERE id = ?", (run["decision_id"],)
+            ).fetchone()
+            saved = json.loads(row["data"])
+            contract = self._contract(row["id"], saved)
+            updated = decision_contract.revise(contract, patch, reason=reason, actor=actor)
+            ident = self.db.execute(
+                "INSERT INTO decisions(run_id,data) VALUES (?,?)",
+                (run_id, encode(validate("decision", {**saved, "contract": updated}))),
+            ).lastrowid
+            self.db.execute("UPDATE runs SET decision_id = ? WHERE id = ?", (ident, run_id))
+            stale = []
+            for artifact in self.db.execute(
+                "SELECT id, data FROM artifacts WHERE run_id = ? AND stale = 0", (run_id,)
+            ).fetchall():
+                if json.loads(artifact["data"]).get("decision_id") == row["id"]:
+                    self.db.execute(
+                        "UPDATE artifacts SET stale = 1 WHERE id = ?", (artifact["id"],)
+                    )
+                    stale.append(artifact["id"])
+            current = self._active(run_id)
+            for task in self._tasks(run_id):
+                stage = task["stage"]
+                if stage == "strategy":
+                    continue
+                if task["status"] == "running" or (
+                    task["status"] == "succeeded"
+                    and any(kind not in current for kind in self._kinds(stage))
+                ):
+                    self._set_task(run_id, stage, "queued")
+            self._event(
+                run_id,
+                "strategy",
+                0,
+                {
+                    "status": "decision_revised",
+                    "decision_id": updated["decision_id"],
+                    "decision_revision": updated["decision_revision"],
+                    "reason": reason,
+                },
+            )
+            return {
+                "decision_id": updated["decision_id"],
+                "decision_revision": updated["decision_revision"],
+                "stale_artifact_ids": sorted(stale),
+            }
+
     def start(self, run_id, execution="fixture", *, stages=None, goal=None):
         validate("run-id", run_id)
         if execution not in {"fixture", "model", "handoff"}:
@@ -277,6 +331,19 @@ class Harness(Store):
     def _kinds(stage):
         return (
             ("positioning", "pricing", "capabilities") if stage == "content" else (OUTPUTS[stage],)
+        )
+
+    @staticmethod
+    def _contract(decision_row_id, data):
+        """Read the stored contract, or derive a stable unknown-only one for old rows."""
+        if "contract" in data:
+            return data["contract"]
+        return decision_contract.build(
+            None,
+            "dec-" + digest({"row": decision_row_id})[:16],
+            {},
+            data.get("claims", []),
+            data.get("assumptions", []),
         )
 
     def _event(self, run_id, stage, attempt, data):
@@ -343,7 +410,7 @@ class Harness(Store):
                 requests[0]["market_review"] = review(inputs.get("market_sources", ([], None))[0])
             else:
                 decision = self.db.execute(
-                    "SELECT data FROM decisions WHERE id = ?", (run["decision_id"],)
+                    "SELECT id, data FROM decisions WHERE id = ?", (run["decision_id"],)
                 ).fetchone()
                 current = self._active(run_id)
                 kinds = [kind for kind in self._kinds(stage) if kind not in current]
@@ -389,9 +456,15 @@ class Harness(Store):
                         if "market_sources" in inputs:
                             item["evidence"].append(inputs["market_sources"][1])
                     if decision and kind not in {"pricing", "capabilities"}:
+                        saved = json.loads(decision["data"])
+                        contract = self._contract(decision["id"], saved)
                         item["decision"] = {
                             "id": run["decision_id"],
-                            "recommendation": json.loads(decision["data"])["recommendation"],
+                            "decision_id": contract["decision_id"],
+                            "decision_revision": contract["decision_revision"],
+                            "contract_sha256": digest(contract),
+                            "contract": contract,
+                            "recommendation": saved["recommendation"],
                         }
                     if kind not in PRODUCT_ONLY:
                         item["market_review"] = self._market()
@@ -462,6 +535,26 @@ class Harness(Store):
                 ):
                     raise HarnessError("market citations require exact claims")
                 source_dependencies(market, claims, citations)
+            checks = []
+            for req, result in zip(requests, results):
+                if "decision" not in req:
+                    checks.append(None)
+                    continue
+                if result.get("constraint_refs") is None and adapter.execution == "fixture":
+                    result["constraint_refs"] = decision_contract.declaration(
+                        req["decision"]["contract"]
+                    )
+                outcome = decision_contract.check(
+                    req["decision"]["contract"], result.get("constraint_refs")
+                )
+                if outcome["status"] in {"drifted", "stale_version", "not_declared"}:
+                    detail = ", ".join(
+                        f"{item['field']} {item['kind']}" for item in outcome["drift"]
+                    )
+                    raise HarnessError(
+                        f"decision constraints {outcome['status']}: {detail}"
+                    )
+                checks.append(outcome)
             audits = []
             for req, result in zip(requests, results):
                 market = req.get("market_review", {"citation_ids": [], "sources": []})
@@ -495,7 +588,7 @@ class Harness(Store):
         with self.transaction():
             if not self._owns_attempt(run_id, stage, attempt):
                 raise HarnessError("attempt superseded; results discarded")
-            for req, result, audit in zip(requests, results, audits):
+            for req, result, audit, check in zip(requests, results, audits, checks):
                 refs = [
                     {key: item[key] for key in ("field", "revision")} for item in req["evidence"]
                 ]
@@ -522,6 +615,23 @@ class Harness(Store):
                         contradictions=market["contradictions"],
                     )
                     data.pop("citations", None)
+                    data["contract"] = decision_contract.build(
+                        result.get("contract"),
+                        "dec-"
+                        + digest(
+                            {
+                                "run": run_id,
+                                "recommendation": result["recommendation"],
+                                "goal": req["context"].get("goal"),
+                            }
+                        )[:16],
+                        {
+                            "goal": req["context"].get("goal"),
+                            "budget": req["context"].get("budget"),
+                        },
+                        result.get("claims", []),
+                        result.get("assumptions", []),
+                    )
                     ident = self.db.execute(
                         "INSERT INTO decisions(run_id,data) VALUES (?,?)",
                         (run_id, encode(validate("decision", data))),
@@ -531,6 +641,15 @@ class Harness(Store):
                 else:
                     if "decision" in req:
                         data["decision_id"] = req["decision"]["id"]
+                        data["decision_revision"] = req["decision"]["decision_revision"]
+                        data["decision_contract_sha256"] = req["decision"]["contract_sha256"]
+                    else:
+                        data.pop("constraint_refs", None)
+                    if check is not None:
+                        data["constraint_check"] = {
+                            key: check[key]
+                            for key in ("status", "decision_revision", "drift", "proposals")
+                        }
                     if req.get("handoffs"):
                         data["handoff_ids"] = [handoff["id"] for handoff in req["handoffs"]]
                     data.update(status="draft", sha256=digest(result["markdown"]))
