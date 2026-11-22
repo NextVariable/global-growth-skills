@@ -3,7 +3,7 @@
 import json
 
 from .contracts import HarnessError, digest, encode, validate
-from .evidence import audit_evidence, requires_claim_mapping
+from .evidence import audit_evidence
 from .registry import skill_registry
 from .research import dependencies_changed, review, source_dependencies
 from .planning import DEFAULT, HANDOFF_KINDS, OUTPUTS, PARENTS, plan
@@ -439,12 +439,18 @@ class Harness(Store):
                         validate("host-receipt", receipt)
                         with self.transaction():
                             self._event(run_id, stage, attempt, {"host_receipt": receipt})
-                results.append(
-                    validate(
-                        "strategy-result" if stage == "strategy" else "content-result",
-                        result,
-                    )
+                result = validate(
+                    "strategy-result" if stage == "strategy" else "content-result", result
                 )
+                if adapter.execution in {"model", "handoff"} and "claims" in result:
+                    result = {
+                        **result,
+                        "claims": [
+                            {key: value for key, value in claim.items() if key != "review"}
+                            for claim in result["claims"]
+                        ],
+                    }
+                results.append(result)
             for req, result in zip(requests, results):
                 market = req.get("market_review", {"citation_ids": [], "sources": []})
                 claims = result.get("claims", [])
@@ -468,11 +474,6 @@ class Harness(Store):
                     execution=adapter.execution,
                     gaps=result.get("evidence_gaps", []),
                 )
-                if requires_claim_mapping(audit):
-                    raise HarnessError(
-                        "model output omitted the required claim mapping for eligible evidence; "
-                        "retry with claims that quote supplied excerpts"
-                    )
                 audits.append(audit)
             if stage != "strategy" and any(
                 req["artifact_kind"] != result["kind"] for req, result in zip(requests, results)

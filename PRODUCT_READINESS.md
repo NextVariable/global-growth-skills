@@ -1,14 +1,14 @@
 # GTM Harness 1.0.0-rc.3 产品验收
 
-**保留 RC。** RC2 已完成真实检索、五阶段 Codex 调用、来源审查和导出，但模型没有选用结构化引用。RC3 把这条缺口变成门禁，并补充公开网页证据、包质量评分和上下文预算；本轮没有可用的 Codex CLI，因此真实模型是否稳定遵守新门禁尚未验证。
+**保留 RC。** RC2 已完成真实检索、五阶段 Codex 调用、来源审查和导出，但模型没有选用结构化引用。RC3 把这条缺口变成门禁，并补充公开网页证据、包质量评分和上下文预算；独立验收在零模型成本阶段发现发布阻塞。审计修复分支调整了证据门禁，真实模型验收尚未执行。
 
 ## RC3 迭代（本次）
 
 ### 已实现
 
 - **Evidence Engine 2.0**：claim 可引用摘录中的逐字片段，记录 `exact_excerpt`/`excerpt_fragment`、来源时效和重复合并；冲突、过期、注入来源不可引用。
-- **语义支持与逐字匹配分离**：字符串匹配只记为 `support`；`semantic_support` 在具名模型或人工评审前保持 `unverified`。评审须记录 `reviewer`、`verdict`、`rationale` 与 `uncertainty`。仅凭“1000 stars”不能推出“1000 付费客户”，后者在评审拒绝时状态为 `unsupported_claims`。
-- **门禁边界**：模型只在“陈述外部事实却没有任何 claim”时硬失败；无事实断言的建议不因存在无关来源而被强制引用。审计状态区分 `not_applicable`、`no_eligible_sources`、`no_claims`、`conflict`、`missing_claims`、`needs_review`、`unsupported_claims`、`partial`、`verified`。
+- **语义支持与逐字匹配分离**：模型草稿记录逐字匹配，语义支持保持 `unverified`。本版尚未接入独立评审。
+- **门禁边界**：错误的来源或引文拒绝保存。文本规则命中保留草稿并触发证据复核，纯建议允许空引用。审计状态区分 `not_applicable`、`no_eligible_sources`、`no_claims`、`conflict`、`missing_claims`、`needs_review`、`unsupported_claims`、`partial`、`verified`。
 - **包状态**：`incomplete_evidence`（缺少必要 claim）、`needs_evidence_review`（逐字命中但语义未复核、评审拒绝或存在冲突）、`needs_quality_review`、`ready_for_internal_review`。
 - **精确失效**：来源依赖按实际引用计算，新增无关来源不再让已引用草稿失效；来源改动、撤回、冲突或过期仍沿依赖传播。
 - **公开网页 Provider**：`research-web` 只读抓取操作者给出的单个公开 HTTPS 页面，记录 SHA256、HTTP 状态、采集时间与有效期；拒绝私网、重定向、非 HTML 和超 1 MB 响应。DNS 只解析一次，所有答案须为全局单播地址，连接固定到已验证 IP 并用原主机名做 TLS 校验，禁止代理路径。
@@ -18,7 +18,7 @@
 
 ### 未验证或受限
 
-- 本机没有 `codex` CLI，本轮未发起真实模型调用；未伪造模型结果或费用。真实模型执行次数与成本记为 `not_run` / `not_incurred`。[验收命令与记录要求](evals/rc3/README.md#真实模型验收)
+- 独立验收未进入付费或真实模型阶段；未伪造模型结果或费用。真实模型执行次数与成本记为 `not_run` / `not_incurred`。[验收命令与记录要求](evals/rc3/README.md#真实模型验收)
 - 开发分支已推送，PR [#1](https://github.com/NextVariable/global-growth-skills/pull/1) 保持 open，CI 通过，未合并。
 - 质量评分是确定性结构检查，不判断语义真伪；没有评审器时 claim 始终为 `needs_review`，不会被标为 `verified`。
 - 浏览器 DOM、JavaScript 渲染、登录页和代理传输不在 `research-web` 支持范围。
@@ -87,4 +87,4 @@ GitHub Provider 仅允许固定 HTTPS GET，拒绝重定向，不发送凭证，
 
 本地 Harness 40/40，安装器 10/10，离线代表任务 10/10。原安装器另完成五个固定版本的实际下载与安装。静态检查及版本历史敏感模式扫描通过。Windows 的 POSIX 模拟身份测试按兼容规则跳过。[三平台 Harness 及归档](https://github.com/NextVariable/global-growth-skills/actions/runs/44987367829) · [六项兼容与仓库检查](https://github.com/NextVariable/global-growth-skills/actions/runs/44987367836)
 
-代码路径包括 `harness/github_research.py`、`research.py`、`orchestrator.py`、`gateway.py`、`package.py`、`pins.py`、`__main__.py` 与兼容扩展的 v1 Schema。迁移与恢复沿用 SQLite v3。[快速开始](README.md#gtm-harness-100-rc2) · [故障说明](docs/harness.md#常见故障) · [Unit log](evals/rc2/offline-unittest.txt)
+代码路径包括 `harness/github_research.py`、`research.py`、`orchestrator.py`、`gateway.py`、`package.py`、`pins.py`、`__main__.py` 与兼容扩展的 v1 Schema。迁移与恢复沿用 SQLite v3。[当前快速开始](README.md#gtm-harness-100-rc3) · [故障说明](docs/harness.md#常见故障) · [Unit log](evals/rc2/offline-unittest.txt)

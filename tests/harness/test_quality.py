@@ -1,6 +1,6 @@
 import unittest
 
-from harness.package import snapshot
+from harness.package import markdown, snapshot
 from harness.quality import assess
 
 
@@ -130,6 +130,18 @@ class QualityTests(unittest.TestCase):
                 for item in package["quality"]["items"]
             )
         )
+
+    def test_export_escapes_model_gaps_and_preserves_currency_units(self):
+        state = strong_state()
+        state["context"]["project_id"] = "test"
+        state["tasks"][0]["stage"] = "strategy"
+        state["context"]["values"]["budget"] = {"currency": "JPY", "amount_minor": 1200}
+        state["artifacts"][0]["evidence_gaps"] = [
+            "![attachment](https://example.com/image)"
+        ]
+        rendered = markdown(snapshot(state, []))
+        self.assertNotIn("![attachment]", rendered)
+        self.assertIn("JPY 1,200 minor units", rendered)
 
     def test_rejected_claims_require_evidence_review(self):
         state = strong_state()

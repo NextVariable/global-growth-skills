@@ -204,7 +204,7 @@ def assess(state):
     }
 
 
-def markdown_lines(quality):
+def markdown_lines(quality, *, format_text):
     lines = [
         "## Quality scorecard",
         "",
@@ -219,10 +219,10 @@ def markdown_lines(quality):
             f"evidence `{item['evidence_status']}` · missing {', '.join(missing) or 'none'}"
         )
         for gap in item["evidence_gaps"]:
-            lines.append(f"  - gap · {gap}")
+            lines.append(f"  - gap · {format_text(gap)}")
     if quality["consistency"]:
         lines.append("")
         for finding in quality["consistency"]:
             label = "ok" if finding["ok"] else "check"
-            lines.append(f"- {label} · {finding['check']} · {finding['detail']}")
+            lines.append(f"- {label} · {finding['check']} · {format_text(finding['detail'])}")
     return lines

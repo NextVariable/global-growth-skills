@@ -67,7 +67,7 @@ def _review(claim):
     return recorded, review["verdict"]
 
 
-def build_claim_map(market, claims, citations=(), today=None):
+def build_claim_map(market, claims, citations=(), today=None, *, trust_reviews=True):
     """Map every claim to an eligible source and a verbatim support fragment."""
     today = today or datetime.now(timezone.utc).date()
     eligible = set(market["citation_ids"])
@@ -102,7 +102,7 @@ def build_claim_map(market, claims, citations=(), today=None):
             duplicates += 1
             continue
         seen.add(key)
-        review, semantic = _review(claim)
+        review, semantic = _review(claim) if trust_reviews else (None, "unverified")
         mapped.append(
             {
                 "claim_id": _claim_id(ident, quote, text),
@@ -134,7 +134,9 @@ def audit_evidence(market, claims, citations, text, *, execution, today=None, ga
     """Combine exact claim validation with visible prose and source risk."""
     market = market or {"citation_ids": [], "sources": [], "contradictions": [], "status": "needs_review"}
     today = today or datetime.now(timezone.utc).date()
-    mapped = build_claim_map(market, claims, citations, today)
+    mapped = build_claim_map(
+        market, claims, citations, today, trust_reviews=execution == "fixture"
+    )
     prose_flags = prose_review(text)
     eligible = list(market["citation_ids"])
     contradictions = sorted(market.get("contradictions") or [])
@@ -147,18 +149,20 @@ def audit_evidence(market, claims, citations, text, *, execution, today=None, ga
     )
     mapped_claims = mapped["claims"]
     semantic = [item["semantic_support"] for item in mapped_claims]
-    # A model that states external facts without mapping them must retry. A
-    # recommendation that makes no factual assertion does not need a citation
-    # just because some source happens to be eligible.
-    missing_claims = bool(eligible) and not mapped_claims and bool(prose_flags)
-    if not market["sources"]:
-        status = "not_applicable"
-    elif contradictions:
+    # Pattern matches flag drafts for review and can include legitimate budget or target figures.
+    missing_claims = not mapped_claims and bool(prose_flags) and (
+        bool(eligible) or execution in {"model", "handoff"}
+    )
+    if contradictions:
         status = "conflict"
+    elif missing_claims:
+        status = "missing_claims"
+    elif not market["sources"]:
+        status = "not_applicable"
     elif not eligible:
         status = "no_eligible_sources"
     elif not mapped_claims:
-        status = "missing_claims" if missing_claims else "no_claims"
+        status = "no_claims"
     elif "rejected" in semantic:
         status = "unsupported_claims"
     elif prose_flags:
@@ -171,7 +175,7 @@ def audit_evidence(market, claims, citations, text, *, execution, today=None, ga
     diagnostics = list(gaps or [])
     if missing_claims:
         diagnostics.append(
-            "No structured claim maps the external-fact statements in this output to an eligible source."
+            "No structured claim maps the external-fact statements in this output to an eligible source. Check whether the flagged statements are project inputs or proposed targets."
         )
     elif eligible and not mapped_claims:
         diagnostics.append(
@@ -220,10 +224,6 @@ def audit_evidence(market, claims, citations, text, *, execution, today=None, ga
         "evidence_gaps": diagnostics,
     }
 
-
-def requires_claim_mapping(audit):
-    """Only a model run that states external facts must map them to claims."""
-    return audit["execution"] == "model" and audit["status"] == "missing_claims"
 
 
 def prose_pattern_names():

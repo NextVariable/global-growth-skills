@@ -3,7 +3,7 @@ from datetime import date
 import unittest
 
 from harness.contracts import HarnessError, digest, validate
-from harness.evidence import audit_evidence, build_claim_map, requires_claim_mapping
+from harness.evidence import audit_evidence, build_claim_map
 from harness.research import dependencies_changed, review, source_fingerprint
 
 
@@ -122,7 +122,6 @@ class EvidenceTests(unittest.TestCase):
         )
         self.assertEqual(audit["status"], "missing_claims")
         self.assertTrue(audit["missing_claims"])
-        self.assertTrue(requires_claim_mapping(audit))
         self.assertIn("market_size_in_prose", audit["prose_flags"])
 
     def test_verbatim_mapping_without_semantic_review_is_not_verified(self):
@@ -136,12 +135,11 @@ class EvidenceTests(unittest.TestCase):
             today=self.today,
         )
         self.assertEqual(audit["status"], "needs_review")
-        self.assertFalse(requires_claim_mapping(audit))
         self.assertEqual(audit["claims"][0]["support"], "excerpt_fragment")
         self.assertEqual(audit["claims"][0]["semantic_support"], "unverified")
         self.assertEqual(audit["claims"][0]["claim_key"], "price")
 
-    def test_semantic_review_can_verify_a_mapping(self):
+    def test_fixture_review_can_verify_a_mapping(self):
         market = self.market([source("price-1", "price")])
         audit = audit_evidence(
             market,
@@ -161,7 +159,7 @@ class EvidenceTests(unittest.TestCase):
             ],
             ["price-1"],
             "Launch the Pro plan at the observed price.",
-            execution="model",
+            execution="fixture",
             today=self.today,
         )
         self.assertEqual(audit["status"], "verified")
@@ -169,7 +167,9 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual(audit["claims"][0]["review"]["reviewer"], "model")
 
     def test_stars_do_not_support_a_paying_customer_claim(self):
-        market = self.market([source("repo-1", "demand", "The project has 1000 stars.")])
+        market = self.market(
+            [source("repo-1", "demand", "The project has 1000 stars.")]
+        )
         audit = audit_evidence(
             market,
             [
@@ -187,12 +187,55 @@ class EvidenceTests(unittest.TestCase):
             ],
             ["repo-1"],
             "Demand is proven.",
-            execution="model",
+            execution="fixture",
             today=self.today,
         )
         self.assertEqual(audit["status"], "unsupported_claims")
         self.assertEqual(audit["claims"][0]["support"], "excerpt_fragment")
         self.assertEqual(audit["claims"][0]["semantic_support"], "rejected")
+
+    def test_draft_cannot_self_verify_as_human_or_model(self):
+        market = self.market(
+            [source("repo", "activity", "The repository has 20 stars.")]
+        )
+        for reviewer in (
+            {"reviewer": "human"},
+            {"reviewer": "model", "model": "fixture-model"},
+        ):
+            with self.subTest(reviewer=reviewer):
+                audit = audit_evidence(
+                    market,
+                    [
+                        {
+                            "source_id": "repo",
+                            "quote": "20 stars",
+                            "text": "The product has 20 paying customers.",
+                            "review": {
+                                **reviewer,
+                                "verdict": "supported",
+                                "rationale": "Self-attested.",
+                                "uncertainty": "low",
+                            },
+                        }
+                    ],
+                    ["repo"],
+                    "Draft.",
+                    execution="model",
+                    today=self.today,
+                )
+                self.assertEqual(audit["status"], "needs_review")
+                self.assertIsNone(audit["claims"][0]["review"])
+
+    def test_numeric_external_assertion_without_sources_is_not_ready(self):
+        audit = audit_evidence(
+            None,
+            [],
+            [],
+            "The product has 20 paying customers.",
+            execution="model",
+            today=self.today,
+        )
+        self.assertEqual(audit["status"], "missing_claims")
 
     def test_no_factual_prose_does_not_require_a_citation(self):
         market = self.market([source("price-1", "price")])
@@ -206,7 +249,6 @@ class EvidenceTests(unittest.TestCase):
         )
         self.assertEqual(audit["status"], "no_claims")
         self.assertFalse(audit["missing_claims"])
-        self.assertFalse(requires_claim_mapping(audit))
 
     def test_conflicting_sources_are_reported_as_conflict(self):
         market = self.market(
@@ -218,7 +260,6 @@ class EvidenceTests(unittest.TestCase):
         audit = audit_evidence(market, [], [], "Draft.", execution="model", today=self.today)
         self.assertEqual(audit["status"], "conflict")
         self.assertEqual(audit["contradictions"], ["demand"])
-        self.assertFalse(requires_claim_mapping(audit))
 
     def test_review_schema_requires_a_model_name_only_for_model_reviewers(self):
         claim = {
@@ -264,7 +305,7 @@ class EvidenceTests(unittest.TestCase):
                 ],
                 ["price-1"],
                 "Draft.",
-                execution="model",
+                execution="fixture",
                 today=self.today,
             )
         with self.assertRaisesRegex(HarnessError, "reviewing model"):
@@ -284,7 +325,7 @@ class EvidenceTests(unittest.TestCase):
                 ],
                 ["price-1"],
                 "Draft.",
-                execution="model",
+                execution="fixture",
                 today=self.today,
             )
 

@@ -94,7 +94,7 @@ def _text(value):
 
 def _field_value(value):
     if isinstance(value, dict) and "amount_minor" in value:
-        amount = f"{value.get('currency', '')} {value['amount_minor'] / 100:,.2f}".strip()
+        amount = f"{value['currency']} {value['amount_minor']:,} minor units"
         unit = value.get("unit")
         return f"{amount} · {unit}" if unit else amount
     return value
@@ -161,7 +161,7 @@ def markdown(package):
             *_note_lines(a),
             "",
         ]
-    lines += markdown_lines(package["quality"]) + [""]
+    lines += markdown_lines(package["quality"], format_text=_text) + [""]
     lines += ["## Evidence and decision log", ""]
     for item in package["claim_audit"]:
         flags = ", ".join(item["prose_flags"]) or "none detected"

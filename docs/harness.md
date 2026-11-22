@@ -49,13 +49,9 @@ SQLite `user_version=3`。打开旧双阶段数据库会事务迁移，保留原
 
 ### Claim–Evidence 映射
 
-每条外部事实必须同时给出 `source_id`、`quote`（来源摘录中的逐字片段）和可选 `text`（草稿中的断言）。匹配只证明文字出现在摘录中，`support` 记为 `exact_excerpt` 或 `excerpt_fragment`；`semantic_support` 默认 `unverified`，不会因为字符串匹配而升级为事实。要声明语义支持，须提供 `review`：`reviewer`（`model`/`human`）、`verdict`（`supported`/`rejected`/`uncertain`）、`rationale` 和 `uncertainty`（`low`/`medium`/`high`）；模型评审还须给出 `model` 名称，评审输入即 claim 文本与来源摘录。未评审的 claim 保持 `needs_review`；被拒绝的 claim 为 `unsupported_claims`。
+Codex 草稿的每条外部事实使用 `source_id`、`quote` 和 `text` 描述。`quote` 必须匹配来源摘录的逐字片段，`text` 是待复核断言。匹配只确立引用位置，语义支持保持 `unverified`。本版生成流程没有独立评审入口，模型输出和手工交接中的自报 `review` 不会被保存为评审。
 
-Harness 会合并同源同片段重复项、检查来源时效（`fresh`/`expiring`/`expired`）、标记 30 天内到期证据，并把 `assumptions` 与 `evidence_gaps` 分开保存。门禁只针对“陈述外部事实却没有 claim”：模型输出包含市场规模、价格、采用数量、百分比、预测等外部事实时硬失败并提示重试；只给建议、假设或实验步骤时允许 `claims=[]`，不会为了通过门禁而要求引用无关来源。来源冲突记为 `conflict`，来源不可用记为 `no_eligible_sources`，没有适用来源的任务记为 `not_applicable`。
-
-审计状态：`not_applicable`、`no_eligible_sources`、`no_claims`、`conflict`、`missing_claims`、`needs_review`、`unsupported_claims`、`partial`、`verified`。只有每条 claim 都有 `supported` 评审且没有未映射事实时才为 `verified`。包状态为 `incomplete_evidence`（缺必要 claim）或 `needs_evidence_review`（语义未复核、被拒绝或来源冲突）时，不能作为已验证交付物。对声明为市场相关、尚无具体引用的结果，候选来源集合变化仍会触发复核。
-
-来源依赖按精确引用计算：只复核引用该来源的决策与草稿，新增无关来源不会误伤已有产物。来源 ID 和摘录摘要绑定到决策与草稿，撤回、改动、冲突或过期后沿已保存的上游依赖传递。
+Harness 合并重复项、记录来源时效、冲突和证据缺口。文本规则命中可能来自真实市场断言、用户预算或实验目标。草稿仍可保存，缺结构化支持的产物包标记 `incomplete_evidence`，由操作者复核。已声明的来源 ID 或片段不匹配时，任务拒绝该结果。纯建议允许 `claims=[]`。已引用来源改动后，受影响的产物会失效。
 
 ### 公开网页 Provider
 

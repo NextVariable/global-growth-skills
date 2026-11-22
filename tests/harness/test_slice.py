@@ -237,7 +237,7 @@ class HarnessTests(unittest.TestCase):
             len(self.h.step("run", self.adapter, recover=True)["artifacts"]), 3
         )
 
-    def test_model_run_must_map_eligible_evidence(self):
+    def test_model_prose_flags_allow_checkpoint_and_block_ready_package(self):
         project = copy.deepcopy(PROJECT)
         project["values"]["market_sources"] = [
             {
@@ -256,7 +256,7 @@ class HarnessTests(unittest.TestCase):
         h = Harness(path)
         self.addCleanup(h.close)
         h.initialize(project)
-        h.start("model", "model")
+        h.start("model", "model", stages=["strategy"])
 
         class Model(FixtureAdapter):
             execution = "model"
@@ -264,15 +264,19 @@ class HarnessTests(unittest.TestCase):
             def execute(self, request):
                 result = super().execute(request)
                 if request["stage"] == "strategy":
-                    result["recommendation"] += " The market size is $4B today."
+                    result["recommendation"] += (
+                        " The declared promotion budget is 0 USD."
+                    )
                 return result
 
-        with self.assertRaisesRegex(HarnessError, "attempt failed"):
-            h.step("model", Model())
-        status = h.status("model")
-        self.assertEqual(status["tasks"][0]["status"], "failed")
-        self.assertIn("claim mapping", status["tasks"][0]["detail"])
-        self.assertEqual(status["decisions"], [])
+        from harness.package import snapshot
+
+        status = h.step("model", Model())
+        self.assertEqual(status["tasks"][0]["status"], "succeeded")
+        self.assertEqual(
+            status["decisions"][0]["evidence_audit"]["status"], "missing_claims"
+        )
+        self.assertEqual(snapshot(status, [])["status"], "incomplete_evidence")
 
     def test_cli_init_start_change_and_resume(self):
         path = self.path.parent / "cli.sqlite"

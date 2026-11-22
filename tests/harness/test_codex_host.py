@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-from harness.codex_host import CodexAdapter, handoff
+from harness.codex_host import CodexAdapter, handoff, output_schema
 from harness.contracts import HarnessError
 
 
@@ -34,6 +34,14 @@ class CodexHostTests(unittest.TestCase):
             "skill": {"revision": revision, "path": "skills/example"},
         }
         self.adapter = CodexAdapter({"strategy": self.checkout}, model="fixture-model")
+
+    def test_claim_output_schemas_allow_only_required_draft_fields(self):
+        for stage in ("strategy", "launch"):
+            schema = output_schema(stage)
+            self.assertEqual(set(schema["properties"]), set(schema["required"]))
+            fields = schema["properties"]["claims"]["items"]
+            self.assertEqual(set(fields["properties"]), set(fields["required"]))
+            self.assertEqual(set(fields["required"]), {"source_id", "quote", "text"})
 
     def test_reads_pinned_blob_over_worktree(self):
         prompt, schema, digest, selection = handoff(self.checkout, self.request)
