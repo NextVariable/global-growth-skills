@@ -1,24 +1,44 @@
 # GTM Harness 1.0.0-rc.3 产品验收
 
-**保留 RC。** RC2 已完成真实检索、五阶段 Codex 调用、来源审查和导出，但模型没有选用结构化引用。RC3 把这条缺口变成硬性门禁，并补充公开网页证据、包质量评分和上下文预算；本轮没有可用的 Codex CLI，因此真实模型是否稳定遵守新门禁尚未验证。
+**保留 RC。** RC2 已完成真实检索、五阶段 Codex 调用、来源审查和导出，但模型没有选用结构化引用。RC3 把这条缺口变成门禁，并补充公开网页证据、包质量评分和上下文预算；本轮没有可用的 Codex CLI，因此真实模型是否稳定遵守新门禁尚未验证。
 
 ## RC3 迭代（本次）
 
 ### 已实现
 
-- **Evidence Engine 2.0**：claim 可引用摘录中的逐字片段，记录 `exact_excerpt`/`excerpt_fragment`、来源时效和重复合并；冲突、过期、注入来源不可引用。模型在有可用来源却没有 claim 时直接失败，包状态为 `incomplete_evidence`。
+- **Evidence Engine 2.0**：claim 可引用摘录中的逐字片段，记录 `exact_excerpt`/`excerpt_fragment`、来源时效和重复合并；冲突、过期、注入来源不可引用。
+- **语义支持与逐字匹配分离**：字符串匹配只记为 `support`；`semantic_support` 在具名模型或人工评审前保持 `unverified`。评审须记录 `reviewer`、`verdict`、`rationale` 与 `uncertainty`。仅凭“1000 stars”不能推出“1000 付费客户”，后者在评审拒绝时状态为 `unsupported_claims`。
+- **门禁边界**：模型只在“陈述外部事实却没有任何 claim”时硬失败；无事实断言的建议不因存在无关来源而被强制引用。审计状态区分 `not_applicable`、`no_eligible_sources`、`no_claims`、`conflict`、`missing_claims`、`needs_review`、`unsupported_claims`、`partial`、`verified`。
+- **包状态**：`incomplete_evidence`（缺少必要 claim）、`needs_evidence_review`（逐字命中但语义未复核、评审拒绝或存在冲突）、`needs_quality_review`、`ready_for_internal_review`。
 - **精确失效**：来源依赖按实际引用计算，新增无关来源不再让已引用草稿失效；来源改动、撤回、冲突或过期仍沿依赖传播。
-- **公开网页 Provider**：`research-web` 只读抓取操作者给出的单个公开 HTTPS 页面，记录 SHA256、HTTP 状态、采集时间与有效期；拒绝私网、重定向、非 HTML 和超 1 MB 响应。
+- **公开网页 Provider**：`research-web` 只读抓取操作者给出的单个公开 HTTPS 页面，记录 SHA256、HTTP 状态、采集时间与有效期；拒绝私网、重定向、非 HTML 和超 1 MB 响应。DNS 只解析一次，所有答案须为全局单播地址，连接固定到已验证 IP 并用原主机名做 TLS 校验，禁止代理路径。
 - **包质量**：`audit` 输出 Claim–Evidence 映射、时效、注入标记、证据缺口和六类交付物的结构评分；`needs_quality_review` 不允许充当可评审交付物。
 - **运行时**：每个阶段固定发 `SKILL.md`，参考/模板按阶段选择并限制 60 KB；回执记录 prompt、文档与全包字节数。
 - **评测**：四行业（AI SaaS、开发者工具、智能硬件、B2B 服务）fixture/reference 评测与 model 模式入口；报告明确区分 Fixture、真实模型和业务效果。[RC3 基线](evals/rc3/baseline.json)
 
 ### 未验证或受限
 
-- 本机没有 `codex` CLI，本轮未发起真实模型调用；未伪造模型结果或费用。真实模型执行次数与成本记为 `not_run` / `not_incurred`。
-- `feat/rc3-research-quality` 推送被环境阻塞（`github.com:443` 超时，现有凭据 403），PR 尚未建立。
-- 质量评分是确定性结构检查，不判断语义真伪；跨阶段一致性不覆盖全部业务逻辑。
+- 本机没有 `codex` CLI，本轮未发起真实模型调用；未伪造模型结果或费用。真实模型执行次数与成本记为 `not_run` / `not_incurred`。[验收命令与记录要求](evals/rc3/README.md#真实模型验收)
+- 开发分支已推送，PR [#1](https://github.com/NextVariable/global-growth-skills/pull/1) 保持 open，CI 通过，未合并。
+- 质量评分是确定性结构检查，不判断语义真伪；没有评审器时 claim 始终为 `needs_review`，不会被标为 `verified`。
+- 浏览器 DOM、JavaScript 渲染、登录页和代理传输不在 `research-web` 支持范围。
 - 真实客户采用、付费转化和外部发布仍未验证；不进行未经授权的外部触达、CRM 修改或广告消费。
+
+### RC2 与 RC3 对照
+
+| 指标 | RC2（真实模型，已测） | RC3（真实模型） |
+|---|---:|---:|
+| 任务 | 五阶段 GTM | 未执行 |
+| 成功调用 | 7/7，5/5 阶段 | `not_run` |
+| 输入 token | 248,336 | 未测 |
+| 输出 token | 5,758 | 未测 |
+| 缓存 token | 未报告 | 未测 |
+| 端到端耗时 | 242.45 秒 | 未测 |
+| 参考文档字节 | 未测 | 回执字段已就绪 |
+| 结构化引用 | 0 条 | 门禁已实现，模型行为未测 |
+| 包质量评分 | 未使用评分卡 | 未测 |
+
+Fixture 与 Reference 只验证流程和评分卡区分度，不能当作模型质量或成本证据。
 
 ## RC2 真实运行和证据（历史）
 

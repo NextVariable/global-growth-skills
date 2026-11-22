@@ -3,8 +3,11 @@
 ## 1.0.0-rc.3
 
 - Evidence Engine 2.0：claim 支持逐字片段而不只是整段摘录；新增 Claim–Evidence 映射、支持类型、重复合并、时效分级、证据缺口和 provider 指令注入阻断。
+- 逐字匹配与语义支持分离：`support` 只表示文本命中，`semantic_support` 在具名评审前保持 `unverified`；新增 `review` 记录和 `needs_review`/`unsupported_claims` 状态，字符串匹配不再被当作事实已验证。
+- 门禁只拦截“陈述外部事实却无 claim”的模型输出；无事实断言的建议不再被强制引用无关来源。包状态新增 `needs_evidence_review`。
+- `web-public` 抓取固定到一次解析得到的全局单播地址，使用原主机名完成 TLS 校验，阻断 DNS Rebinding/TOCTOU；不支持代理传输。拒绝私网、重定向、非 HTML 和超限响应。
 - 来源失效改为精确依赖：只复核引用该来源的决策与草稿，新增无关来源不再误触发失效。
-- 模型在有可用来源但没有结构化 claim 时直接失败，不再静默通过；包状态新增 `incomplete_evidence` 与 `needs_quality_review`。
+- 模型陈述外部事实却没有结构化 claim 时失败并提示重试；只给建议或假设时不强制引用。包状态新增 `incomplete_evidence`、`needs_evidence_review` 与 `needs_quality_review`。
 - 新增只读 `web-public` Provider，可抓取显式公开 HTTPS 页面/定价页；拒绝私网、重定向、非 HTML 和超限响应。
 - GTM Package 增加质量评分卡、事实/假设分离、指标公式/分母/护栏/判定规则和跨阶段一致性检查。
 - Codex 上下文按阶段选择 Skill 文档并设 60 KB 预算，回执记录 prompt 与文档字节数。

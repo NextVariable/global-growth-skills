@@ -49,13 +49,17 @@ SQLite `user_version=3`。打开旧双阶段数据库会事务迁移，保留原
 
 ### Claim–Evidence 映射
 
-每条外部事实必须同时给出 `source_id`、`quote`（来源摘录中的逐字片段）和可选 `text`（草稿中的断言）。Harness 会合并同源同片段重复项、检查来源时效（`fresh`/`expiring`/`expired`）、标记 30 天内到期证据，并把 `assumptions` 与 `evidence_gaps` 分开保存。模型运行中，如果存在可用来源但没有任何 claim，任务直接失败并提示重试；包状态为 `incomplete_evidence` 时不能作为可评审交付物。对声明为市场相关、尚无具体引用的结果，候选来源集合变化仍会触发复核。
+每条外部事实必须同时给出 `source_id`、`quote`（来源摘录中的逐字片段）和可选 `text`（草稿中的断言）。匹配只证明文字出现在摘录中，`support` 记为 `exact_excerpt` 或 `excerpt_fragment`；`semantic_support` 默认 `unverified`，不会因为字符串匹配而升级为事实。要声明语义支持，须提供 `review`：`reviewer`（`model`/`human`）、`verdict`（`supported`/`rejected`/`uncertain`）、`rationale` 和 `uncertainty`（`low`/`medium`/`high`）；模型评审还须给出 `model` 名称，评审输入即 claim 文本与来源摘录。未评审的 claim 保持 `needs_review`；被拒绝的 claim 为 `unsupported_claims`。
+
+Harness 会合并同源同片段重复项、检查来源时效（`fresh`/`expiring`/`expired`）、标记 30 天内到期证据，并把 `assumptions` 与 `evidence_gaps` 分开保存。门禁只针对“陈述外部事实却没有 claim”：模型输出包含市场规模、价格、采用数量、百分比、预测等外部事实时硬失败并提示重试；只给建议、假设或实验步骤时允许 `claims=[]`，不会为了通过门禁而要求引用无关来源。来源冲突记为 `conflict`，来源不可用记为 `no_eligible_sources`，没有适用来源的任务记为 `not_applicable`。
+
+审计状态：`not_applicable`、`no_eligible_sources`、`no_claims`、`conflict`、`missing_claims`、`needs_review`、`unsupported_claims`、`partial`、`verified`。只有每条 claim 都有 `supported` 评审且没有未映射事实时才为 `verified`。包状态为 `incomplete_evidence`（缺必要 claim）或 `needs_evidence_review`（语义未复核、被拒绝或来源冲突）时，不能作为已验证交付物。对声明为市场相关、尚无具体引用的结果，候选来源集合变化仍会触发复核。
 
 来源依赖按精确引用计算：只复核引用该来源的决策与草稿，新增无关来源不会误伤已有产物。来源 ID 和摘录摘要绑定到决策与草稿，撤回、改动、冲突或过期后沿已保存的上游依赖传递。
 
 ### 公开网页 Provider
 
-`research-web URL --topic ...` 只读取操作者显式给出的一个公开 HTTPS 页面。拒绝私网/保留地址、非 443 端口、凭证、重定向、非 HTML/纯文本和超过 1 MB 的响应；记录 HTTP 状态、内容 SHA256、采集时间、有效期和可见文本摘录。`--quote` 可把摘录收窄为页面中真实存在的逐字片段。它不执行搜索、登录、JavaScript、点击或任何外部写操作。页面内容视为不可信数据；检测到指令式文本的 provider 来源标记为 `blocked_injection`，不进入引用，也不进入模型提示。
+`research-web URL --topic ...` 只读取操作者显式给出的一个公开 HTTPS 页面。拒绝私网/保留地址、非 443 端口、凭证、重定向、非 HTML/纯文本和超过 1 MB 的响应；记录 HTTP 状态、内容 SHA256、采集时间、有效期和可见文本摘录。DNS 只解析一次，所有答案都必须是全局单播地址；TCP 连接固定到已验证 IP，TLS 仍用原主机名做证书与 SNI 校验，因此解析结果变化不能把连接改写到其他地址。实现只建立直连 socket，不支持代理配置或环境代理变量；需要代理的环境不适用此 Provider。`--quote` 可把摘录收窄为页面中真实存在的逐字片段。它不执行搜索、登录、JavaScript、点击或任何外部写操作。页面内容视为不可信数据；检测到指令式文本的 provider 来源标记为 `blocked_injection`，不进入引用，也不进入模型提示。
 
 ### 审计与质量
 
