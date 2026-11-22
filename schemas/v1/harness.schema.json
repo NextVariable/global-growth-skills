@@ -1156,6 +1156,9 @@
             },
             {
               "$ref": "#/$defs/web-capture"
+            },
+            {
+              "$ref": "#/$defs/hn-capture"
             }
           ]
         }
@@ -1444,6 +1447,86 @@
             "open_issues_count": {
               "type": "integer",
               "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "hn-capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "retrieved_at",
+        "topic",
+        "endpoint",
+        "facts"
+      ],
+      "properties": {
+        "provider": {
+          "const": "hn-public"
+        },
+        "retrieved_at": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "topic": {
+          "enum": [
+            "market",
+            "competitor",
+            "icp",
+            "channel"
+          ]
+        },
+        "endpoint": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "facts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "object_id",
+            "title",
+            "points",
+            "num_comments",
+            "created_at",
+            "story_url",
+            "discussion_url"
+          ],
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "pattern": "^[0-9]{1,20}$"
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "points": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "num_comments": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "created_at": {
+              "type": "string",
+              "maxLength": 40
+            },
+            "story_url": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2000
+            },
+            "discussion_url": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 5000
             }
           }
         }

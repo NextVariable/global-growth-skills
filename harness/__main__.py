@@ -16,6 +16,8 @@ from .orchestrator import Harness
 from .package import markdown, snapshot
 from .pins import prepare_pins
 from .registry import ROLES
+from .hn_research import PROVIDER as HN_PROVIDER
+from .telemetry import cost_report
 from .web_research import PROVIDER as WEB_PROVIDER
 
 
@@ -82,11 +84,20 @@ def main():
     prepare = commands.add_parser("prepare")
     prepare.add_argument("operation")
     commands.add_parser("receipts")
+    cost = commands.add_parser("cost-report", help="token, byte and duration totals for one run")
+    cost.add_argument("run_id")
     research = commands.add_parser("research", help="retrieve and store public GitHub evidence")
     research.add_argument("topic", choices=("market", "competitor", "icp", "channel"))
     research.add_argument("term", help="public search keywords; do not include private data")
     research.add_argument("--repository", help="exact public OWNER/REPO lookup")
     research.add_argument("--limit", type=int, default=3)
+    community = commands.add_parser(
+        "research-community",
+        help="retrieve public Hacker News discussion evidence (no article fetching)",
+    )
+    community.add_argument("topic", choices=("market", "competitor", "icp", "channel"))
+    community.add_argument("term", help="public search keywords; do not include private data")
+    community.add_argument("--limit", type=int, default=3)
     web = commands.add_parser(
         "research-web", help="snapshot one public HTTPS page (no redirects, no login)"
     )
@@ -167,6 +178,7 @@ def main():
             "execute-mock",
             "receipts",
             "research",
+            "research-community",
             "research-web",
             "prepare",
         }:
@@ -176,6 +188,11 @@ def main():
                 if args.repository:
                     query["repository"] = args.repository
                 result = gateway.research(query)
+            elif args.command == "research-community":
+                result = gateway.research(
+                    {"topic": args.topic, "term": args.term, "limit": args.limit},
+                    provider=HN_PROVIDER,
+                )
             elif args.command == "research-web":
                 query = {
                     "url": args.url,
@@ -228,6 +245,8 @@ def main():
                 ],
             }
             exit_code = 2 if package["status"] in {"incomplete_evidence", "needs_decision_review"} else 0
+        elif args.command == "cost-report":
+            result = cost_report(harness.status(args.run_id))
         elif args.command == "handoff":
             checkouts = dict(value.split("=", 1) for value in args.checkout)
             state = harness.status(args.run_id)

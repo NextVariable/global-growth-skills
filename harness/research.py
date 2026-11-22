@@ -85,23 +85,9 @@ def review(sources, today=None):
         )
         flags = injection_flags(row["excerpt"])
         if row.get("capture"):
-            from .github_research import PROVIDER as GITHUB_PROVIDER, excerpt
+            from .providers import verify_capture
 
-            capture = row["capture"]
-            facts = capture["facts"]
-            if capture.get("provider") == GITHUB_PROVIDER:
-                expected_id = "gh-" + digest(facts["full_name"].casefold())[:20]
-                if (
-                    row["excerpt"] != excerpt(facts)
-                    or row["url"] != "https://github.com/" + facts["full_name"]
-                    or row["id"] != expected_id
-                    or row["claim_key"] != expected_id
-                ):
-                    raise HarnessError("capture does not match the normalized GitHub evidence")
-            else:
-                from .web_research import verify_capture
-
-                verify_capture(row)
+            verify_capture(row)
         if status == "reviewable" and row.get("capture") and flags:
             status = "blocked_injection"
         key = _canonical_url(row)
@@ -154,20 +140,76 @@ def source_dependencies(market, claims, citations=()):
     return {ident: source_fingerprint(by_id[ident]) for ident in sorted(refs or eligible)}
 
 
-def prompt_review(market):
-    """Pass allow-listed captured observations; retain general text for human review."""
+PROMPT_CHAR_BUDGET = 6000
+PROMPT_SOURCE_LIMIT = 12
+PROMPT_EXCERPT_LIMIT = 900
+
+
+def prompt_review(
+    market,
+    *,
+    budget=PROMPT_CHAR_BUDGET,
+    max_sources=PROMPT_SOURCE_LIMIT,
+    excerpt_limit=PROMPT_EXCERPT_LIMIT,
+):
+    """Pass allow-listed captured observations within a deterministic budget.
+
+    General text that no workflow can cite stays out of model prompts. Packing
+    never invents evidence: it only trims excerpt length and source count, and
+    reports what was omitted so the same inputs always pack identically.
+    """
+    from .contracts import encode
+
+    candidates = [
+        row
+        for row in market["sources"]
+        if row["id"] in market["citation_ids"]
+        and row.get("capture")
+        and not row.get("injection_flags")
+    ]
+    sources = []
+    used = len(encode({"sources": []}))
+    truncated = 0
+    omitted = 0
+    for row in candidates:
+        if len(sources) >= max_sources:
+            omitted += 1
+            continue
+        excerpt = row["excerpt"]
+        if len(excerpt) > excerpt_limit:
+            excerpt = excerpt[: excerpt_limit - 15] + " [truncated]"
+            truncated += 1
+        item = {
+            key: row[key]
+            for key in ("id", "claim_key", "url", "observed_on", "valid_until", "freshness")
+        }
+        item["excerpt"] = excerpt
+        item["status"] = row["status"]
+        cost = len(encode(item)) + 2
+        if sources and used + cost > budget:
+            omitted += 1
+            continue
+        while not sources and used + cost > budget and len(excerpt) > 1:
+            excerpt = excerpt[: max(1, len(excerpt) - (used + cost - budget) - 20)] + " [truncated]"
+            item["excerpt"] = excerpt
+            truncated += 1
+            cost = len(encode(item)) + 2
+        sources.append(item)
+        used += cost
     return {
-        **market,
-        "sources": [
-            {
-                key: row[key]
-                for key in ("id", "excerpt", "status", "observed_on", "valid_until", "freshness")
-            }
-            for row in market["sources"]
-            if row["id"] in market["citation_ids"]
-            and row.get("capture")
-            and not row.get("injection_flags")
-        ],
+        "status": market["status"],
+        "citation_ids": list(market["citation_ids"]),
+        "contradictions": list(market["contradictions"]),
+        "freshness": market.get("freshness"),
+        "packing": {
+            "candidates": len(candidates),
+            "included": len(sources),
+            "omitted": omitted,
+            "truncated_excerpts": truncated,
+            "budget_chars": budget,
+            "used_chars": used,
+        },
+        "sources": sources,
     }
 
 
