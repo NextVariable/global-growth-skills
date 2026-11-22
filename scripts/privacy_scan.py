@@ -37,6 +37,11 @@ def findings(data):
                 and not value.endswith(
                     (b"@example.com", b"@example.org", b"@example.net", b"@example.invalid")
                 )
+                # Reserved, non-routable domains cannot be private contacts. Local
+                # commit identities such as name@host.local are not delivered mail.
+                and not value.lower().endswith(
+                    (b".local", b".localhost", b".test", b".invalid", b".internal", b".example")
+                )
             ]
         if matches:
             result.append({"rule": rule, "matches": len(matches)})
