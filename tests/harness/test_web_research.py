@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
 import unittest
+from unittest import mock
 
 from harness.contracts import HarnessError, digest
 from harness.research import review
-from harness.web_research import fetch
+from harness.web_research import _PinnedHTTPSConnection, fetch
 
 URL = "https://pricing.example.com/pro"
 HTML = b"""<html><head><title>Acme Pricing</title>
@@ -13,7 +14,7 @@ NOW = datetime(2026, 11, 22, 9, 0, tzinfo=timezone.utc)
 
 
 def get_ok(body=HTML, media="text/html; charset=utf-8", status=200):
-    return lambda url: (status, media, body)
+    return lambda url, addresses: (status, media, body)
 
 
 def resolve_public(host):
@@ -74,7 +75,7 @@ class WebResearchTests(unittest.TestCase):
 
     def test_redirect_and_non_html_are_refused(self):
         with self.assertRaisesRegex(HarnessError, "HTTP 200"):
-            self.fetch_page(get=lambda url: (302, "text/html", b""))
+            self.fetch_page(get=lambda url, addresses: (302, "text/html", b""))
         with self.assertRaisesRegex(HarnessError, "HTML or plain-text"):
             self.fetch_page(get=get_ok(b'{"price":49}', "application/json"))
         with self.assertRaisesRegex(HarnessError, "empty"):
@@ -96,6 +97,77 @@ class WebResearchTests(unittest.TestCase):
             with self.subTest(days=days):
                 with self.assertRaisesRegex(HarnessError, "valid_days"):
                     self.fetch_page(valid_days=days)
+
+    def test_resolution_happens_once_and_validated_addresses_reach_transport(self):
+        calls = []
+        seen = {}
+
+        def resolve(host):
+            calls.append(host)
+            return ["93.184.216.34"] if len(calls) == 1 else ["127.0.0.1"]
+
+        def get(url, addresses):
+            seen["addresses"] = addresses
+            return 200, "text/html", HTML
+
+        fetch(
+            {"url": URL, "topic": "competitor"},
+            get=get,
+            resolve=resolve,
+            clock=lambda: NOW,
+        )
+        self.assertEqual(calls, ["pricing.example.com"])
+        self.assertEqual(seen["addresses"], ["93.184.216.34"])
+
+    def test_mixed_public_and_private_answers_are_refused(self):
+        with self.assertRaisesRegex(HarnessError, "private or reserved"):
+            fetch(
+                {"url": URL, "topic": "competitor"},
+                get=get_ok(),
+                resolve=lambda host: ["93.184.216.34", "10.0.0.5"],
+                clock=lambda: NOW,
+            )
+
+    def test_ip_literal_is_not_resolved_again(self):
+        def resolve(host):
+            raise AssertionError("literal addresses must not be resolved")
+
+        def get(url, addresses):
+            return 200, "text/html", HTML
+
+        fetch(
+            {"url": "https://93.184.216.34/pro", "topic": "market"},
+            get=get,
+            resolve=resolve,
+            clock=lambda: NOW,
+        )
+
+
+class PinnedTransportTests(unittest.TestCase):
+    def test_socket_targets_validated_address_and_tls_keeps_hostname(self):
+        calls = {}
+
+        class Context:
+            def wrap_socket(self, sock, server_hostname):
+                calls["sni"] = server_hostname
+                return sock
+
+        sentinel = object()
+
+        def create_connection(address, timeout):
+            calls["address"] = address
+            calls["timeout"] = timeout
+            return sentinel
+
+        connection = _PinnedHTTPSConnection("pricing.example.com", "93.184.216.34", 5, Context())
+        with mock.patch(
+            "harness.web_research.socket.create_connection", side_effect=create_connection
+        ):
+            connection.connect()
+        self.assertEqual(calls["address"], ("93.184.216.34", 443))
+        self.assertEqual(calls["timeout"], 5)
+        self.assertEqual(calls["sni"], "pricing.example.com")
+        self.assertIs(connection.sock, sentinel)
 
 
 if __name__ == "__main__":

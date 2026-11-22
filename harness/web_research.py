@@ -3,12 +3,12 @@
 from datetime import datetime, timedelta, timezone
 import hashlib
 from html.parser import HTMLParser
+import http.client
 import ipaddress
 import re
 import socket
-from urllib.error import HTTPError, URLError
+import ssl
 from urllib.parse import urlsplit, urlunsplit
-from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
 
 from .contracts import HarnessError, digest
 
@@ -19,11 +19,27 @@ MAX_BYTES = 1_000_000
 MAX_EXCERPT = 1200
 DEFAULT_VALID_DAYS = 30
 USER_AGENT = "gtm-harness/read-only-public-page"
+REQUEST_TIMEOUT = 10
 
 
-class NoRedirect(HTTPRedirectHandler):
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
-        return None
+class _PinnedHTTPSConnection(http.client.HTTPSConnection):
+    """Connect to a pre-validated address while verifying the original hostname.
+
+    Resolution happens exactly once in ``_validated_addresses``. The socket is
+    opened to that literal address, so a later DNS answer cannot redirect the
+    connection. TLS still verifies the certificate against the requested host.
+    """
+
+    def __init__(self, host, address, timeout, context):
+        super().__init__(host, 443, timeout=timeout, context=context)
+        self._pinned_address = address
+        self._tls = context
+
+    def connect(self):
+        self.sock = socket.create_connection(
+            (self._pinned_address, 443), timeout=self.timeout
+        )
+        self.sock = self._tls.wrap_socket(self.sock, server_hostname=self.host)
 
 
 class _VisibleText(HTMLParser):
@@ -100,10 +116,17 @@ def _default_resolve(host):
     return sorted({info[4][0] for info in infos})
 
 
-def _check_addresses(host, resolve):
-    addresses = resolve(host)
-    if not addresses:
+def _validated_addresses(host, resolve):
+    """Resolve once and require every answer to be a global unicast address."""
+    try:
+        literal = ipaddress.ip_address(host)
+    except ValueError:
+        addresses = resolve(host)
+    else:
+        addresses = [str(literal)]
+    if not isinstance(addresses, (list, tuple)) or not addresses:
         raise HarnessError("web research could not resolve the public host")
+    validated = []
     for value in addresses:
         try:
             address = ipaddress.ip_address(value)
@@ -111,39 +134,44 @@ def _check_addresses(host, resolve):
             raise HarnessError("web research received an invalid address") from None
         if not address.is_global:
             raise HarnessError("web research refuses hosts resolving to private or reserved addresses")
+        validated.append(str(address))
+    return validated
 
 
-def _default_get(url, timeout=10):
-    request = Request(
-        url,
-        headers={
-            "User-Agent": USER_AGENT,
-            "Accept": "text/html,application/xhtml+xml,text/plain;q=0.8",
-            "Accept-Encoding": "identity",
-        },
-        method="GET",
-    )
-    try:
-        with build_opener(ProxyHandler({}), NoRedirect()).open(request, timeout=timeout) as response:
-            content_type = response.headers.get("Content-Type", "")
+def _default_get(url, addresses, timeout=REQUEST_TIMEOUT):
+    parts = urlsplit(url)
+    target = urlunsplit(("", "", parts.path or "/", parts.query, ""))
+    headers = {
+        "User-Agent": USER_AGENT,
+        "Accept": "text/html,application/xhtml+xml,text/plain;q=0.8",
+        "Accept-Encoding": "identity",
+        "Connection": "close",
+    }
+    context = ssl.create_default_context()
+    for address in addresses:
+        connection = _PinnedHTTPSConnection(parts.hostname, address, timeout, context)
+        try:
+            connection.request("GET", target, headers=headers)
+            response = connection.getresponse()
+            status = response.status
+            content_type = response.getheader("Content-Type", "")
             body = response.read(MAX_BYTES + 1)
-            return response.status, content_type, body
-    except HTTPError as exc:
-        status = exc.code
-        exc.close()
+        except (OSError, ssl.SSLError, http.client.HTTPException):
+            continue
+        finally:
+            connection.close()
         if 300 <= status < 400:
-            raise HarnessError("web research refuses redirects") from None
-        raise HarnessError(f"web research unavailable: HTTP {status}") from None
-    except URLError:
-        raise HarnessError("web research unavailable: connection failed") from None
-    except (TimeoutError, OSError):
-        raise HarnessError("web research unavailable: timeout or connection error") from None
+            raise HarnessError("web research refuses redirects")
+        return status, content_type, body
+    raise HarnessError("web research unavailable: connection failed")
 
 
 def _excerpt(visible, description, quote):
     visible = _collapse(visible)
     description = _collapse(description)
     if quote is not None:
+        if not isinstance(quote, str):
+            raise HarnessError("quote must be text")
         wanted = _collapse(quote)
         if not wanted:
             raise HarnessError("quote must not be blank")
@@ -159,7 +187,7 @@ def _excerpt(visible, description, quote):
     return window[: stop + 1] if stop >= 80 else window
 
 
-def fetch(query, *, get=_default_get, resolve=_default_resolve, clock=lambda: datetime.now(timezone.utc)):
+def fetch(query, *, get=None, resolve=_default_resolve, clock=lambda: datetime.now(timezone.utc)):
     if not isinstance(query, dict):
         raise HarnessError("web research requires a query object")
     topic = query.get("topic")
@@ -169,8 +197,9 @@ def fetch(query, *, get=_default_get, resolve=_default_resolve, clock=lambda: da
     valid_days = query.get("valid_days", DEFAULT_VALID_DAYS)
     if type(valid_days) is not int or not 1 <= valid_days <= 365:
         raise HarnessError("valid_days must be an integer from 1 to 365")
-    _check_addresses(parts.hostname.casefold().rstrip("."), resolve)
-    status, content_type, body = get(cleaned)
+    addresses = _validated_addresses(parts.hostname.casefold().rstrip("."), resolve)
+    transport = get or _default_get
+    status, content_type, body = transport(cleaned, addresses)
     if status != 200:
         raise HarnessError(f"web research requires HTTP 200, received {status}")
     media = content_type.split(";")[0].strip().casefold()
@@ -192,7 +221,10 @@ def fetch(query, *, get=_default_get, resolve=_default_resolve, clock=lambda: da
     if media == "text/plain":
         parser.parts = [text]
     else:
-        parser.feed(text)
+        try:
+            parser.feed(text)
+        except Exception:
+            raise HarnessError("web research could not parse the public page") from None
     excerpt = _excerpt(" ".join(parser.parts), parser.description, query.get("quote"))
     at = clock().astimezone(timezone.utc)
     ident = "web-" + digest(cleaned.casefold())[:20]
@@ -237,6 +269,8 @@ def verify_capture(row):
     capture = row.get("capture") or {}
     facts = capture.get("facts") or {}
     expected = "web-" + digest(capture.get("requested_url", "").casefold())[:20]
+    requested = urlsplit(str(capture.get("requested_url", "")))
+    endpoint = urlsplit(str(capture.get("endpoint", "")))
     if (
         capture.get("provider") != PROVIDER
         or row["id"] != expected
@@ -246,6 +280,14 @@ def verify_capture(row):
         or facts.get("http_status") != 200
         or not re.fullmatch(r"[0-9a-f]{64}", facts.get("content_sha256", ""))
         or facts.get("content_sha256") != capture.get("content_sha256")
+        or type(capture.get("content_bytes")) is not int
+        or not 1 <= capture["content_bytes"] <= MAX_BYTES
+        or capture.get("content_type") not in CONTENT_TYPES
+        or type(facts.get("visible_characters")) is not int
+        or facts["visible_characters"] < 0
+        or requested.scheme != "https"
+        or endpoint.scheme != "https"
+        or endpoint.hostname != requested.hostname
         or not row["excerpt"].strip()
     ):
         raise HarnessError("capture does not match the normalized public web evidence")
