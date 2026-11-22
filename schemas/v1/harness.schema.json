@@ -77,6 +77,35 @@
             },
             "market_sources": {
               "$ref": "#/$defs/source-list"
+            },
+            "market": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "budget": {
+              "type": "object",
+              "required": [
+                "amount_minor",
+                "currency",
+                "unit"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "amount_minor": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "currency": {
+                  "type": "string",
+                  "pattern": "^[A-Z]{3}$"
+                },
+                "unit": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 20000
+                }
+              }
             }
           }
         }
@@ -158,6 +187,35 @@
             },
             "market_sources": {
               "$ref": "#/$defs/source-list"
+            },
+            "market": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "budget": {
+              "type": "object",
+              "required": [
+                "amount_minor",
+                "currency",
+                "unit"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "amount_minor": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "currency": {
+                  "type": "string",
+                  "pattern": "^[A-Z]{3}$"
+                },
+                "unit": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 20000
+                }
+              }
             }
           }
         }
@@ -180,7 +238,9 @@
             "goal",
             "price",
             "capabilities",
-            "market_sources"
+            "market_sources",
+            "market",
+            "budget"
           ]
         },
         "revision": {
@@ -211,7 +271,9 @@
             "goal",
             "price",
             "capabilities",
-            "market_sources"
+            "market_sources",
+            "market",
+            "budget"
           ]
         },
         "revision": {
@@ -272,6 +334,19 @@
             "$ref": "#/$defs/run-id"
           },
           "uniqueItems": true
+        },
+        "claims": {
+          "$ref": "#/$defs/claim-list"
+        },
+        "source_dependencies": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/run-id"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
         }
       }
     },
@@ -342,6 +417,19 @@
             "needs_review",
             "sources_available"
           ]
+        },
+        "claims": {
+          "$ref": "#/$defs/claim-list"
+        },
+        "source_dependencies": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/run-id"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
         }
       }
     },
@@ -402,6 +490,9 @@
             "$ref": "#/$defs/run-id"
           },
           "uniqueItems": true
+        },
+        "claims": {
+          "$ref": "#/$defs/claim-list"
         }
       }
     },
@@ -427,6 +518,9 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 20000
+        },
+        "claims": {
+          "$ref": "#/$defs/claim-list"
         }
       }
     },
@@ -549,6 +643,35 @@
             },
             "market_sources": {
               "$ref": "#/$defs/source-list"
+            },
+            "market": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "budget": {
+              "type": "object",
+              "required": [
+                "amount_minor",
+                "currency",
+                "unit"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "amount_minor": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "currency": {
+                  "type": "string",
+                  "pattern": "^[A-Z]{3}$"
+                },
+                "unit": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 20000
+                }
+              }
             }
           }
         },
@@ -707,6 +830,35 @@
         },
         "market_sources": {
           "$ref": "#/$defs/source-list"
+        },
+        "market": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "budget": {
+          "type": "object",
+          "required": [
+            "amount_minor",
+            "currency",
+            "unit"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "amount_minor": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "currency": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}$"
+            },
+            "unit": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20000
+            }
+          }
         }
       },
       "minProperties": 1
@@ -817,6 +969,9 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 5000
+        },
+        "capture": {
+          "$ref": "#/$defs/github-capture"
         }
       },
       "required": [
@@ -934,6 +1089,89 @@
         "error_code": {
           "type": "string",
           "pattern": "^[a-z_]{1,50}$"
+        }
+      }
+    },
+    "github-capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "retrieved_at",
+        "topic",
+        "endpoint",
+        "facts"
+      ],
+      "properties": {
+        "provider": {
+          "const": "github-public"
+        },
+        "retrieved_at": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "topic": {
+          "enum": [
+            "market",
+            "competitor",
+            "icp",
+            "channel"
+          ]
+        },
+        "endpoint": {
+          "type": "string",
+          "maxLength": 150
+        },
+        "facts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "full_name",
+            "stargazers_count",
+            "forks_count",
+            "open_issues_count"
+          ],
+          "properties": {
+            "full_name": {
+              "type": "string",
+              "maxLength": 141
+            },
+            "stargazers_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "forks_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "open_issues_count": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "claim-list": {
+      "type": "array",
+      "maxItems": 10,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": [
+          "source_id",
+          "quote"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "source_id": {
+            "$ref": "#/$defs/run-id"
+          },
+          "quote": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000
+          }
         }
       }
     }

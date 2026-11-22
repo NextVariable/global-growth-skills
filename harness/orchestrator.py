@@ -4,11 +4,13 @@ import json
 
 from .contracts import HarnessError, digest, encode, validate
 from .registry import skill_registry
-from .research import review
+from .research import dependencies_changed, review, source_dependencies
 from .planning import DEFAULT, HANDOFF_KINDS, OUTPUTS, PARENTS, plan
 from .store import Store
 
 STRATEGY_FIELDS = ("product", "audience", "goal")
+OPTIONAL_FIELDS = {"market", "budget"}
+PRODUCT_ONLY = {"pricing", "capabilities"}
 DRAFT_FIELDS = {
     "positioning": STRATEGY_FIELDS,
     "pricing": ("price",),
@@ -102,10 +104,11 @@ class Harness(Store):
         self.db.execute("UPDATE project SET revision = ?", (revision,))
         for field, value in changes.items():
             self._save_evidence(field, revision, value)
-        return {
-            "revision": revision,
-            "stale_artifact_ids": self._invalidate(set(changes)),
-        }
+        stale = self._invalidate(set(changes) - {"market_sources"})
+        if "market_sources" in changes:
+            for run in self.db.execute("SELECT id FROM runs").fetchall():
+                stale.extend(self._refresh_market(run["id"], inputs_changed=True))
+        return {"revision": revision, "stale_artifact_ids": sorted(stale)}
 
     def _invalidate(self, fields_changed, only_run=None):
         stale = []
@@ -114,11 +117,12 @@ class Harness(Store):
             (only_run, only_run),
         ).fetchall():
             deps = json.loads(row["data"])["dependencies"]
-            if any(ref["field"] in fields_changed for ref in deps):
+            market_aware = json.loads(row["data"]).get("market_status") is not None
+            if any(ref["field"] in fields_changed for ref in deps) or (
+                market_aware and fields_changed & OPTIONAL_FIELDS
+            ):
                 stale.append(row["id"])
-                self.db.execute(
-                    "UPDATE artifacts SET stale = 1 WHERE id = ?", (row["id"],)
-                )
+                self.db.execute("UPDATE artifacts SET stale = 1 WHERE id = ?", (row["id"],))
         for run in self.db.execute(
             "SELECT id FROM runs WHERE ? IS NULL OR id = ?", (only_run, only_run)
         ).fetchall():
@@ -130,16 +134,10 @@ class Harness(Store):
                     if stage == "strategy"
                     else {f for kind in self._kinds(stage) for f in DRAFT_FIELDS[kind]}
                 )
-                if not fields & fields_changed and not (
-                    "market_sources" in fields_changed
-                    and stage != "strategy"
-                    and "strategy" in self._plan(run_id)
-                ):
+                if not (fields | OPTIONAL_FIELDS) & fields_changed:
                     continue
                 if stage == "strategy":
-                    self.db.execute(
-                        "UPDATE runs SET decision_id = NULL WHERE id = ?", (run_id,)
-                    )
+                    self.db.execute("UPDATE runs SET decision_id = NULL WHERE id = ?", (run_id,))
                 if task["status"] == "succeeded" and stage != "strategy":
                     current = self._active(run_id)
                     if all(kind in current for kind in self._kinds(stage)):
@@ -154,23 +152,66 @@ class Harness(Store):
                 self._set_task(run_id, stage, status)
         return stale
 
-    def _refresh_market(self, run_id, decision_id):
-        if decision_id is None:
-            return
-        saved = json.loads(
-            self.db.execute(
+    def _market(self):
+        return review(self._inputs().get("market_sources", ([], None))[0])
+
+    def _refresh_market(self, run_id, *, inputs_changed=False):
+        market = self._market()
+        decision_id = self._run(run_id)["decision_id"]
+
+        def invalid(data):
+            if "market_status" not in data:
+                return False
+            snapshots = data.get("source_dependencies")
+            if snapshots is not None:
+                if data.get("claims") or data.get("citation_ids"):
+                    return dependencies_changed(market, snapshots)
+                return snapshots != source_dependencies(market, [])
+            return inputs_changed or (
+                market["status"],
+                market["citation_ids"],
+                market["contradictions"],
+            ) != (
+                data["market_status"],
+                data.get("eligible_citation_ids", []),
+                data.get("contradictions", []),
+            )
+
+        decision_stale = False
+        if decision_id is not None:
+            saved = self.db.execute(
                 "SELECT data FROM decisions WHERE id=?", (decision_id,)
-            ).fetchone()[0]
-        )
-        if "market_status" not in saved:
-            return
-        latest = review(self._inputs().get("market_sources", ([], None))[0])
-        if (latest["status"], latest["citation_ids"], latest["contradictions"]) != (
-            saved["market_status"],
-            saved.get("eligible_citation_ids", saved["citation_ids"]),
-            saved["contradictions"],
-        ):
-            self._invalidate({"market_sources"}, only_run=run_id)
+            ).fetchone()
+            decision_stale = invalid(json.loads(saved["data"]))
+            if decision_stale:
+                self.db.execute("UPDATE runs SET decision_id=NULL WHERE id=?", (run_id,))
+                self._set_task(run_id, "strategy", "queued")
+        stale = set()
+        # Handoffs point to previously inserted artifacts, so ordered traversal propagates once.
+        rows = self.db.execute(
+            "SELECT id, data FROM artifacts WHERE stale=0 AND run_id=? ORDER BY id", (run_id,)
+        ).fetchall()
+        for row in rows:
+            data = json.loads(row["data"])
+            if (
+                (decision_stale and data.get("decision_id") == decision_id)
+                or stale.intersection(data.get("handoff_ids", ()))
+                or invalid(data)
+            ):
+                stale.add(row["id"])
+                self.db.execute("UPDATE artifacts SET stale=1 WHERE id=?", (row["id"],))
+        current = self._active(run_id)
+        for task in self._tasks(run_id):
+            stage = task["stage"]
+            if inputs_changed and task["status"] == "running":
+                self._set_task(run_id, stage, "queued")
+            if (
+                stage != "strategy"
+                and task["status"] == "succeeded"
+                and any(kind not in current for kind in self._kinds(stage))
+            ):
+                self._set_task(run_id, stage, "queued")
+        return stale
 
     def start(self, run_id, execution="fixture", *, stages=None, goal=None):
         validate("run-id", run_id)
@@ -187,9 +228,7 @@ class Harness(Store):
             if existing:
                 if existing["execution"] != execution:
                     raise HarnessError("run already uses another execution mode")
-                if (
-                    json.loads(existing["plan"]) if existing["plan"] else list(DEFAULT)
-                ) != stages:
+                if (json.loads(existing["plan"]) if existing["plan"] else list(DEFAULT)) != stages:
                     raise HarnessError("run already has a different plan")
                 return
             self.db.execute(
@@ -236,9 +275,7 @@ class Harness(Store):
     @staticmethod
     def _kinds(stage):
         return (
-            ("positioning", "pricing", "capabilities")
-            if stage == "content"
-            else (OUTPUTS[stage],)
+            ("positioning", "pricing", "capabilities") if stage == "content" else (OUTPUTS[stage],)
         )
 
     def _event(self, run_id, stage, attempt, data):
@@ -258,9 +295,8 @@ class Harness(Store):
             run = self._run(run_id)
             if run["execution"] != execution:
                 raise HarnessError("adapter execution mode differs from the stored run")
-            if not preview:
-                self._refresh_market(run_id, run["decision_id"])
-                run = self._run(run_id)
+            self._refresh_market(run_id)
+            run = self._run(run_id)
             tasks = {t["stage"]: t for t in self._tasks(run_id)}
             task = next(
                 (
@@ -268,9 +304,7 @@ class Harness(Store):
                     for t in tasks.values()
                     if t["status"] not in {"succeeded", "blocked"}
                     and all(
-                        tasks[p]["status"] == "succeeded"
-                        for p in PARENTS[t["stage"]]
-                        if p in tasks
+                        tasks[p]["status"] == "succeeded" for p in PARENTS[t["stage"]] if p in tasks
                     )
                 ),
                 None,
@@ -279,9 +313,7 @@ class Harness(Store):
                 return None
             stage, status = task["stage"], task["status"]
             if status == "running" and not recover:
-                raise HarnessError(
-                    "attempt is running; use explicit recovery after interruption"
-                )
+                raise HarnessError("attempt is running; use explicit recovery after interruption")
             if status == "failed" and not retry:
                 raise HarnessError("attempt failed; use explicit retry")
             inputs = self._inputs()
@@ -294,7 +326,9 @@ class Harness(Store):
                 "tool_policy": "deny_external_writes",
             }
 
-            def request(fields):
+            def request(fields, market_aware=True):
+                if market_aware:
+                    fields = sorted(set(fields) | (OPTIONAL_FIELDS & inputs.keys()))
                 return {
                     **base,
                     "context": {f: inputs[f][0] for f in fields},
@@ -305,9 +339,7 @@ class Harness(Store):
                 requests = [request(STRATEGY_FIELDS)]
                 if "market_sources" in inputs:
                     requests[0]["evidence"].append(inputs["market_sources"][1])
-                requests[0]["market_review"] = review(
-                    inputs.get("market_sources", ([], None))[0]
-                )
+                requests[0]["market_review"] = review(inputs.get("market_sources", ([], None))[0])
             else:
                 decision = self.db.execute(
                     "SELECT data FROM decisions WHERE id = ?", (run["decision_id"],)
@@ -347,27 +379,21 @@ class Harness(Store):
                                 }
                             )
                     item = {
-                        **request(sorted(fields - {"market_sources"})),
+                        **request(sorted(fields - {"market_sources"}), kind not in PRODUCT_ONLY),
                         "artifact_kind": kind,
                     }
                     if handoffs:
                         item["handoffs"] = handoffs
-                    if kind not in {"pricing", "capabilities"} and (
-                        decision or "market_sources" in fields
-                    ):
+                    if kind not in PRODUCT_ONLY:
                         if "market_sources" in inputs:
                             item["evidence"].append(inputs["market_sources"][1])
                     if decision and kind not in {"pricing", "capabilities"}:
                         item["decision"] = {
                             "id": run["decision_id"],
-                            "recommendation": json.loads(decision["data"])[
-                                "recommendation"
-                            ],
+                            "recommendation": json.loads(decision["data"])["recommendation"],
                         }
-                    if decision and "decision" in item:
-                        item["market_review"] = review(
-                            inputs.get("market_sources", ([], None))[0]
-                        )
+                    if kind not in PRODUCT_ONLY:
+                        item["market_review"] = self._market()
                     requests.append(item)
             for item in requests:
                 validate("task-input", item)
@@ -411,56 +437,65 @@ class Harness(Store):
                     if receipt is not None:
                         validate("host-receipt", receipt)
                         with self.transaction():
-                            self._event(
-                                run_id, stage, attempt, {"host_receipt": receipt}
-                            )
+                            self._event(run_id, stage, attempt, {"host_receipt": receipt})
                 results.append(
                     validate(
                         "strategy-result" if stage == "strategy" else "content-result",
                         result,
                     )
                 )
-            if stage == "strategy" and not set(results[0].get("citations", [])) <= set(
-                requests[0]["market_review"]["citation_ids"]
-            ):
-                raise HarnessError("citation is missing, stale or contradicted")
+            for req, result in zip(requests, results):
+                market = req.get("market_review", {"citation_ids": [], "sources": []})
+                claims = result.get("claims", [])
+                citations = result.get("citations", [])
+                if (
+                    adapter.execution == "model"
+                    and citations
+                    and set(citations) != {claim["source_id"] for claim in claims}
+                ):
+                    raise HarnessError("market citations require exact claims")
+                source_dependencies(market, claims, citations)
             if stage != "strategy" and any(
-                req["artifact_kind"] != result["kind"]
-                for req, result in zip(requests, results)
+                req["artifact_kind"] != result["kind"] for req, result in zip(requests, results)
             ):
                 raise HarnessError("adapter returned an unexpected artifact kind")
         except Exception as exc:
             with self.transaction():
                 if self._owns_attempt(run_id, stage, attempt):
+                    receipt = getattr(adapter, "last_receipt", None) or {}
                     detail = (
-                        "invalid adapter result"
+                        receipt.get("error_code", "invalid adapter result")
                         if isinstance(exc, HarnessError)
                         else type(exc).__name__
                     )
                     self._set_task(run_id, stage, "failed", detail)
-                    self._event(
-                        run_id, stage, attempt, {"status": "failed", "error": detail}
-                    )
-            raise HarnessError(
-                f"{stage} attempt failed; inspect status and retry"
-            ) from None
+                    self._event(run_id, stage, attempt, {"status": "failed", "error": detail})
+            raise HarnessError(f"{stage} attempt failed; inspect status and retry") from None
 
         with self.transaction():
             if not self._owns_attempt(run_id, stage, attempt):
                 raise HarnessError("attempt superseded; results discarded")
             for req, result in zip(requests, results):
                 refs = [
-                    {key: item[key] for key in ("field", "revision")}
-                    for item in req["evidence"]
+                    {key: item[key] for key in ("field", "revision")} for item in req["evidence"]
                 ]
                 data = {**result, "dependencies": refs, "execution": adapter.execution}
                 if stage == "strategy" or "decision" in req:
                     if not any(ref["field"] == "market_sources" for ref in refs):
                         refs.append({"field": "market_sources", "revision": 0})
+                if "market_review" in req:
+                    market = req["market_review"]
+                    data["source_dependencies"] = source_dependencies(
+                        market, result.get("claims", []), result.get("citations", [])
+                    )
+                    data["market_status"] = (
+                        market["status"]
+                        if result.get("claims") or result.get("citations")
+                        else "needs_review"
+                    )
                 if stage == "strategy":
                     market = req["market_review"]
                     data.update(
-                        market_status=market["status"],
                         citation_ids=result.get("citations", []),
                         eligible_citation_ids=market["citation_ids"],
                         contradictions=market["contradictions"],
@@ -470,32 +505,25 @@ class Harness(Store):
                         "INSERT INTO decisions(run_id,data) VALUES (?,?)",
                         (run_id, encode(validate("decision", data))),
                     ).lastrowid
-                    self.db.execute(
-                        "UPDATE runs SET decision_id = ? WHERE id = ?", (ident, run_id)
-                    )
+                    self.db.execute("UPDATE runs SET decision_id = ? WHERE id = ?", (ident, run_id))
                     self._set_task(run_id, "content", "queued")
                 else:
-                    if req.get("market_review"):
-                        data["market_status"] = req["market_review"]["status"]
                     if "decision" in req:
                         data["decision_id"] = req["decision"]["id"]
                     if req.get("handoffs"):
-                        data["handoff_ids"] = [
-                            handoff["id"] for handoff in req["handoffs"]
-                        ]
+                        data["handoff_ids"] = [handoff["id"] for handoff in req["handoffs"]]
                     data.update(status="draft", sha256=digest(result["markdown"]))
                     self.db.execute(
                         "INSERT INTO artifacts(run_id,kind,data) VALUES (?,?,?)",
                         (run_id, result["kind"], encode(validate("artifact", data))),
                     )
             self._set_task(run_id, stage, "succeeded")
-            self._event(
-                run_id, stage, attempt, {"status": "succeeded", "calls": len(requests)}
-            )
+            self._event(run_id, stage, attempt, {"status": "succeeded", "calls": len(requests)})
         return self.status(run_id)
 
     def status(self, run_id):
         with self.transaction():
+            self._refresh_market(run_id)
             run = self._run(run_id)
             project = self._project()
             context = validate(
@@ -509,11 +537,7 @@ class Harness(Store):
             tasks = [
                 validate(
                     "task-state",
-                    {
-                        k: v
-                        for k, v in dict(t).items()
-                        if k != "run_id" and v is not None
-                    },
+                    {k: v for k, v in dict(t).items() if k != "run_id" and v is not None},
                 )
                 for t in self._tasks(run_id)
             ]
@@ -551,9 +575,7 @@ class Harness(Store):
                 "decisions": decisions,
                 "evidence": [
                     json.loads(r["data"])
-                    for r in self.db.execute(
-                        "SELECT data FROM evidence ORDER BY revision, field"
-                    )
+                    for r in self.db.execute("SELECT data FROM evidence ORDER BY revision, field")
                 ],
                 "active_decision_id": run["decision_id"],
                 "artifacts": artifacts,

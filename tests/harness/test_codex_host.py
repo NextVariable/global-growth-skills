@@ -17,9 +17,7 @@ class CodexHostTests(unittest.TestCase):
         self.checkout = Path(directory.name)
 
         def git(*args):
-            return subprocess.check_output(
-                ["git", "-C", str(self.checkout), *args], text=True
-            )
+            return subprocess.check_output(["git", "-C", str(self.checkout), *args], text=True)
 
         git("init", "-q")
         git("config", "user.name", "Fixture")
@@ -41,7 +39,7 @@ class CodexHostTests(unittest.TestCase):
         prompt, schema, digest = handoff(self.checkout, self.request)
         self.assertIn("Original pins", prompt)
         self.assertNotIn("Uncommitted text", prompt)
-        self.assertEqual(schema["required"], ["recommendation", "citations"])
+        self.assertEqual(schema["required"], ["recommendation", "citations", "claims"])
         self.assertEqual(len(digest), 64)
 
     def test_receipt_and_host_invocation_are_read_only(self):
@@ -64,14 +62,10 @@ class CodexHostTests(unittest.TestCase):
 
         # The real Git pin reader is tested separately above.
         with (
-            patch(
-                "harness.codex_host.handoff", return_value=("Original pins", {}, "x")
-            ),
+            patch("harness.codex_host.handoff", return_value=("Original pins", {}, "x")),
             patch("harness.codex_host.subprocess.run", side_effect=host),
         ):
-            self.assertEqual(
-                self.adapter.execute(self.request)["recommendation"], "Review"
-            )
+            self.assertEqual(self.adapter.execute(self.request)["recommendation"], "Review")
         self.assertEqual(self.adapter.last_receipt["tokens"], {"input_tokens": 11})
 
     def test_timeout_records_failure_without_fabricated_tokens(self):

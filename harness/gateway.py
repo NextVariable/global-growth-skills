@@ -7,6 +7,15 @@ import time
 
 from .contracts import HarnessError, digest, encode, validate
 from .research import review
+from .github_research import PROVIDER, fetch
+
+
+OPERATION_ACCESS = {
+    "publish": "external_write",
+    "outreach": "external_write",
+    "crm_update": "external_write",
+    "ad_spend": "financial_action",
+}
 
 
 class MockExecutor:
@@ -27,7 +36,7 @@ class Gateway:
 
     def __init__(self, harness, *, readers=None, clock=time.time):
         self.harness = harness
-        self.readers = dict(readers or {})
+        self.readers = {PROVIDER: fetch, **(readers or {})}
         self.clock = clock
         self.mock = MockExecutor()
 
@@ -56,15 +65,51 @@ class Gateway:
             }
         )
 
+    def prepare(self, operation):
+        with self.harness.transaction():
+            self._verify(operation)
+            return {
+                "access": OPERATION_ACCESS[operation["kind"]],
+                "mode": "draft_prepare",
+                "digest": self._digest(operation),
+                "executor": "mock_only",
+            }
+
+    def research(self, query):
+        # Snapshot revision before the read. A concurrent change must not be overwritten.
+        with self.harness.transaction():
+            revision = self.harness._project()["revision"]
+        records = self.read(PROVIDER, query)
+        with self.harness.transaction():
+            if self.harness._project()["revision"] != revision:
+                raise HarnessError("context changed during research; retry the read")
+            sources = self.harness._inputs().get("market_sources", ([], None))[0]
+            merged = {row["id"]: row for row in sources}
+            for row in records:
+                previous = merged.get(row["id"])
+                if previous and previous.get("capture", {}).get("provider") != PROVIDER:
+                    raise HarnessError("capture ID collides with an operator source")
+                merged[row["id"]] = row
+            combined = list(merged.values())
+            market = review(combined)
+            change = self.harness._apply_patch({"market_sources": combined}) if records else {}
+        return {
+            "provider": PROVIDER,
+            "access": "read_only",
+            "query": query,
+            "status": "retrieved" if records else "no_results",
+            "retrieved": records,
+            "source_review": market,
+            **change,
+        }
+
     def approve(self, operation, ttl):
         with self.harness.transaction():
             ident = self._verify(operation)
             if type(ttl) is not int or not 1 <= ttl <= 3600:
                 raise HarnessError("approval TTL must be 1–3600 seconds")
             actor = self._actor()
-            if self.harness.db.execute(
-                "SELECT 1 FROM approvals WHERE id=?", (ident,)
-            ).fetchone():
+            if self.harness.db.execute("SELECT 1 FROM approvals WHERE id=?", (ident,)).fetchone():
                 raise HarnessError("operation already has an approval history")
             expires = int(self.clock()) + ttl
             self.harness.db.execute(
@@ -100,12 +145,8 @@ class Gateway:
                 or grant["operation_digest"] != self._digest(operation)
                 or grant["expires"] <= self.clock()
             ):
-                raise HarnessError(
-                    "write denied: exact unexpired unused approval required"
-                )
-            self.harness.db.execute(
-                "UPDATE approvals SET state='consumed' WHERE id=?", (ident,)
-            )
+                raise HarnessError("write denied: exact unexpired unused approval required")
+            self.harness.db.execute("UPDATE approvals SET state='consumed' WHERE id=?", (ident,))
             self._event(
                 ident,
                 "outcome_unknown",
@@ -117,9 +158,7 @@ class Gateway:
             if receipt["target"] != operation["target"]:
                 raise HarnessError("receipt target mismatch")
         except Exception:
-            raise HarnessError(
-                "mock result unknown; do not retry this operation ID"
-            ) from None
+            raise HarnessError("mock result unknown; do not retry this operation ID") from None
         with self.harness.transaction():
             self._event(ident, "confirmed", receipt)
         return receipt
@@ -131,12 +170,12 @@ class Gateway:
         try:
             records = self.readers[tool](query)
             review(records)
-        except Exception:
+        except Exception as exc:
             with self.harness.transaction():
                 self._event(tool, "read_failed", {"query_digest": digest(query)})
-            raise HarnessError(
-                "read-only provider failed or returned invalid evidence"
-            ) from None
+            if self.readers[tool] is fetch and isinstance(exc, HarnessError):
+                raise
+            raise HarnessError("read-only provider failed or returned invalid evidence") from None
         with self.harness.transaction():
             self._event(
                 tool,
@@ -146,11 +185,7 @@ class Gateway:
         return records
 
     def receipts(self):
-        scope = (
-            nullcontext()
-            if self.harness.db.in_transaction
-            else self.harness.transaction()
-        )
+        scope = nullcontext() if self.harness.db.in_transaction else self.harness.transaction()
         with scope:
             return [
                 {**dict(row), "data": json.loads(row["data"])}
