@@ -83,6 +83,7 @@ class CodexHostTests(unittest.TestCase):
                 "claims",
                 "assumptions",
                 "evidence_gaps",
+                "actions",
             ],
         )
         self.assertEqual(schema["properties"]["claims"]["items"]["properties"]["text"], {"type": "string"})

@@ -4,6 +4,7 @@ from html import escape
 import re
 
 from .decision import markdown_lines as contract_lines
+from .intelligence import build_brief
 from .provenance import format_money
 from .quality import assess, markdown_lines
 from .research import prose_review, review, source_dependencies
@@ -198,6 +199,9 @@ def snapshot(state, receipts):
             },
         },
         "decision": decision,
+        "decision_brief": build_brief(
+            state["context"]["values"], sources, (decision or {}).get("contract")
+        ),
         "artifacts": active,
         "quality": quality,
         "decision_review": decision_review,
@@ -269,6 +273,176 @@ def _note_lines(item):
     return lines
 
 
+def _all_actions(package):
+    rows = []
+    decision = package.get("decision")
+    if decision and decision.get("actions"):
+        rows.extend(("strategy", item) for item in decision["actions"])
+    for artifact in package["artifacts"]:
+        for item in artifact.get("actions") or []:
+            rows.append((artifact["kind"], item))
+    return rows
+
+
+def _executive_lines(package):
+    context = package["context"]["values"]
+    review = package["evidence_review"]
+    decision = package.get("decision") or {}
+    actions = _all_actions(package)
+    lines = [
+        "## Executive summary",
+        "",
+        f"- **Product** · {_text(context.get('product', 'not supplied'))}",
+        f"- **Goal** · {_text(context.get('goal', 'not supplied'))}",
+        f"- **ICP** · {_text(context.get('audience', 'not supplied'))}",
+    ]
+    if "budget" in context:
+        lines.append(f"- **Budget** · {_text(_field_value(context['budget']))}")
+    lines += [
+        f"- **Market evidence** · {len(review['sources'])} source(s), "
+        f"{len(review['citation_ids'])} citable, {len(review['contradictions'])} contradiction(s)",
+        f"- **Package status** · `{package['status']}` · quality `{package['quality']['status']}` "
+        f"({package['quality']['score']}/100)",
+        f"- **Structured actions** · {len(actions)}",
+    ]
+    if decision.get("recommendation"):
+        lines.append(f"- **Strategy snapshot** · {_text(decision['recommendation'])[:600]}")
+    blockers = [
+        task["stage"] for task in package["tasks"] if task["status"] != "succeeded"
+    ]
+    if blockers:
+        lines.append(f"- **Open stages** · {', '.join(blockers)}")
+    if package["decision_review"]["status"] == "required":
+        lines.append("- **Next gate** · independent decision review is required before external use")
+    elif not actions:
+        lines.append("- **Next step** · convert the prose into owned actions before execution")
+    else:
+        lines.append(f"- **Next step** · {_text(actions[0][1]['next_step'])}")
+    return [*lines, ""]
+
+
+def _market_lines(package):
+    review = package["evidence_review"]
+    values = package["context"]["values"]
+    freshness = review.get("freshness") or {}
+    lines = [
+        "## Market and ICP research",
+        "",
+        f"- **ICP hypothesis** · {_text(values.get('audience', 'not supplied'))}",
+        f"- **Source review** · `{review['status']}` · citable {len(review['citation_ids'])}",
+        f"- **Freshness** · fresh {freshness.get('fresh', 0)} · "
+        f"expiring {freshness.get('expiring', 0)} · expired {freshness.get('expired', 0)}",
+        f"- **Contradictions** · {len(review['contradictions'])}",
+    ]
+    for row in review["sources"][:10]:
+        topic = (row.get("capture") or {}).get("topic", "unclassified")
+        lines.append(
+            f"- `{row['id']}` · {topic} · {row['status']} · observed {row['observed_on']}"
+        )
+    if not review["sources"]:
+        lines.append("- No public source was captured; ICP and market claims stay hypotheses.")
+    lines.append("")
+    return lines
+
+
+def _competitive_lines(package):
+    topic_of = {
+        row["id"]: (row.get("capture") or {}).get("topic")
+        for row in package["evidence_review"]["sources"]
+    }
+    locator = {row["id"]: row["url"] for row in package["evidence_review"]["sources"]}
+    rows = [
+        item
+        for item in package["provenance"]["external_evidence"]
+        if topic_of.get(item.get("source_id")) == "competitor"
+    ]
+    lines = ["## Competitive landscape", ""]
+    if not rows:
+        lines += [
+            "- No competitor source was captured. Named comparisons remain hypotheses and must not "
+            "be presented as verified facts.",
+            "",
+        ]
+        return lines
+    for item in rows[:10]:
+        url = _text(locator.get(item.get("source_id"), "unavailable"))
+        lines.append(f"- {_text(item['label'])[:500]}")
+        lines.append(f"  - Source `{_text(item.get('source_id', 'unknown'))}` · {url}")
+    lines.append("")
+    return lines
+
+
+def _kpi_lines(package):
+    contract = (package.get("decision") or {}).get("contract") or {}
+    lines = ["## KPI and measurement framework", ""]
+    approved = []
+    for field in ("target_value", "sample_size", "observation_window", "budget_constraints"):
+        slot = contract.get(field)
+        if isinstance(slot, dict) and slot.get("state") == "decided":
+            approved.append(_slot_label(field, slot))
+    if approved:
+        lines += [f"- Approved · {_text(item)}" for item in approved]
+    else:
+        lines.append(
+            "- No measurement slot is approved yet; do not present an experiment result as validated."
+        )
+    metrics = []
+    for _, action in _all_actions(package):
+        if action.get("metric") not in metrics:
+            metrics.append(action["metric"])
+    if metrics:
+        lines += [f"- Action metric · {_text(metric)}" for metric in metrics[:10]]
+    lines.append("")
+    return lines
+
+
+def _action_lines(package):
+    rows = _all_actions(package)
+    lines = ["## Action register", ""]
+    if not rows:
+        lines += [
+            "- No structured actions were returned. Convert the prose into owned actions with "
+            "prerequisites, resources, metrics and a next step before execution.",
+            "",
+        ]
+        return lines
+    for kind, action in rows[:20]:
+        prerequisites = ", ".join(_text(item) for item in action.get("prerequisites") or []) or "none"
+        resources = ", ".join(_text(item) for item in action.get("resources") or []) or "none"
+        lines += [
+            f"### {_text(action['title'])} · {kind}",
+            "",
+            f"- Owner role · {_text(action['owner_role'])}",
+            f"- Prerequisites · {prerequisites}",
+            f"- Resources · {resources}",
+            f"- Metric · {_text(action['metric'])}",
+            f"- Next step · {_text(action['next_step'])}",
+            "",
+        ]
+    return lines
+
+
+def _brief_lines(package):
+    brief = package.get("decision_brief") or {}
+    lines = ["## GTM decision register", ""]
+    summary = brief.get("summary") or {}
+    lines.append(
+        f"- Areas {summary.get('areas', 0)} · decision-ready {summary.get('decision_ready', 0)} · "
+        f"needs evidence {summary.get('needs_evidence', 0)}"
+    )
+    for area in brief.get("areas") or []:
+        basis = ", ".join(
+            f"{item['kind']}:{item['ref']}" for item in area.get("basis") or []
+        ) or "none"
+        lines.append(f"- **{area['area']}** · `{area['status']}` · basis {basis}")
+        lines.append(f"  - {_text(area['question'])}")
+        lines.append(f"  - Guardrail · {_text(area['guardrail'])}")
+        for item in area.get("unresolved") or []:
+            lines.append(f"  - Open · {_text(item)}")
+    lines.append("")
+    return lines
+
+
 def markdown(package):
     context = package["context"]
     lines = [
@@ -279,6 +453,7 @@ def markdown(package):
         "",
         "Internal review. Validate any proposed action and any factual assertion outside the evidence log before reuse.",
         "",
+        *_executive_lines(package),
         "## Project and workflow",
         "",
     ]
@@ -286,6 +461,8 @@ def markdown(package):
         if field in context["values"]:
             lines.append(f"- **{field}** · {_text(_field_value(context['values'][field]))}")
     lines += ["", *[f"- `{t['stage']}` · {t['status']}" for t in package["tasks"]], ""]
+    lines += _market_lines(package)
+    lines += _competitive_lines(package)
     if package["decision_review"]["status"] == "required":
         lines += [
             "**Independent decision review required.** The declaration check covers structured "
@@ -321,6 +498,7 @@ def markdown(package):
             *_note_lines(decision),
             "",
         ]
+    lines += _brief_lines(package)
     for a in package["artifacts"]:
         lines += [
             f"## {HEADING[a['kind']]}",
@@ -347,6 +525,8 @@ def markdown(package):
             *_note_lines(a),
             "",
         ]
+    lines += _kpi_lines(package)
+    lines += _action_lines(package)
     lines += markdown_lines(package["quality"], format_text=_text) + [""]
     provenance = package.get("provenance") or {}
     if any(
@@ -367,7 +547,7 @@ def markdown(package):
             if len(items) > 5:
                 lines.append(f"  - … {len(items) - 5} more")
         lines.append("")
-    lines += ["## Evidence and decision log", ""]
+    lines += ["## Evidence and decision register", ""]
     for item in package["claim_audit"]:
         flags = ", ".join(item["prose_flags"]) or "none detected"
         lines.append(

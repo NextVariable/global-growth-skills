@@ -5,6 +5,7 @@ import json
 from . import decision as decision_contract
 from .contracts import HarnessError, digest, encode, validate
 from .evidence import audit_evidence
+from .intelligence import build_brief
 from .registry import skill_registry
 from .research import dependencies_changed, review, source_dependencies
 from .planning import DEFAULT, HANDOFF_KINDS, OUTPUTS, PARENTS, plan
@@ -439,7 +440,11 @@ class Harness(Store):
                 requests = [request(STRATEGY_FIELDS)]
                 if "market_sources" in inputs:
                     requests[0]["evidence"].append(inputs["market_sources"][1])
-                requests[0]["market_review"] = review(inputs.get("market_sources", ([], None))[0])
+                market = review(inputs.get("market_sources", ([], None))[0])
+                requests[0]["market_review"] = market
+                requests[0]["decision_brief"] = build_brief(
+                    {field: value[0] for field, value in inputs.items()}, market
+                )
             else:
                 decision = self.db.execute(
                     "SELECT id, data FROM decisions WHERE id = ?", (run["decision_id"],)
