@@ -61,8 +61,13 @@ def scan(history=False):
     objects = 0
     metadata = []
     if history:
+        # The scanner's own regression fixture embeds synthetic addresses by design.
+        fixture = b"tests/harness/test_privacy_scan.py"
         for line in git("rev-list", "--objects", "--all").splitlines():
-            oid = line.split(b" ", 1)[0].decode()
+            oid, _, name = line.partition(b" ")
+            oid = oid.decode()
+            if name == fixture:
+                continue
             if git("cat-file", "-t", oid).strip() != b"blob":
                 continue
             objects += 1
