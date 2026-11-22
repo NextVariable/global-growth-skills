@@ -42,6 +42,7 @@ CHECKS = {
 ASSUMPTION_LABEL = r"(?:assumption|hypothesis|assume|假设|推断|未验证)"
 FORMULA = r"[A-Za-z_\u4e00-\u9fff]+\s*=\s*[^\n]{2,}"
 EXTERNAL_BLOCKING = {"missing_claims"}
+EVIDENCE_REVIEW = {"needs_review", "unsupported_claims", "partial", "conflict"}
 KIND_CATEGORY = {
     "launch-plan": "launch",
     "sales-plan": "sales",
@@ -101,7 +102,13 @@ def _item(kind, text, item):
     )
     passed = sum(check["ok"] for check in checks)
     score = round(100 * passed / len(checks)) if checks else 100
-    status = "fail" if score < 60 or evidence_status in EXTERNAL_BLOCKING else "warn" if score < 85 else "pass"
+    status = (
+        "fail"
+        if score < 60 or evidence_status in EXTERNAL_BLOCKING
+        else "warn"
+        if score < 85 or evidence_status in EVIDENCE_REVIEW
+        else "pass"
+    )
     return {
         "kind": kind,
         "score": score,

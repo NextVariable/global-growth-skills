@@ -124,6 +124,12 @@ class QualityTests(unittest.TestCase):
             ],
             ["unverified"],
         )
+        self.assertTrue(
+            any(
+                item["evidence_status"] == "needs_review" and item["status"] == "warn"
+                for item in package["quality"]["items"]
+            )
+        )
 
     def test_rejected_claims_require_evidence_review(self):
         state = strong_state()
