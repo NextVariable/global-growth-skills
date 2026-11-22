@@ -12,6 +12,8 @@
 - **包状态**：`incomplete_evidence`（缺少必要 claim）、`needs_evidence_review`（逐字命中但语义未复核、评审拒绝或存在冲突）、`needs_quality_review`、`ready_for_internal_review`。
 - **精确失效**：来源依赖按实际引用计算，新增无关来源不再让已引用草稿失效；来源改动、撤回、冲突或过期仍沿依赖传播。
 - **公开网页 Provider**：`research-web` 只读抓取操作者给出的单个公开 HTTPS 页面，记录 SHA256、HTTP 状态、采集时间与有效期；拒绝私网、重定向、非 HTML 和超 1 MB 响应。DNS 只解析一次，所有答案须为全局单播地址，连接固定到已验证 IP 并用原主机名做 TLS 校验，禁止代理路径。
+- **决策契约**：战略结果附带版本化 `contract`（目标、主指标与分母、单位、目标值、比较符、样本量、独立条件、时间窗、预算、证据引用、假设、审批状态）。未知值保持 `unknown`，不补造阈值；模型不能自我批准。下游任务输入携带 `decision_id`、`decision_revision`、`contract_sha256` 和完整契约。
+- **跨 Skill 一致性门禁**：positioning、launch、sales、experiments 必须在 `constraint_refs` 中逐字复制已确认约束。数值、单位、分母、时间窗、预算、独立条件被更改，或复用旧 revision，都会在写入草稿前失败；`proposals` 只能作为明确标注的未批准建议。修订通过 `revise-decision --reason` 由操作者发起，保留旧版本并使旧草稿失效。
 - **包质量**：`audit` 输出 Claim–Evidence 映射、时效、注入标记、证据缺口和六类交付物的结构评分；`needs_quality_review` 不允许充当可评审交付物。
 - **运行时**：每个阶段固定发 `SKILL.md`，参考/模板按阶段选择并限制 60 KB；回执记录 prompt、文档与全包字节数。
 - **评测**：四行业（AI SaaS、开发者工具、智能硬件、B2B 服务）fixture/reference 评测与 model 模式入口；报告明确区分 Fixture、真实模型和业务效果。[RC3 基线](evals/rc3/baseline.json)
@@ -22,6 +24,7 @@
 - 开发分支已推送，PR [#1](https://github.com/NextVariable/global-growth-skills/pull/1) 保持 open，CI 通过，未合并。
 - 质量评分是确定性结构检查，不判断语义真伪；没有评审器时 claim 始终为 `needs_review`，不会被标为 `verified`。
 - 浏览器 DOM、JavaScript 渲染、登录页和代理传输不在 `research-web` 支持范围。
+- 决策契约的一致性判定只读取结构化声明；自由文本中的矛盾不会自动拦截，仍需人工审阅。真实模型是否稳定复制契约尚未验证。
 - 真实客户采用、付费转化和外部发布仍未验证；不进行未经授权的外部触达、CRM 修改或广告消费。
 
 ### RC2 与 RC3 对照

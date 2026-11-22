@@ -53,6 +53,32 @@ Codex 草稿的每条外部事实使用 `source_id`、`quote` 和 `text` 描述�
 
 Harness 合并重复项、记录来源时效、冲突和证据缺口。文本规则命中可能来自真实市场断言、用户预算或实验目标。草稿仍可保存，缺结构化支持的产物包标记 `incomplete_evidence`，由操作者复核。已声明的来源 ID 或片段不匹配时，任务拒绝该结果。纯建议允许 `claims=[]`。已引用来源改动后，受影响的产物会失效。
 
+### 决策契约与跨 Skill 一致性
+
+战略结果现在附带版本化 `contract`。十个约束字段为 `objective`、`primary_metric`、`metric_definition`、`unit`、`target_value`、`comparator`、`sample_size`、`independence_conditions`、`observation_window` 和 `budget_constraints`。每个字段有 `state`：`decided` 携带已确认值，`unknown` 表示战略未确定，`proposed` 表示模型的暂定建议。只有操作者上下文已提供的目标与预算会自动成为 `decided`；其余未知字段保持 `unknown`，不会补造数字。数值字段中 `sample_size` 是整数，`target_value` 允许小数（如 `60.0` 百分比阈值），时间窗使用 `value` 加 `unit`（`days`/`weeks`），预算使用 `amount_minor`、`currency` 和 `unit`。
+
+交接到下游的任务输入从原来的 `{id, recommendation}` 扩展为：
+
+```json
+{
+  "id": 1,
+  "decision_id": "dec-0123456789abcdef",
+  "decision_revision": 1,
+  "contract_sha256": "<64 hex>",
+  "contract": {"decision_id": "...", "decision_revision": 1, "sample_size": {"state": "decided", "value": 2, "unit": "participant"}, "...": "..."},
+  "recommendation": "..."
+}
+```
+
+Positioning、launch、sales 和 experiments 必须返回 `constraint_refs`，逐字复制 `decision_id`、`decision_revision` 和所有 `decided` 约束。Harness 在写入草稿前做确定性比对：复制允许；缺字段、改数值、改单位、改分母、改时间窗、改预算币种或金额、放宽独立条件、把未知字段写成具体值，以及复用旧 revision，都会使该阶段尝试失败且不写入产物。`proposals` 只能作为新建议保存，不能替换契约；没有理由的 proposal 会被 schema 拒绝，proposal 也不会被导出为 approved。自由文本只用于人工阅读，不参与一致性判定。
+
+```sh
+python3 -m harness --db "$db" revise-decision RUN patch.json \
+  --reason "Operator approved a wider pilot" --actor operator
+```
+
+修订由操作者命令发起，新增一行 decision 并保留旧版本；`decision_revision` 递增，记录 `change_reason`、`change_initiator` 和 `approved_by`。引用旧 decision 行的草稿标记为 stale，相关阶段重新排队；pricing 和 capabilities 等不依赖决策的产物保留。模型不能在自己的输出里设置 `approval_status`，也不能自称 approved，schema 与运行时都会拒绝。恢复运行时只使用当前激活的 revision，不混用新旧约束。
+
 ### 公开网页 Provider
 
 `research-web URL --topic ...` 只读取操作者显式给出的一个公开 HTTPS 页面。拒绝私网/保留地址、非 443 端口、凭证、重定向、非 HTML/纯文本和超过 1 MB 的响应；记录 HTTP 状态、内容 SHA256、采集时间、有效期和可见文本摘录。DNS 只解析一次，所有答案都必须是全局单播地址；TCP 连接固定到已验证 IP，TLS 仍用原主机名做证书与 SNI 校验，因此解析结果变化不能把连接改写到其他地址。实现只建立直连 socket，不支持代理配置或环境代理变量；需要代理的环境不适用此 Provider。`--quote` 可把摘录收窄为页面中真实存在的逐字片段。它不执行搜索、登录、JavaScript、点击或任何外部写操作。页面内容视为不可信数据；检测到指令式文本的 provider 来源标记为 `blocked_injection`，不进入引用，也不进入模型提示。

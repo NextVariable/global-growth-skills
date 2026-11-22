@@ -56,6 +56,37 @@ python3 -m harness --db "$db" resume paired --recover --model <name> \
 python3 -m harness --db "$db" export paired --format json
 ```
 
+## 决策契约验收（Strategy → Acquisition → Experiments）
+
+先用确定性测试确认门禁，再用真实模型执行三阶段。三阶段之外仍需内容与销售阶段作为实验的直接上游，完整五阶段在门禁稳定后执行。
+
+```bash
+# deterministic: 20 个决策与漂移回归用例，不调用模型
+python3 -m unittest tests.harness.test_decision -v
+
+# real model: 三阶段相关流程（含作为直接上游的 content / sales）
+python3 -m harness --db "$db" start drift --execution model \
+  --stages strategy content launch sales experiments --goal "Validate demand"
+python3 -m harness --db "$db" step drift --model <name> \
+  --checkout "strategy=$strategy_repo" --checkout "content=$content_repo" \
+  --checkout "launch=$launch_repo" --checkout "sales=$sales_repo" \
+  --checkout "experiments=$experiments_repo" --timeout 180
+# 重复 step 直到五阶段完成；每次记录 decision_revision 与 constraint_check.status
+
+# 观察到下游拟改阈值时，走人工批准修订，而不是让模型覆盖
+python3 -m harness --db "$db" revise-decision drift sample-size-3.json \
+  --reason "Operator approved a wider pilot" --actor operator
+```
+
+检查项：
+
+- Strategy 交付的 `contract` 中 `sample_size=2 participant`、`target_value=2`、`observation_window=14 days`、`budget=0 USD`。
+- launch / sales / experiments 的 `constraint_refs` 逐字复制同一 `decision_id` 与 `decision_revision`，`constraint_check.status` 为 `consistent`。
+- 若模型输出 3 人或 60%，必须出现在 `proposals` 且带有理由；不得出现在 `constraints`，也不得自称 approved。
+- 修订后旧产物变为 stale，下一次请求使用新 revision；旧 revision 的声明触发 `stale_version`。
+
+**NOT TESTED**：当前环境没有可用模型宿主，本轮只执行确定性测试。真实模型结果、token 和耗时不得填写估计值。
+
 记录要求：
 
 - 每次模型调用的模型名、输入/输出/缓存 token、耗时、`prompt_bytes`、`skill_document_bytes` 和 `skill_package_bytes`。
