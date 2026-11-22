@@ -1,0 +1,33 @@
+{
+  "execution": "state-change on copies of real model data",
+  "hypothetical_price": {
+    "revision": 4,
+    "stale_artifact_ids": [
+      2,
+      5,
+      6
+    ],
+    "stale_kinds": [
+      "experiment-plan",
+      "pricing",
+      "sales-plan"
+    ],
+    "retained": {
+      "positioning": 1,
+      "capabilities": 3,
+      "launch-plan": 4
+    }
+  },
+  "removed_cited_evidence": {
+    "revision": 2,
+    "stale_artifact_ids": [
+      1
+    ],
+    "removed_source_ids": [
+      "gh-331af9506465f648b0ec"
+    ],
+    "decision_before": 1,
+    "decision_after": null
+  },
+  "reran_model_after_change": false
+}

@@ -1,0 +1,82 @@
+{
+  "collection_code_commit": "bf6d9c6",
+  "fresh_git_checkout": true,
+  "fresh_virtualenv": true,
+  "pinned_skills_prepared": [
+    "launch",
+    "strategy"
+  ],
+  "prepared_catalog_pin_count": 5,
+  "provider": "github-public",
+  "source_ids": [
+    "gh-331af9506465f648b0ec"
+  ],
+  "model": "gpt-6.2-sol",
+  "separate_step_and_resume": true,
+  "decision_id_at_checkpoint": 1,
+  "decision_id_after_resume": 1,
+  "stages": [
+    {
+      "stage": "strategy",
+      "status": "succeeded",
+      "attempt": 1
+    },
+    {
+      "stage": "launch",
+      "status": "succeeded",
+      "attempt": 1
+    }
+  ],
+  "export_formats": [
+    "markdown",
+    "json"
+  ],
+  "host_receipts": [
+    {
+      "calls": 1,
+      "duration_ms": 24824,
+      "exit_code": 0,
+      "host": "codex",
+      "requested_model": "gpt-6.2-sol",
+      "skill_document_digest": "c6de1d3fe081cde3e4b1f4c658d7bc352d695b9b5d56e0c6f435641b1e502c80",
+      "status": "completed",
+      "tokens": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 0,
+        "input_tokens": 37496,
+        "output_tokens": 805,
+        "reasoning_output_tokens": 0
+      }
+    },
+    {
+      "calls": 1,
+      "duration_ms": 45108,
+      "exit_code": 0,
+      "host": "codex",
+      "requested_model": "gpt-6.2-sol",
+      "skill_document_digest": "c451dc8906bcdf7f8a8adaab34e013fa84c1ae40d880fedcb55379695d5e5734",
+      "status": "completed",
+      "tokens": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 0,
+        "input_tokens": 34498,
+        "output_tokens": 1294,
+        "reasoning_output_tokens": 0
+      }
+    }
+  ],
+  "claim_audit": [
+    {
+      "record": "strategy",
+      "exact_excerpt_checks": 0,
+      "source_ids": [],
+      "prose_flags": []
+    },
+    {
+      "record": "launch-plan",
+      "exact_excerpt_checks": 0,
+      "source_ids": [],
+      "prose_flags": []
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-# GTM Harness 1.0.0-rc.1
+# GTM Harness 1.0.0-rc.2
 
 ## 架构与任务选择
 
@@ -16,7 +16,7 @@ flowchart LR
 
 ## Codex 宿主
 
-先在仓库外准备 Skill 仓库的 Git 克隆，并保证 catalog 对应提交对象存在。示例从已有 SQLite 项目开始。
+从已有 SQLite 项目开始。可用 `prepare-pins DEST` 把固定版本下载到新目录，再用 `--checkouts-dir DEST` 调用。已有克隆也可用 `--checkout` 指定，必须包含 catalog 对应的提交对象。
 
 ```sh
 python -m harness --db "$db" start model-demo --execution model --stages strategy launch
@@ -43,9 +43,11 @@ SQLite `user_version=3`。打开旧双阶段数据库会事务迁移，保留原
 
 ## 证据与权限
 
-`change` 接收带 `market_sources` 的项目补丁。来源可由操作者从有权使用的搜索、浏览或 MCP 导出，也可由 Python 调用者向 `Gateway(readers=...)` 注入已审查的只读提供方。自动化测试使用本地 provider。Codex 子进程目前没有直接的研究工具。
+使用 `research TOPIC TERM` 从公开 GitHub 检索。TOPIC 可用 `market`、`competitor`、`icp` 或 `channel` 来标识研究目的。可用 `--repository OWNER/REPO` 精确查询，按词搜索最多 5 个结果。接入只读取固定 GitHub HTTPS API，禁止跳转，限响应大小和请求时限。它保留观察日和采集时刻、GitHub 标准 URL、源 ID、原始选定字段和规范化摘录。搜索范围限 GitHub 仓库，星标或分叉不足以支持需求、采用和市场规模判定。[GitHub Search API](https://docs.github.com/en/rest/search/search)
 
-缺证据或有冲突时，战略与相关草稿标记 `needs_review`。未知或过期引用会失败。矛盾检查基于操作者声明的 claim ID 与立场，网页内容、自然语言论断与引文之间的支持关系仍需人工核验。
+`change` 可以导入或替换 `market_sources`。人工导入的自由文本保留供审核，当前 Codex 仅看到 GitHub 规范化观察。结构化引用须逐字匹配有效摘录，未知、冲突或过期来源不能进入引用。源 ID 和摘录摘要绑定到决策与草稿，变更后沿已保存的上游依赖传递。对声明为市场相关、尚无具体引用的结果，候选来源集合变化会触发复核。矛盾检查依赖同一 claim ID 的相反立场。自由文本的常见数字声明会在导出时提示复核，任意自然语言的真伪仍需人审。
+
+`export RUN` 默认输出 Markdown，`--format json` 附完整的引用检查、可用来源、尝试记录和依赖。部分运行明确标为 incomplete，过期产物用历史 ID 标识。导出的文字均须人工审核后才可使用。
 
 审批命令 `approve-mock`、`revoke-mock`、`execute-mock` 与 `receipts` 专用于 Mock Executor。授权来自受信的本机 POSIX 账户，绑定项目版本和完整操作摘要。操作与上下文变动后授权失效。提交前消耗授权并记录结果未知，确认后再写回执。超时或崩溃不会自动重试同一操作 ID。真实发布、触达、CRM 和广告仍待独立接入。本机数据库只提供给受信操作者。新库在 POSIX 上按账户读写权限创建。
 
@@ -59,3 +61,14 @@ python -m harness --db "$db" approve-mock examples/harness/mock-operation.json -
 python -m harness --db "$db" execute-mock examples/harness/mock-operation.json
 python -m harness --db "$db" receipts
 ```
+
+
+## 常见故障
+
+| 现象 | 怎么处理 |
+|---|---|
+| GitHub TLS trust failed | 配置 Python 的受信 CA。使用 python.org 的 macOS Python 时可运行随安装器提供的证书安装程序，或把 `SSL_CERT_FILE` 指向系统认可的 CA bundle。保持 TLS 验证。 |
+| GitHub 403、限流或不可达 | 稍后重试、缩小查询，或导入已审核的来源。模型可先生成带证据限制的方案。 |
+| 找不到固定 Skill 内容 | 用 `prepare-pins` 准备新的目录。失败留下的目录可以检查，重试使用新目录。 |
+| 缺少价格、能力或宿主凭证 | 用 `status` 查缺失字段。已确认后通过 `change` 补齐，或创建只含相应阶段的运行。Codex 未登录时使用手工交接。 |
+| 模型执行失败或中断 | 已失败尝试用 `resume --retry`，原进程确认退出但状态仍运行时用 `resume --recover`。使用相同模型和固定 Skill。 |

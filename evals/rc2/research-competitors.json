@@ -1,0 +1,191 @@
+{
+  "provider": "github-public",
+  "access": "read_only",
+  "query": {
+    "topic": "competitor",
+    "term": "agent skills marketing in:name,description",
+    "limit": 3
+  },
+  "status": "retrieved",
+  "retrieved": [
+    {
+      "id": "gh-156cf857b72a844a91ae",
+      "claim_key": "gh-156cf857b72a844a91ae",
+      "url": "https://github.com/coreyhaines31/marketingskills",
+      "observed_on": "2026-11-22",
+      "valid_until": "2026-11-29",
+      "kind": "observation",
+      "stance": "supports",
+      "excerpt": "GitHub public repository coreyhaines31/marketingskills is listed with 61911 stars, 9034 forks and 40 open issues or pull requests.",
+      "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+      "capture": {
+        "provider": "github-public",
+        "retrieved_at": "2026-11-22T04:50:17.796687+00:00",
+        "topic": "competitor",
+        "endpoint": "/search/repositories",
+        "facts": {
+          "full_name": "coreyhaines31/marketingskills",
+          "stargazers_count": 61911,
+          "forks_count": 9034,
+          "open_issues_count": 40
+        }
+      }
+    },
+    {
+      "id": "gh-9914de67573a7a1ba371",
+      "claim_key": "gh-9914de67573a7a1ba371",
+      "url": "https://github.com/wondelai/skills",
+      "observed_on": "2026-11-22",
+      "valid_until": "2026-11-29",
+      "kind": "observation",
+      "stance": "supports",
+      "excerpt": "GitHub public repository wondelai/skills is listed with 2760 stars, 267 forks and 13 open issues or pull requests.",
+      "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+      "capture": {
+        "provider": "github-public",
+        "retrieved_at": "2026-11-22T04:50:17.796687+00:00",
+        "topic": "competitor",
+        "endpoint": "/search/repositories",
+        "facts": {
+          "full_name": "wondelai/skills",
+          "stargazers_count": 2760,
+          "forks_count": 267,
+          "open_issues_count": 13
+        }
+      }
+    },
+    {
+      "id": "gh-75c95c0438bd513f5a5f",
+      "claim_key": "gh-75c95c0438bd513f5a5f",
+      "url": "https://github.com/davidpc007/openclaw-marketing-skills",
+      "observed_on": "2026-11-22",
+      "valid_until": "2026-11-29",
+      "kind": "observation",
+      "stance": "supports",
+      "excerpt": "GitHub public repository davidpc007/openclaw-marketing-skills is listed with 182 stars, 1130 forks and 0 open issues or pull requests.",
+      "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+      "capture": {
+        "provider": "github-public",
+        "retrieved_at": "2026-11-22T04:50:17.796687+00:00",
+        "topic": "competitor",
+        "endpoint": "/search/repositories",
+        "facts": {
+          "full_name": "davidpc007/openclaw-marketing-skills",
+          "stargazers_count": 182,
+          "forks_count": 1130,
+          "open_issues_count": 0
+        }
+      }
+    }
+  ],
+  "source_review": {
+    "sources": [
+      {
+        "capture": {
+          "endpoint": "/repos/NextVariable/global-growth-skills",
+          "facts": {
+            "forks_count": 0,
+            "full_name": "NextVariable/global-growth-skills",
+            "open_issues_count": 0,
+            "stargazers_count": 1
+          },
+          "provider": "github-public",
+          "retrieved_at": "2026-11-22T04:50:16.380785+00:00",
+          "topic": "market"
+        },
+        "claim_key": "gh-331af9506465f648b0ec",
+        "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+        "excerpt": "GitHub public repository NextVariable/global-growth-skills is listed with 1 stars, 0 forks and 0 open issues or pull requests.",
+        "id": "gh-331af9506465f648b0ec",
+        "kind": "observation",
+        "observed_on": "2026-11-22",
+        "stance": "supports",
+        "url": "https://github.com/NextVariable/global-growth-skills",
+        "valid_until": "2026-11-29",
+        "status": "reviewable"
+      },
+      {
+        "id": "gh-156cf857b72a844a91ae",
+        "claim_key": "gh-156cf857b72a844a91ae",
+        "url": "https://github.com/coreyhaines31/marketingskills",
+        "observed_on": "2026-11-22",
+        "valid_until": "2026-11-29",
+        "kind": "observation",
+        "stance": "supports",
+        "excerpt": "GitHub public repository coreyhaines31/marketingskills is listed with 61911 stars, 9034 forks and 40 open issues or pull requests.",
+        "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+        "capture": {
+          "provider": "github-public",
+          "retrieved_at": "2026-11-22T04:50:17.796687+00:00",
+          "topic": "competitor",
+          "endpoint": "/search/repositories",
+          "facts": {
+            "full_name": "coreyhaines31/marketingskills",
+            "stargazers_count": 61911,
+            "forks_count": 9034,
+            "open_issues_count": 40
+          }
+        },
+        "status": "reviewable"
+      },
+      {
+        "id": "gh-9914de67573a7a1ba371",
+        "claim_key": "gh-9914de67573a7a1ba371",
+        "url": "https://github.com/wondelai/skills",
+        "observed_on": "2026-11-22",
+        "valid_until": "2026-11-29",
+        "kind": "observation",
+        "stance": "supports",
+        "excerpt": "GitHub public repository wondelai/skills is listed with 2760 stars, 267 forks and 13 open issues or pull requests.",
+        "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+        "capture": {
+          "provider": "github-public",
+          "retrieved_at": "2026-11-22T04:50:17.796687+00:00",
+          "topic": "competitor",
+          "endpoint": "/search/repositories",
+          "facts": {
+            "full_name": "wondelai/skills",
+            "stargazers_count": 2760,
+            "forks_count": 267,
+            "open_issues_count": 13
+          }
+        },
+        "status": "reviewable"
+      },
+      {
+        "id": "gh-75c95c0438bd513f5a5f",
+        "claim_key": "gh-75c95c0438bd513f5a5f",
+        "url": "https://github.com/davidpc007/openclaw-marketing-skills",
+        "observed_on": "2026-11-22",
+        "valid_until": "2026-11-29",
+        "kind": "observation",
+        "stance": "supports",
+        "excerpt": "GitHub public repository davidpc007/openclaw-marketing-skills is listed with 182 stars, 1130 forks and 0 open issues or pull requests.",
+        "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+        "capture": {
+          "provider": "github-public",
+          "retrieved_at": "2026-11-22T04:50:17.796687+00:00",
+          "topic": "competitor",
+          "endpoint": "/search/repositories",
+          "facts": {
+            "full_name": "davidpc007/openclaw-marketing-skills",
+            "stargazers_count": 182,
+            "forks_count": 1130,
+            "open_issues_count": 0
+          }
+        },
+        "status": "reviewable"
+      }
+    ],
+    "contradictions": [],
+    "citation_ids": [
+      "gh-331af9506465f648b0ec",
+      "gh-156cf857b72a844a91ae",
+      "gh-9914de67573a7a1ba371",
+      "gh-75c95c0438bd513f5a5f"
+    ],
+    "status": "sources_available"
+  },
+  "revision": 3,
+  "stale_artifact_ids": []
+}

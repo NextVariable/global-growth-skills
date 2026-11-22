@@ -1,0 +1,71 @@
+{
+  "provider": "github-public",
+  "access": "read_only",
+  "query": {
+    "topic": "market",
+    "term": "Global Growth Skills",
+    "limit": 3,
+    "repository": "NextVariable/global-growth-skills"
+  },
+  "status": "retrieved",
+  "retrieved": [
+    {
+      "id": "gh-331af9506465f648b0ec",
+      "claim_key": "gh-331af9506465f648b0ec",
+      "url": "https://github.com/NextVariable/global-growth-skills",
+      "observed_on": "2026-11-22",
+      "valid_until": "2026-11-29",
+      "kind": "observation",
+      "stance": "supports",
+      "excerpt": "GitHub public repository NextVariable/global-growth-skills is listed with 1 stars, 0 forks and 0 open issues or pull requests.",
+      "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+      "capture": {
+        "provider": "github-public",
+        "retrieved_at": "2026-11-22T04:50:16.380785+00:00",
+        "topic": "market",
+        "endpoint": "/repos/NextVariable/global-growth-skills",
+        "facts": {
+          "full_name": "NextVariable/global-growth-skills",
+          "stargazers_count": 1,
+          "forks_count": 0,
+          "open_issues_count": 0
+        }
+      }
+    }
+  ],
+  "source_review": {
+    "sources": [
+      {
+        "id": "gh-331af9506465f648b0ec",
+        "claim_key": "gh-331af9506465f648b0ec",
+        "url": "https://github.com/NextVariable/global-growth-skills",
+        "observed_on": "2026-11-22",
+        "valid_until": "2026-11-29",
+        "kind": "observation",
+        "stance": "supports",
+        "excerpt": "GitHub public repository NextVariable/global-growth-skills is listed with 1 stars, 0 forks and 0 open issues or pull requests.",
+        "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+        "capture": {
+          "provider": "github-public",
+          "retrieved_at": "2026-11-22T04:50:16.380785+00:00",
+          "topic": "market",
+          "endpoint": "/repos/NextVariable/global-growth-skills",
+          "facts": {
+            "full_name": "NextVariable/global-growth-skills",
+            "stargazers_count": 1,
+            "forks_count": 0,
+            "open_issues_count": 0
+          }
+        },
+        "status": "reviewable"
+      }
+    ],
+    "contradictions": [],
+    "citation_ids": [
+      "gh-331af9506465f648b0ec"
+    ],
+    "status": "sources_available"
+  },
+  "revision": 2,
+  "stale_artifact_ids": []
+}

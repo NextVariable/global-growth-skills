@@ -1,0 +1,516 @@
+{
+  "arm": "harness",
+  "execution": "model",
+  "project": {
+    "schema_version": 1,
+    "project_id": "growth-skills-public",
+    "values": {
+      "product": "Global Growth Skills, the open-source collection at https://github.com/NextVariable/global-growth-skills",
+      "audience": "Hypothesis: English-speaking solo founders and developer marketers already using Agent Skills",
+      "market": "English-speaking open-source developer-tool communities, initially GitHub",
+      "goal": "Assess whether to run a small opt-in pilot for an English GTM tutorial, and produce launch, adoption and measurement drafts. No customer interviews, adoption or market-size data supplied.",
+      "price": {
+        "amount_minor": 0,
+        "currency": "USD",
+        "unit": "open-source software license; excludes model usage"
+      },
+      "budget": {
+        "amount_minor": 0,
+        "currency": "USD",
+        "unit": "paid promotion for the proposed pilot"
+      },
+      "capabilities": [
+        "five standalone Agent Skills",
+        "a fixed-version catalog and installer",
+        "SQLite checkpoints for the optional Harness"
+      ],
+      "market_sources": [
+        {
+          "id": "gh-331af9506465f648b0ec",
+          "claim_key": "gh-331af9506465f648b0ec",
+          "url": "https://github.com/NextVariable/global-growth-skills",
+          "observed_on": "2026-11-22",
+          "valid_until": "2026-11-29",
+          "kind": "observation",
+          "stance": "supports",
+          "excerpt": "GitHub public repository NextVariable/global-growth-skills is listed with 1 stars, 0 forks and 0 open issues or pull requests.",
+          "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+          "capture": {
+            "provider": "github-public",
+            "retrieved_at": "2026-11-22T04:50:16.380785+00:00",
+            "topic": "market",
+            "endpoint": "/repos/NextVariable/global-growth-skills",
+            "facts": {
+              "full_name": "NextVariable/global-growth-skills",
+              "stargazers_count": 1,
+              "forks_count": 0,
+              "open_issues_count": 0
+            }
+          }
+        },
+        {
+          "id": "gh-156cf857b72a844a91ae",
+          "claim_key": "gh-156cf857b72a844a91ae",
+          "url": "https://github.com/coreyhaines31/marketingskills",
+          "observed_on": "2026-11-22",
+          "valid_until": "2026-11-29",
+          "kind": "observation",
+          "stance": "supports",
+          "excerpt": "GitHub public repository coreyhaines31/marketingskills is listed with 61911 stars, 9034 forks and 40 open issues or pull requests.",
+          "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+          "capture": {
+            "provider": "github-public",
+            "retrieved_at": "2026-11-22T04:50:17.796687+00:00",
+            "topic": "competitor",
+            "endpoint": "/search/repositories",
+            "facts": {
+              "full_name": "coreyhaines31/marketingskills",
+              "stargazers_count": 61911,
+              "forks_count": 9034,
+              "open_issues_count": 40
+            }
+          }
+        },
+        {
+          "id": "gh-9914de67573a7a1ba371",
+          "claim_key": "gh-9914de67573a7a1ba371",
+          "url": "https://github.com/wondelai/skills",
+          "observed_on": "2026-11-22",
+          "valid_until": "2026-11-29",
+          "kind": "observation",
+          "stance": "supports",
+          "excerpt": "GitHub public repository wondelai/skills is listed with 2760 stars, 267 forks and 13 open issues or pull requests.",
+          "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+          "capture": {
+            "provider": "github-public",
+            "retrieved_at": "2026-11-22T04:50:17.796687+00:00",
+            "topic": "competitor",
+            "endpoint": "/search/repositories",
+            "facts": {
+              "full_name": "wondelai/skills",
+              "stargazers_count": 2760,
+              "forks_count": 267,
+              "open_issues_count": 13
+            }
+          }
+        },
+        {
+          "id": "gh-75c95c0438bd513f5a5f",
+          "claim_key": "gh-75c95c0438bd513f5a5f",
+          "url": "https://github.com/davidpc007/openclaw-marketing-skills",
+          "observed_on": "2026-11-22",
+          "valid_until": "2026-11-29",
+          "kind": "observation",
+          "stance": "supports",
+          "excerpt": "GitHub public repository davidpc007/openclaw-marketing-skills is listed with 182 stars, 1130 forks and 0 open issues or pull requests.",
+          "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+          "capture": {
+            "provider": "github-public",
+            "retrieved_at": "2026-11-22T04:50:17.796687+00:00",
+            "topic": "competitor",
+            "endpoint": "/search/repositories",
+            "facts": {
+              "full_name": "davidpc007/openclaw-marketing-skills",
+              "stargazers_count": 182,
+              "forks_count": 1130,
+              "open_issues_count": 0
+            }
+          }
+        }
+      ]
+    }
+  },
+  "steps": [],
+  "requested_model": "gpt-6.2-sol",
+  "pricing": "unknown",
+  "operator_interventions": null,
+  "comparison": "fixed handoff field replay; no human labor time measured",
+  "status": "succeeded",
+  "state": {
+    "run_id": "paired",
+    "execution": "model",
+    "context": {
+      "project_id": "growth-skills-public",
+      "revision": 1,
+      "values": {
+        "product": "Global Growth Skills, the open-source collection at https://github.com/NextVariable/global-growth-skills",
+        "audience": "Hypothesis: English-speaking solo founders and developer marketers already using Agent Skills",
+        "market": "English-speaking open-source developer-tool communities, initially GitHub",
+        "goal": "Assess whether to run a small opt-in pilot for an English GTM tutorial, and produce launch, adoption and measurement drafts. No customer interviews, adoption or market-size data supplied.",
+        "price": {
+          "amount_minor": 0,
+          "currency": "USD",
+          "unit": "open-source software license; excludes model usage"
+        },
+        "budget": {
+          "amount_minor": 0,
+          "currency": "USD",
+          "unit": "paid promotion for the proposed pilot"
+        },
+        "capabilities": [
+          "five standalone Agent Skills",
+          "a fixed-version catalog and installer",
+          "SQLite checkpoints for the optional Harness"
+        ],
+        "market_sources": [
+          {
+            "capture": {
+              "endpoint": "/repos/NextVariable/global-growth-skills",
+              "facts": {
+                "forks_count": 0,
+                "full_name": "NextVariable/global-growth-skills",
+                "open_issues_count": 0,
+                "stargazers_count": 1
+              },
+              "provider": "github-public",
+              "retrieved_at": "2026-11-22T04:50:16.380785+00:00",
+              "topic": "market"
+            },
+            "claim_key": "gh-331af9506465f648b0ec",
+            "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+            "excerpt": "GitHub public repository NextVariable/global-growth-skills is listed with 1 stars, 0 forks and 0 open issues or pull requests.",
+            "id": "gh-331af9506465f648b0ec",
+            "kind": "observation",
+            "observed_on": "2026-11-22",
+            "stance": "supports",
+            "url": "https://github.com/NextVariable/global-growth-skills",
+            "valid_until": "2026-11-29"
+          },
+          {
+            "capture": {
+              "endpoint": "/search/repositories",
+              "facts": {
+                "forks_count": 9034,
+                "full_name": "coreyhaines31/marketingskills",
+                "open_issues_count": 40,
+                "stargazers_count": 61911
+              },
+              "provider": "github-public",
+              "retrieved_at": "2026-11-22T04:50:17.796687+00:00",
+              "topic": "competitor"
+            },
+            "claim_key": "gh-156cf857b72a844a91ae",
+            "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+            "excerpt": "GitHub public repository coreyhaines31/marketingskills is listed with 61911 stars, 9034 forks and 40 open issues or pull requests.",
+            "id": "gh-156cf857b72a844a91ae",
+            "kind": "observation",
+            "observed_on": "2026-11-22",
+            "stance": "supports",
+            "url": "https://github.com/coreyhaines31/marketingskills",
+            "valid_until": "2026-11-29"
+          },
+          {
+            "capture": {
+              "endpoint": "/search/repositories",
+              "facts": {
+                "forks_count": 267,
+                "full_name": "wondelai/skills",
+                "open_issues_count": 13,
+                "stargazers_count": 2760
+              },
+              "provider": "github-public",
+              "retrieved_at": "2026-11-22T04:50:17.796687+00:00",
+              "topic": "competitor"
+            },
+            "claim_key": "gh-9914de67573a7a1ba371",
+            "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+            "excerpt": "GitHub public repository wondelai/skills is listed with 2760 stars, 267 forks and 13 open issues or pull requests.",
+            "id": "gh-9914de67573a7a1ba371",
+            "kind": "observation",
+            "observed_on": "2026-11-22",
+            "stance": "supports",
+            "url": "https://github.com/wondelai/skills",
+            "valid_until": "2026-11-29"
+          },
+          {
+            "capture": {
+              "endpoint": "/search/repositories",
+              "facts": {
+                "forks_count": 1130,
+                "full_name": "davidpc007/openclaw-marketing-skills",
+                "open_issues_count": 0,
+                "stargazers_count": 182
+              },
+              "provider": "github-public",
+              "retrieved_at": "2026-11-22T04:50:17.796687+00:00",
+              "topic": "competitor"
+            },
+            "claim_key": "gh-75c95c0438bd513f5a5f",
+            "confidence_basis": "GitHub API snapshot. Counts describe repository activity only.",
+            "excerpt": "GitHub public repository davidpc007/openclaw-marketing-skills is listed with 182 stars, 1130 forks and 0 open issues or pull requests.",
+            "id": "gh-75c95c0438bd513f5a5f",
+            "kind": "observation",
+            "observed_on": "2026-11-22",
+            "stance": "supports",
+            "url": "https://github.com/davidpc007/openclaw-marketing-skills",
+            "valid_until": "2026-11-29"
+          }
+        ]
+      }
+    },
+    "schema_version": 1,
+    "workflow_version": 2,
+    "plan": [
+      "strategy",
+      "launch"
+    ],
+    "history": [
+      {
+        "stage": "strategy",
+        "attempt": 1,
+        "data": {
+          "input_digest": "c13c22b5cd11da4009fe3bb31cca0087814a788338eda9f5f9c3aab18e971f2a",
+          "status": "running"
+        }
+      },
+      {
+        "stage": "strategy",
+        "attempt": 1,
+        "data": {
+          "host_receipt": {
+            "calls": 1,
+            "duration_ms": 24597,
+            "exit_code": 0,
+            "host": "codex",
+            "requested_model": "gpt-6.2-sol",
+            "skill_document_digest": "c6de1d3fe081cde3e4b1f4c658d7bc352d695b9b5d56e0c6f435641b1e502c80",
+            "status": "completed",
+            "tokens": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 24448,
+              "input_tokens": 37707,
+              "output_tokens": 781,
+              "reasoning_output_tokens": 57
+            }
+          }
+        }
+      },
+      {
+        "stage": "strategy",
+        "attempt": 1,
+        "data": {
+          "calls": 1,
+          "status": "succeeded"
+        }
+      },
+      {
+        "stage": "launch",
+        "attempt": 1,
+        "data": {
+          "input_digest": "f756f92146a337985c5b571be5d145b3ae2fabbd8ecfdd553cf6b05e77aad5e1",
+          "status": "running"
+        }
+      },
+      {
+        "stage": "launch",
+        "attempt": 1,
+        "data": {
+          "host_receipt": {
+            "calls": 1,
+            "duration_ms": 36119,
+            "exit_code": 0,
+            "host": "codex",
+            "requested_model": "gpt-6.2-sol",
+            "skill_document_digest": "c451dc8906bcdf7f8a8adaab34e013fa84c1ae40d880fedcb55379695d5e5734",
+            "status": "completed",
+            "tokens": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 0,
+              "input_tokens": 34554,
+              "output_tokens": 1185,
+              "reasoning_output_tokens": 0
+            }
+          }
+        }
+      },
+      {
+        "stage": "launch",
+        "attempt": 1,
+        "data": {
+          "calls": 1,
+          "status": "succeeded"
+        }
+      }
+    ],
+    "skill_pins": {
+      "launch": {
+        "path": "skills/global-launch-acquisition",
+        "repository": "https://github.com/NextVariable/global-launch-acquisition-skill",
+        "revision": "a5bfa7c3d5a64b61bcb17491ad96a9b34269b96e",
+        "skill_id": "global-launch-acquisition"
+      },
+      "strategy": {
+        "path": "skills/global-gtm-strategy-skill",
+        "repository": "https://github.com/NextVariable/global-gtm-strategy-skill",
+        "revision": "b9a3f9d46e68e6959211ac5ebccb4a5bd35ead12",
+        "skill_id": "global-gtm-strategy-skill"
+      }
+    },
+    "tasks": [
+      {
+        "stage": "strategy",
+        "status": "succeeded",
+        "attempt": 1
+      },
+      {
+        "stage": "launch",
+        "status": "succeeded",
+        "attempt": 1
+      }
+    ],
+    "decisions": [
+      {
+        "id": 1,
+        "citation_ids": [
+          "gh-331af9506465f648b0ec"
+        ],
+        "claims": [
+          {
+            "quote": "GitHub public repository NextVariable/global-growth-skills is listed with 1 stars, 0 forks and 0 open issues or pull requests.",
+            "source_id": "gh-331af9506465f648b0ec"
+          }
+        ],
+        "contradictions": [],
+        "dependencies": [
+          {
+            "field": "audience",
+            "revision": 1
+          },
+          {
+            "field": "budget",
+            "revision": 1
+          },
+          {
+            "field": "goal",
+            "revision": 1
+          },
+          {
+            "field": "market",
+            "revision": 1
+          },
+          {
+            "field": "product",
+            "revision": 1
+          },
+          {
+            "field": "market_sources",
+            "revision": 1
+          }
+        ],
+        "eligible_citation_ids": [
+          "gh-331af9506465f648b0ec",
+          "gh-156cf857b72a844a91ae",
+          "gh-9914de67573a7a1ba371",
+          "gh-75c95c0438bd513f5a5f"
+        ],
+        "execution": "model",
+        "market_status": "sources_available",
+        "recommendation": "# Global Growth Skills 市场进入策略｜内部草案\n\n**决策：有条件地优先验证 GitHub 上的英语细分，暂缓扩大投入。** 如果能在零付费推广预算内接触到符合条件的自愿参与者，并安排人员观察任务过程，就值得做一次小范围教程试点。若这两个条件未满足，暂缓启动。市场按英语和工作流划分，现有材料不足以按国家排序。\n\n## 首批对象与进入方式\n\n- **暂定 ICP**：已经在使用 Agent Skills、近期需要为开源开发工具决定首批目标用户或进入路径的独立创始人和开发者营销人员。两类人分别记录。谁提出需求、谁实际使用、谁决定团队是否采纳，仍待核实。\n- **推断**：项目已有 GitHub 仓库，因此可以先验证从仓库发现项目到用教程完成任务的路径。现有仓库快照仅记录公开活动。首批对象能否从这里发现教程、是否愿意参与，仍无证据。其他英语社区的可达性和维护成本未知，暂缓并行拓展。\n- **待验证假设**：在一次真实 GTM 决策中，英文教程能帮助用户产出可用于下一步行动的判断。可能的替代包括现有 Agent Skills、通用 AI、手工文档或表格、自建流程、外部协助和推迟决策。实际采用的替代、保留原因及切换成本都未知。\n\n## 优先验证与决策条件\n\n**先观察一次完整任务。** 筛选有近期真实 GTM 决策、已使用 Agent Skills、愿意自带去敏任务的参与者。请他们先说明原有做法和预期交付，再尝试用英文教程完成任务。记录是否独立完成、在哪一步需要协助，以及产出是否被用于下一步决策。付费推广上限为 **0 USD**。负责人、可用工时和验证周期尚未提供，启动前需明确。\n\n若观察到多个独立参与者完成真实任务并实际使用产出，可继续验证更广的可达性和重复使用。若招募顺利，但参与者在同一步反复卡住，先修订教程。若能接触合格对象却看不到真实任务中的价值，暂停这一场景。若在约定周期内招不到合格对象，暂停 GitHub 渠道投入，保留需求判断。\n\n**证据缺口**：没有客户访谈、任务观察、采用或复用数据，也没有市场规模、付费路径或支持成本数据。本轮先判断能否触达目标用户并帮助他们完成真实任务，市场规模暂不估算。",
+        "source_dependencies": {
+          "gh-331af9506465f648b0ec": "9536014d0566b941b4c470bee799aae0f6226051989e43af2002f6a27a9e4c01"
+        }
+      }
+    ],
+    "evidence": [
+      {
+        "field": "audience",
+        "revision": 1,
+        "sha256": "157989c0e68d860f46002abfda146ef22b74fa0567fdca12a398441c595748e5",
+        "source": "operator_input"
+      },
+      {
+        "field": "budget",
+        "revision": 1,
+        "sha256": "4fe64509f821e2236c8e8a2afaa558f482ace2b3f12f95fde55b4c34fb4b25e5",
+        "source": "operator_input"
+      },
+      {
+        "field": "capabilities",
+        "revision": 1,
+        "sha256": "8a9d13c6c835770fc350a12f4e8670760350331e56ea72dbfc4d44e7110bc7f3",
+        "source": "operator_input"
+      },
+      {
+        "field": "goal",
+        "revision": 1,
+        "sha256": "7209ba678b4c63e4e45d375460de4108a3b1e91c45d0d90e1a37acd5f4407ce0",
+        "source": "operator_input"
+      },
+      {
+        "field": "market",
+        "revision": 1,
+        "sha256": "3eaba8df35796ab9a72ae3ada4cf3f0095f5e7fc71ce92a64262911062dea82f",
+        "source": "operator_input"
+      },
+      {
+        "field": "market_sources",
+        "revision": 1,
+        "sha256": "e456a36d0fb61e799c8cb2d1da20941df9954cf517cb4eb57b7f336f1d119891",
+        "source": "operator_input"
+      },
+      {
+        "field": "price",
+        "revision": 1,
+        "sha256": "082954186251b9c424ff38b1af47808413539c8acfd7b1975b6e0d997732fd19",
+        "source": "operator_input"
+      },
+      {
+        "field": "product",
+        "revision": 1,
+        "sha256": "bd7989744cfbc877a8abba8d25d1fce45f3dcdad10c8e2b7095f9f7afb532f79",
+        "source": "operator_input"
+      }
+    ],
+    "active_decision_id": 1,
+    "artifacts": [
+      {
+        "id": 1,
+        "claims": [],
+        "decision_id": 1,
+        "dependencies": [
+          {
+            "field": "audience",
+            "revision": 1
+          },
+          {
+            "field": "budget",
+            "revision": 1
+          },
+          {
+            "field": "capabilities",
+            "revision": 1
+          },
+          {
+            "field": "goal",
+            "revision": 1
+          },
+          {
+            "field": "market",
+            "revision": 1
+          },
+          {
+            "field": "product",
+            "revision": 1
+          },
+          {
+            "field": "market_sources",
+            "revision": 1
+          }
+        ],
+        "execution": "model",
+        "kind": "launch-plan",
+        "markdown": "# Global Growth Skills 英文教程发布计划｜内部草案\n\n**建议有条件地启动一次 GitHub 自愿试点。** 先在项目仓库验证一条路径：符合条件的参与者能否找到英文教程，并独立用它完成一次真实的 GTM 决策。启动前须确认负责人、工时、招募入口和教程可运行性。付费推广上限为 **0 USD**。\n\n## 渠道与承接\n\n- **渠道与目的地**：[Global Growth Skills 项目仓库](https://github.com/NextVariable/global-growth-skills)。拟在 README 放置一处英文试点入口，指向仓库内的英文教程草案 v0.1。具体路径、固定版本和反馈入口待确认。README 入口复用现有项目地址，适合先检查从发现到首次使用的链路。目标用户能否通过仓库发现入口，仍待验证。\n- **暂定参与者**：已经使用 Agent Skills、近期需要为开源开发工具选择首批目标用户或进入路径、愿意带一个去敏真实任务的英语独立创始人或开发者营销人员。记录角色和任务类型。\n- **拟用英文入口文案**：“Already using Agent Skills to plan a launch for an open-source developer tool? Try this English tutorial on a real decision about which users to serve first or how to reach them.” 唯一主行动为 **Try the tutorial**。教程末尾提供自愿反馈入口，仅收集去敏摘要和参与者同意提供的联系方式。\n- **教程承接**：用固定版本的目录和安装器，带参与者选择一个适合任务的独立 Agent Skill。开头提供一个可复现的去敏示例，再请参与者记录原有做法，并用自己的任务得到一项 GTM 决策、判断依据、未验证假设和下一步。Harness 及其 SQLite 检查点放在可选说明中。\n\n## 发布与接手\n\n| 节点 | 动作与放行条件 | 拟议负责人 |\n|---|---|---|\n| 启动前 | 确认 README 修改权限、适用规则、固定版本、支持环境和反馈权限。用干净环境走通 README → 教程 → 安装 → 任务输出 → 反馈，核对链接和英文说明。 | 项目维护者，姓名待定 |\n| 启动日 | 经授权后只启用 README 入口。回读实际页面、教程版本和链接，确认自愿反馈可送达。 | 同一维护者负责发布与答疑，产品问题由技术维护者接手，姓名待定 |\n| 观察期 | 建议开放招募 14 天，结束后再留 7 天观察已入组者是否实际使用产出。具体日期、时区及可投入工时由负责人确认。人工、制作和工具成本待估。 | 试点负责人记录反馈、卡点和实际工时，拟由项目维护者兼任 |\n\n首轮只开放一个入口。其他社区和合作分发暂缓，等仓库到教程的链路跑通并确认团队能承接反馈后再考虑。入口、安装或反馈失效，或答疑超出已确认工时，则暂停招募并排查。当前状态为内部草案，尚未排期或发布。\n\n## 采用观察与试点决定\n\n- **招募**：从自愿反馈记录统计合格报名人数。若有可用的 README 入口或教程访问数据，单独记录其口径。访问分母未知时只报告人数。\n- **完成**：独立完成人数 ÷ 已开始真实任务的合格参与者人数。以参与者提供的去敏决策摘要和协助记录为依据，分别记录独立完成、协助完成、卡点和结果未知。按参与者去重。\n- **实际使用**：确认已将产出用于下一步行动的人数 ÷ 完成真实任务的人数。以参与者自愿回报的具体用途为依据，单列失访和未确认。记录教程版本、渠道变更和同期产品变更，便于解释结果。\n\n**建议决策规则**：若至少两位参与者独立完成并确认实际使用产出，且答疑工时可承受，继续小范围验证重复使用和渠道可达性。若多人卡在同一步，先修订教程再试。若观察到合格参与者完成任务却没有实际采用，暂停该场景。若招募期内没有合格参与者，暂停扩大 GitHub 渠道投入，需求判断保留。反馈稀少或失访较多时，将结果记为证据不足。\n\n**观察与证据缺口**：项目输入已给出仓库、产品能力和付费推广上限。仓库入口能触达目标人群是推断，英文教程能支持真实决策是待验证假设。目前缺少客户访谈、渠道触达、任务观察、采用、复用和市场规模数据。教程、反馈入口、渠道权限及人员安排均待核实。",
+        "market_status": "needs_review",
+        "sha256": "a313556754f789e56f469c09f4a89b487c58dab8289732b40ba53ccd86955c15",
+        "source_dependencies": {
+          "gh-156cf857b72a844a91ae": "c3284332aad7625d58c607220cbc20805615bac73cbf1d7e0929a5c501a4a55a",
+          "gh-331af9506465f648b0ec": "9536014d0566b941b4c470bee799aae0f6226051989e43af2002f6a27a9e4c01",
+          "gh-75c95c0438bd513f5a5f": "df5f8d1b945c3a9ff8a65ab6baf7572cc30523f47db8849f701473f0a6ae3b44",
+          "gh-9914de67573a7a1ba371": "7feb2e1e707cc5a54edc11be4f8b905e966df15a9db7d5908d20450d97df087b"
+        },
+        "status": "draft"
+      }
+    ]
+  },
+  "wall_ms": 61686
+}

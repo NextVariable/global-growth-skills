@@ -82,23 +82,50 @@ Five independent Agent Skills for international GTM: strategy, positioning and c
 
 维护与更新：[变更记录](CHANGELOG.md) · [升级与回退](docs/upgrading.md) · [安全问题反馈](SECURITY.md)。
 
-## GTM Harness 1.0.0-rc.1
+## GTM Harness 1.0.0-rc.2
 
-五种 Skill 可按目标选择，也可用 `--stages` 显式组合。项目上下文、证据、任务状态和草稿存入仓库外的 SQLite。需要 Python 3.10+，以下为离线合成案例。
+五种 Skill 可按目标选择，也可用 `--stages` 显式组合。项目上下文、证据、任务状态和草稿存入仓库外的 SQLite。需要 Python 3.10+，以下命令从合集仓库根目录运行，先用离线示例验证安装，再切换到公开资料和真实模型。
 
 ```sh
 python -m venv .venv
 . .venv/bin/activate
 python -m pip install -r requirements-harness.txt
-db="$(mktemp -d)/project.sqlite"
+work="$(mktemp -d)"
+db="$work/project.sqlite"
 python -m harness --db "$db" init examples/harness/project.json
 python -m harness --db "$db" start demo --goal "完整 GTM"
 python -m harness --db "$db" step demo
 python -m harness --db "$db" resume demo
 python -m harness --db "$db" change examples/harness/price-change.json
 python -m harness --db "$db" resume demo
+python -m harness --db "$db" export demo > "$work/gtm-package.md"
 ```
 
 只处理渠道时用 `start channel --stages launch`。中断后的 `resume` 读取已提交结果。确认原进程已退出后，仍处于运行状态的任务可以加 `--recover` 恢复，适配器失败可以加 `--retry`。
 
 [Codex、手工交接与状态迁移](docs/harness.md) · [数据与 Skill 契约](docs/harness-contract.md) · [预发布验收](V1_RELEASE_READINESS.md)
+
+
+### 用公开资料和真实 Codex 跑一次
+
+先确认 Codex CLI 已登录，并设置终端变量 `GTM_MODEL` 为该账户可用的型号。复制示例 JSON 可更换产品、市场、目标客户、目标与预算。价格与产品能力用于完整内容和销售流程，未知时可以先单独运行战略。搜索查询会发往 GitHub，请使用可公开的关键词。
+
+```sh
+work="$(mktemp -d)"
+db="$work/project.sqlite"
+python -m harness --db "$db" init evals/rc2/public-project.json
+python -m harness --db "$db" prepare-pins "$work/pins"
+python -m harness --db "$db" research market "Global Growth Skills" \
+  --repository NextVariable/global-growth-skills > "$work/research-product.json"
+python -m harness --db "$db" research competitor "agent skills marketing in:name,description" \
+  --limit 3 > "$work/research-competitors.json"
+python -m harness --db "$db" start public --execution model --goal "full workflow"
+python -m harness --db "$db" step public --model "$GTM_MODEL" --checkouts-dir "$work/pins"
+python -m harness --db "$db" resume public --model "$GTM_MODEL" --checkouts-dir "$work/pins"
+python -m harness --db "$db" export public > "$work/gtm-package.md"
+python -m harness --db "$db" export public --format json > "$work/gtm-package.json"
+```
+
+也可在创建运行时用 `--stages strategy launch` 做简版。用 `status public` 看进度、证据和模型回执。检索失败仍可继续，证据缺口会保留在草稿。每次修改项目事实后用 `change` 提交补丁，再用 `resume` 更新受影响的产物。
+
+[命令、恢复与故障处理](docs/harness.md) · [真实导出示例](evals/rc2/example-package.md) · [RC2 验收](PRODUCT_READINESS.md)
