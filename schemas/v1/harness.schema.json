@@ -1069,7 +1069,8 @@
                         "kind": {
                           "enum": [
                             "operator_input",
-                            "external_evidence"
+                            "external_evidence",
+                            "external_signal"
                           ]
                         },
                         "ref": {

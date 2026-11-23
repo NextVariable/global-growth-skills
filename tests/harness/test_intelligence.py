@@ -118,6 +118,36 @@ class DecisionBriefTests(unittest.TestCase):
         self.assertEqual(area["status"], "needs_evidence")
         self.assertTrue(any("target value" in item for item in area["unresolved"]))
 
+    def test_signal_basis_is_accepted_by_the_task_contract(self):
+        from harness.contracts import validate
+
+        brief = build_brief(INPUTS, market([signal_source("hn-a", "market")]))
+        validate(
+            "task-input",
+            {
+                "project_id": "proj",
+                "run_id": "run",
+                "stage": "strategy",
+                "skill": {
+                    "skill_id": "global-gtm-strategy-skill",
+                    "revision": "a" * 40,
+                    "repository": "https://github.com/NextVariable/global-gtm-strategy-skill",
+                    "path": "skills/global-gtm-strategy-skill",
+                },
+                "context": {"product": "Analytics for indie SaaS"},
+                "evidence": [
+                    {
+                        "field": "product",
+                        "revision": 1,
+                        "source": "operator_input",
+                        "sha256": "b" * 64,
+                    }
+                ],
+                "tool_policy": "deny_external_writes",
+                "decision_brief": brief,
+            },
+        )
+
     def test_every_area_carries_a_guardrail(self):
         brief = build_brief(INPUTS, market())
         self.assertTrue(all(row["guardrail"] for row in brief["areas"]))

@@ -40,6 +40,46 @@ def declared_tests(report):
     return int(match.group(1)) if match else None
 
 
+def changed_paths(sha):
+    result = git("diff", "--name-only", f"{sha}..HEAD", check=False)
+    if result.returncode != 0:
+        return None
+    return [line for line in result.stdout.splitlines() if line]
+
+
+def check_head_relation(label, data, head, shallow, failures, notes):
+    verified = data.get("head_commit")
+    if shallow or not verified or verified == head:
+        return
+    relation = data.get("head_relation")
+    if not isinstance(relation, dict):
+        failures.append(
+            f"{label}: head_commit {verified} differs from HEAD {head}; declare head_relation"
+        )
+        return
+    if relation.get("verified_head") != verified:
+        failures.append(f"{label}: head_relation.verified_head must equal head_commit")
+    declared = relation.get("post_verification_paths")
+    if (
+        not isinstance(declared, list)
+        or not declared
+        or any(not isinstance(path, str) or not path for path in declared)
+    ):
+        failures.append(f"{label}: head_relation.post_verification_paths must be a non-empty list")
+        return
+    actual = changed_paths(verified)
+    if actual is None:
+        failures.append(f"{label}: cannot diff {verified}..HEAD")
+        return
+    for path in sorted(set(declared) - set(actual)):
+        failures.append(f"{label}: declared post-verification path was not changed: {path}")
+    for path in sorted(set(actual) - set(declared)):
+        failures.append(f"{label}: change since verified head is undeclared: {path}")
+    for path in declared:
+        if not (path.startswith("validation/") or path.endswith(".md")):
+            notes.append(f"{label}: declared post-verification code path {path}")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--unittest-report", help="unittest output to compare with declared test counts")
@@ -51,6 +91,8 @@ def main():
     args = parser.parse_args()
 
     failures = []
+    notes = []
+    head = git("rev-parse", "HEAD").stdout.strip()
     expected_catalog = {
         entry["skill"]: entry["revision"]
         for entry in json.loads((ROOT / "catalog.json").read_text())["skills"]
@@ -81,6 +123,8 @@ def main():
             elif not args.shallow and not is_ancestor(ci_head):
                 failures.append(f"{label}: ci.head {ci_head} is not an ancestor of HEAD")
 
+        check_head_relation(label, data, head, args.shallow, failures, notes)
+
         catalog = data.get("catalog")
         if isinstance(catalog, dict) and "revisions" in catalog:
             if catalog["revisions"] != expected_catalog:
@@ -100,11 +144,12 @@ def main():
                     f"{label}: harness_tests is {declared}, report ran {measured_tests}"
                 )
 
+    for note in notes:
+        print(f"NOTE {note}")
     for failure in failures:
         print(f"FAIL {failure}")
     if not failures:
-        print(f"OK release gates match HEAD {git('rev-parse', '--short', 'HEAD').stdout.strip()}; "
-              f"{count} tracked files")
+        print(f"OK release gates match HEAD {head[:7]}; {count} tracked files")
     return 1 if failures else 0
 
 

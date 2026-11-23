@@ -7,10 +7,22 @@
   "branch": "feat/v1.1-gtm-intelligence",
   "base_commit": "7112a7df48d59419594619d51d279e6d0f20fb00",
   "head_commit": "ee52be28f888c0cd5171e1f1bb701c99b496f216",
+  "head_relation": {
+    "verified_head": "ee52be28f888c0cd5171e1f1bb701c99b496f216",
+    "verified_head_role": "last commit covered by the full pre-audit suite and CI",
+    "post_verification_paths": [
+      "evals/v1.1/real-model-protocol.md",
+      "schemas/v1/harness.schema.json",
+      "scripts/check_release_gate.py",
+      "tests/harness/test_intelligence.py",
+      "validation/v1.1-readiness.json"
+    ],
+    "post_verification_note": "Independent audit fixes: the task-input contract accepts external_signal basis rows, the protocol imports one merged research patch and prepares pins once, and the gate checker requires this declaration. The audit-fix commit is the acceptance run."
+  },
   "prepared_at": "2026-11-23",
   "release_gate": "DRAFT",
   "verification": {
-    "harness_tests": 171,
+    "harness_tests": 172,
     "installer_tests": 10,
     "tracked_files": 135,
     "checker": "python3 scripts/check_release_gate.py"
@@ -24,6 +36,7 @@
   },
   "ci": {
     "head": "ee52be28f888c0cd5171e1f1bb701c99b496f216",
+    "note": "These runs belong to the verified commit. The audit-fix commit has its own runs, recorded in the follow-up record commit.",
     "total": 18,
     "success": 18,
     "failure": 0,
@@ -111,9 +124,14 @@
       "detail": "Hacker News and GitHub captures are external_signal; they never make a brief area decision_ready. Only a captured public web page counts as external_evidence."
     },
     {
+      "id": "signal-task-contract",
+      "result": "pass",
+      "detail": "The decision brief emits external_signal basis rows and the task-input contract accepts them; tests/harness/test_intelligence.py validates a signal-only brief against the schema."
+    },
+    {
       "id": "release-gate-consistency",
       "result": "pass",
-      "detail": "scripts/check_release_gate.py verifies declared commits are ancestors of HEAD, catalog revisions match catalog.json, and tracked-file and test counts match the checkout; wired into validate.yml and harness.yml"
+      "detail": "scripts/check_release_gate.py verifies declared commits are ancestors of HEAD, requires head_relation when head_commit differs from HEAD, checks that the declared post-verification paths exactly match the diff, and compares catalog revisions plus tracked-file and test counts; wired into validate.yml and harness.yml"
     }
   ],
   "benchmark": {
@@ -158,9 +176,28 @@
     "Clean-directory install could not be re-verified because github.com git transport was unreachable from the preparation environment.",
     "Competitive and market sections in the exported package only use captured sources; when none exist the package says so instead of inventing numbers.",
     "There is no independent semantic reviewer; verbatim quote matches stay unverified.",
-    "Real publishing, outreach, CRM writes, ad spend and customer outcomes are not executed or measured."
+    "Real publishing, outreach, CRM writes, ad spend and customer outcomes are not executed or measured.",
+    "Capture verification is structural: a fabricated local web capture with a plausible hash is not detected without re-fetching the page.",
+    "The exported package groups mapped claims as external_evidence even when the decision brief labels the source external_signal."
   ],
   "codex_final_audit": "ready_with_documented_p1_items",
+  "independent_audit": {
+    "status": "conditional_pass",
+    "p0_fixed": [
+      "task-input rejected external_signal basis rows emitted by the decision brief, so any workflow with community or repository research failed before its first stage"
+    ],
+    "p1_fixed": [
+      "the readiness record now declares the verified commit and the exact paths changed after verification",
+      "the gate checker rejects an undeclared post-verification delta",
+      "the real-model protocol imports one merged research patch and prepares pins once"
+    ],
+    "p2_open": [
+      "A local operator can fabricate a web capture record; shape checks do not prove the excerpt came from the hashed page.",
+      "The exported package lists mapped claims under external_evidence even when the source is a community or repository signal.",
+      "cost-report attempts count receipts, so multi-artifact stages report more attempts than model calls.",
+      "Real-model A/B was not executed; no token, latency or cost data exists."
+    ]
+  },
   "release_actions": {
     "draft_pull_request": "https://github.com/NextVariable/global-growth-skills/pull/3",
     "merge_main": "not_performed_pending_product_owner_authorization",

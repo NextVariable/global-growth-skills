@@ -29,7 +29,9 @@ export GTM_MODEL="<model available to this Codex account>"
 work="$(mktemp -d)"
 ```
 
-Capture identical research for both arms and reuse the saved JSON:
+Prepare the pins once; both arms run the same pinned revisions and pass
+`--checkouts-dir "$work/pins"` on resume. Capture identical research for both
+arms and import the merged rows into the second database:
 
 ```sh
 cd ../gte-v10
@@ -38,11 +40,21 @@ python -m harness --db "$work/a.sqlite" prepare-pins "$work/pins"
 python -m harness --db "$work/a.sqlite" research market "AI meeting notes" > "$work/research-market.json"
 python -m harness --db "$work/a.sqlite" research competitor "meeting notes" --limit 3 > "$work/research-competitor.json"
 
+# `research` prints a result object; `change` expects a context patch. Merge the
+# retrieved rows into one patch so both arms start from the same source set.
+python - "$work" <<'PY'
+import json, pathlib, sys
+root = pathlib.Path(sys.argv[1])
+rows = {}
+for name in ("market", "competitor"):
+    for row in json.loads((root / f"research-{name}.json").read_text())["retrieved"]:
+        rows[row["id"]] = row
+(root / "patch-sources.json").write_text(json.dumps({"market_sources": list(rows.values())}))
+PY
+
 cd ../gte-v11
 python -m harness --db "$work/b.sqlite" init evals/rc2/public-project.json
-python -m harness --db "$work/b.sqlite" prepare-pins "$work/pins"
-python -m harness --db "$work/b.sqlite" change "$work/research-market.json"
-python -m harness --db "$work/b.sqlite" change "$work/research-competitor.json"
+python -m harness --db "$work/b.sqlite" change "$work/patch-sources.json"
 ```
 
 Run each arm with timing, then export:
