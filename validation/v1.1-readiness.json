@@ -6,18 +6,14 @@
   "repository": "https://github.com/NextVariable/global-growth-skills",
   "branch": "feat/v1.1-gtm-intelligence",
   "base_commit": "7112a7df48d59419594619d51d279e6d0f20fb00",
-  "head_commit": "ee52be28f888c0cd5171e1f1bb701c99b496f216",
+  "head_commit": "b7b71e9d56b41f9b46707a7d4b0ea9915636f628",
   "head_relation": {
-    "verified_head": "ee52be28f888c0cd5171e1f1bb701c99b496f216",
-    "verified_head_role": "last commit covered by the full pre-audit suite and CI",
+    "verified_head": "b7b71e9d56b41f9b46707a7d4b0ea9915636f628",
+    "verified_head_role": "audit-fix commit; 172 harness tests, 10 installer tests, privacy, static analysis and CI ran here",
     "post_verification_paths": [
-      "evals/v1.1/real-model-protocol.md",
-      "schemas/v1/harness.schema.json",
-      "scripts/check_release_gate.py",
-      "tests/harness/test_intelligence.py",
       "validation/v1.1-readiness.json"
     ],
-    "post_verification_note": "Independent audit fixes: the task-input contract accepts external_signal basis rows, the protocol imports one merged research patch and prepares pins once, and the gate checker requires this declaration. The audit-fix commit is the acceptance run."
+    "post_verification_note": "The only change after the verified commit is this readiness record; no code, schema, test or workflow file differs."
   },
   "prepared_at": "2026-11-23",
   "release_gate": "DRAFT",
@@ -35,19 +31,19 @@
     "reason": "No authenticated model was used in this pass; no token, timing or cost data was produced."
   },
   "ci": {
-    "head": "ee52be28f888c0cd5171e1f1bb701c99b496f216",
-    "note": "These runs belong to the verified commit. The audit-fix commit has its own runs, recorded in the follow-up record commit.",
+    "head": "b7b71e9d56b41f9b46707a7d4b0ea9915636f628",
+    "note": "Push and pull_request events each ran Validate and Harness fixture tests for this commit; the two representative URLs are listed below.",
     "total": 18,
     "success": 18,
     "failure": 0,
     "runs": [
       {
         "workflow": "Validate",
-        "url": "https://github.com/NextVariable/global-growth-skills/actions/runs/45053187641"
+        "url": "https://github.com/NextVariable/global-growth-skills/actions/runs/45056603608"
       },
       {
         "workflow": "Harness fixture tests",
-        "url": "https://github.com/NextVariable/global-growth-skills/actions/runs/45053187647"
+        "url": "https://github.com/NextVariable/global-growth-skills/actions/runs/45056603622"
       }
     ]
   },
