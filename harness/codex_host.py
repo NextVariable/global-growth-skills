@@ -8,6 +8,8 @@ import re
 from tempfile import TemporaryDirectory
 import time
 
+from jsonschema import Draft202012Validator
+
 from .contracts import HarnessError, SCHEMA, encode
 from .research import prompt_review
 
@@ -132,6 +134,41 @@ def output_schema(stage):
     if stage == "strategy":
         shape["properties"]["contract"] = _strict_shape(SCHEMA["$defs"]["decision-draft"])
     return shape
+
+
+def normalize_host_result(stage, result):
+    """Translate host null placeholders without changing the storage contract."""
+    kind = "strategy-result" if stage == "strategy" else "content-result"
+    validator = Draft202012Validator(SCHEMA)
+
+    def convert(value, storage, host):
+        if "$ref" in storage:
+            storage = SCHEMA["$defs"][storage["$ref"].removeprefix("#/$defs/")]
+        # The strict projection wraps optional properties in [value, null].
+        if "anyOf" in host:
+            host = host["anyOf"][0]
+        if isinstance(value, list) and storage.get("type") == host.get("type") == "array":
+            return [convert(item, storage["items"], host["items"]) for item in value]
+        if not isinstance(value, dict) or storage.get("type") != "object":
+            return value
+
+        normalized = dict(value)
+        storage_fields = storage["properties"]
+        host_fields = host.get("properties", {})
+        required = storage.get("required", [])
+        for key in value.keys() & storage_fields.keys() & host_fields.keys():
+            item, field, wire = value[key], storage_fields[key], host_fields[key]
+            if (
+                item is None and key not in required
+                and {"type": "null"} in wire.get("anyOf", [])
+                and not validator.evolve(schema=field).is_valid(None)
+            ):
+                del normalized[key]
+            else:
+                normalized[key] = convert(item, field, wire)
+        return normalized
+
+    return convert(result, SCHEMA["$defs"][kind], output_schema(stage))
 
 
 def handoff(checkout, request, *, budget=DEFAULT_DOCUMENT_BUDGET):

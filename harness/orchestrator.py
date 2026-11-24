@@ -3,6 +3,7 @@
 import json
 
 from . import decision as decision_contract
+from .codex_host import normalize_host_result
 from .contracts import HarnessError, digest, encode, validate
 from .evidence import audit_evidence
 from .intelligence import build_brief
@@ -550,7 +551,7 @@ class Harness(Store):
                         with self.transaction():
                             self._event(run_id, stage, attempt, {"host_receipt": receipt})
                 if adapter.execution in {"model", "handoff"}:
-                    result = decision_contract.normalize_host_draft(result)
+                    result = normalize_host_result(stage, result)
                 result = validate(
                     "strategy-result" if stage == "strategy" else "content-result", result
                 )
