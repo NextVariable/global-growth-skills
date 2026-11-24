@@ -1,6 +1,6 @@
 # Global Growth Skills — V1.0.0 Release Notes
 
-**Prepared:** 2026-11-22 · **Status:** release-ready, awaiting Product Owner authorization to merge
+**Prepared:** 2026-11-22 · **Merged:** 2026-11-22 via merge commit `7112a7df48d59419594619d51d279e6d0f20fb00` · **Status:** released on `main`; GitHub Release pending Product Owner authorization
 **Repository:** [NextVariable/global-growth-skills](https://github.com/NextVariable/global-growth-skills) · **PR:** [#1](https://github.com/NextVariable/global-growth-skills/pull/1) · **Accepted HEAD:** `251a52f0382c34b23392470ed1fd61b842cf4c0e`
 
 V1.0 packages five independently maintained Agent Skills for international go-to-market work, plus an optional local orchestration harness. Every skill keeps its own repository, installation unit and version; this repository provides the versioned catalog, installer, harness, schemas and evidence discipline that connect them.
@@ -88,8 +88,9 @@ Fixture and reference modes verify structure and the quality rubric; they are no
 ## Release gate and merge
 
 - **Release Gate: PASS** at `251a52f0382c34b23392470ed1fd61b842cf4c0e`, on the Product Owner's acceptance.
-- **Recommended merge:** create a merge commit on GitHub (not squash), so the evidence commits `faa29ad` and `251a52f` remain reachable and auditable. If the repository prefers a linear history, squash is acceptable only if these release notes and PR #1 stay linked as the evidence record.
-- `main` is unchanged. No GitHub Release has been created. Both actions require the Product Owner's separate authorization.
+- **Merged:** PR [#1](https://github.com/NextVariable/global-growth-skills/pull/1) was merged with a merge commit, so the evidence commits `faa29ad` and `251a52f` remain reachable and auditable. The merge commit is `7112a7df48d59419594619d51d279e6d0f20fb00`; both `Harness fixture tests` and `Validate` workflows passed on that commit.
+- The runtime version string was aligned to `1.0.0` from the release-candidate value; no runtime behaviour changed.
+- No GitHub Release or git tag has been created. That action requires the Product Owner's separate authorization.
 
 See [docs/v1.0.0-release.md](docs/v1.0.0-release.md) for the bilingual product guide and [validation/release-gate-v1.0.0.json](validation/release-gate-v1.0.0.json) for the machine-readable gate record.
 

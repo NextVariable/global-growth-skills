@@ -9,7 +9,9 @@
   "release_gate": "PASS",
   "approved_by": "Product Owner",
   "merge_recommendation": "create_merge_commit",
-  "main_merged": false,
+  "main_merged": true,
+  "merge_commit": "7112a7df48d59419594619d51d279e6d0f20fb00",
+  "merged_at": "2026-11-22",
   "github_release_created": false,
   "catalog": {
     "entries": 5,
@@ -56,7 +58,12 @@
     {
       "id": "static-analysis",
       "result": "pass",
-      "detail": "ruff --isolated --select E4,E7,E9,F"
+      "detail": "ruff check --isolated --select E4,E7,E9,F harness scripts tests"
+    },
+    {
+      "id": "version-alignment",
+      "result": "pass",
+      "detail": "harness.__version__ and `python3 -m harness --version` report 1.0.0"
     },
     {
       "id": "clean-directory-install",
@@ -79,6 +86,15 @@
     "total": 18,
     "success": 18,
     "failure": 0,
+    "main_merge_check": {
+      "head": "7112a7df48d59419594619d51d279e6d0f20fb00",
+      "workflows": ["Harness fixture tests", "Validate"],
+      "result": "success",
+      "runs": [
+        "https://github.com/NextVariable/global-growth-skills/actions/runs/45046188666",
+        "https://github.com/NextVariable/global-growth-skills/actions/runs/45046188699"
+      ]
+    },
     "runs": [
       {
         "workflow": "validate",
@@ -147,8 +163,10 @@
     "Real publishing, outreach, CRM writes, ad spend, customer adoption, conversion and revenue are not executed or measured."
   ],
   "release_actions": {
-    "merge_main": "pending_product_owner_authorization",
+    "merge_main": "completed_via_merge_commit_7112a7d",
+    "release_prep_version_alignment": "1.0.0",
     "github_release": "pending_product_owner_authorization",
-    "new_pull_request": false
+    "git_tag": "pending_product_owner_authorization",
+    "new_pull_request": true
   }
 }
