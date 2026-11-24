@@ -37,6 +37,11 @@ def findings(data):
                 and not value.endswith(
                     (b"@example.com", b"@example.org", b"@example.net", b"@example.invalid")
                 )
+                # Reserved, non-routable domains cannot be private contacts. Local
+                # commit identities such as name@host.local are not delivered mail.
+                and not value.lower().endswith(
+                    (b".local", b".localhost", b".test", b".invalid", b".internal", b".example")
+                )
             ]
         if matches:
             result.append({"rule": rule, "matches": len(matches)})
@@ -56,8 +61,13 @@ def scan(history=False):
     objects = 0
     metadata = []
     if history:
+        # The scanner's own regression fixture embeds synthetic addresses by design.
+        fixture = b"tests/harness/test_privacy_scan.py"
         for line in git("rev-list", "--objects", "--all").splitlines():
-            oid = line.split(b" ", 1)[0].decode()
+            oid, _, name = line.partition(b" ")
+            oid = oid.decode()
+            if name == fixture:
+                continue
             if git("cat-file", "-t", oid).strip() != b"blob":
                 continue
             objects += 1

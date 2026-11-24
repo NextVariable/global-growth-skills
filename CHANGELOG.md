@@ -6,7 +6,8 @@
 - 新增 [Release Notes](RELEASE_NOTES.md)、[中英文发布指南](docs/v1.0.0-release.md) 与 [Release Gate](validation/release-gate-v1.0.0.json)。
 - 修正发布文档中的证据表述：RC3 真实模型五阶段验收已于 `faa29ad` 完成（请求模型 `gpt-6.2-sol`，10/10 次调用，含一次内容重试）；`251a52f` 的来源分类修复由 19 个确定性用例覆盖，未重复执行五阶段模型评测。
 - 明确三层证据边界：工程验证通过、真实模型执行已记录、真实商业效果 `not_measured`。
-- 本轮只把文档修复推送到原分支；未合并 `main`，未创建 GitHub Release。
+- 文档修复经原 PR 审查后以 merge commit `7112a7d` 合并到 `main`；`main` 上的 CI 检查通过。未创建 GitHub Release，Release 仍需 Product Owner 单独授权。
+- 运行时版本号从 `1.0.0-rc.3` 对齐为 `1.0.0`；不改变任何运行时行为。
 
 ## 1.0.0-rc.3
 
