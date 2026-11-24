@@ -5,16 +5,15 @@
   "codename": "GTM Intelligence",
   "repository": "https://github.com/NextVariable/global-growth-skills",
   "branch": "feat/v1.1-gtm-intelligence",
-  "base_commit": "7112a7df48d59419594619d51d279e6d0f20fb00",
-  "head_commit": "b7b71e9d56b41f9b46707a7d4b0ea9915636f628",
+  "base_commit": "2c4a108854ebfc1eb55c305c84667340df32fe1b",
+  "head_commit": "ae8f919ee5aa40a24ccb8a331b2bfe40f021d48d",
   "head_relation": {
-    "verified_head": "b7b71e9d56b41f9b46707a7d4b0ea9915636f628",
-    "verified_head_role": "audit-fix commit; 172 harness tests, 10 installer tests, privacy, static analysis and CI ran here",
+    "verified_head": "ae8f919ee5aa40a24ccb8a331b2bfe40f021d48d",
+    "verified_head_role": "final P1 code candidate with the released V1.0 main merged",
     "post_verification_paths": [
-      "validation/v1.1-readiness.json",
-      "docs/product-scope.md"
+      "validation/v1.1-readiness.json"
     ],
-    "post_verification_note": "After the verified code commit, this readiness record and a documentation-only product-scope file changed; no code, schema, test or workflow file differs."
+    "post_verification_note": "Only this readiness record changes after the P1 code and regression tests."
   },
   "prepared_at": "2026-11-23",
   "release_gate": "DRAFT",
@@ -36,21 +35,27 @@
     "note": "No sixth skill, new provider, runtime rewrite, schema rewrite or SaaS surface is in scope."
   },
   "verification": {
-    "harness_tests": 172,
+    "harness_tests": 174,
     "installer_tests": 10,
     "tracked_files": 136,
     "checker": "python3 scripts/check_release_gate.py"
   },
   "real_model_evaluation": {
     "protocol": "evals/v1.1/real-model-protocol.md",
-    "arms": ["V1.0 at 7112a7d", "V1.1 at the Draft PR head"],
+    "arms": ["official V1.0 at 2c4a108", "V1.1 final P1 candidate"],
     "status": "NOT TESTED",
     "calls": 0,
-    "reason": "No codex executable, no GTM_MODEL value and no model API credential were available; no paid endpoint was called and no token, timing or cost data exists."
+    "reason": "The final P1 candidate awaits a controlled model acceptance run. The earlier Strategy and Acquisition pair completed at f234f25 and exposed the two P1 export defects.",
+    "prior_pair": {
+      "v1_1_head": "f234f259d63af2552d9dee8299402ed8317ec090",
+      "stages": ["strategy", "launch"],
+      "calls": 4,
+      "status": "completed_before_p1_fixes"
+    }
   },
   "ci": {
     "head": "b7b71e9d56b41f9b46707a7d4b0ea9915636f628",
-    "note": "Push and pull_request events each ran Validate and Harness fixture tests for this commit; the two representative URLs are listed below.",
+    "note": "Historical pre-fix CI. Final candidate checks are reported on Draft PR #3.",
     "total": 18,
     "success": 18,
     "failure": 0,
@@ -140,12 +145,12 @@
     {
       "id": "decision-grade-evidence",
       "result": "pass",
-      "detail": "Hacker News and GitHub captures are external_signal; they never make a brief area decision_ready. Only a captured public web page counts as external_evidence."
+      "detail": "Topic matches surface candidate sources for internal review. The saved Fireflies package re-export changes pricing_packaging from decision_ready to needs_internal_review; the competitor feature excerpt cannot support pricing."
     },
     {
       "id": "signal-task-contract",
       "result": "pass",
-      "detail": "The decision brief emits external_signal basis rows and the task-input contract accepts them; tests/harness/test_intelligence.py validates a signal-only brief against the schema."
+      "detail": "GitHub and Hacker News claims remain external_signal across persisted claim audits, the brief, and JSON and Markdown exports. The regression covers provider and semantic status, re-export of legacy audits, and refusal to count signals as evidence for paying-customer claims."
     },
     {
       "id": "release-gate-consistency",
@@ -189,17 +194,16 @@
     "business_outcome": "not_measured"
   },
   "known_limitations": [
-    "No real-model V1.0 vs V1.1 comparison was run in this pass; model quality and token cost are NOT TESTED.",
+    "The final P1 candidate has not been run with a real model.",
     "Structural benchmark scores do not measure commercial quality.",
     "Hacker News points and comments are public discussion activity, not demand, adoption, paying customers or market size.",
     "Competitive and market sections in the exported package only use captured sources; when none exist the package says so instead of inventing numbers.",
     "There is no independent semantic reviewer; verbatim quote matches stay unverified.",
     "Real publishing, outreach, CRM writes, ad spend and customer outcomes are not executed or measured.",
     "Capture verification is structural: a fabricated local web capture with a plausible hash is not detected without re-fetching the page.",
-    "The exported package groups mapped claims as external_evidence even when the decision brief labels the source external_signal.",
-    "docs/product-scope.md is published on both the V1.0 release branch and this Draft branch; it reaches main with either merge."
+    "Business recommendations remain subject to internal review."
   ],
-  "codex_final_audit": "ready_with_documented_p1_items",
+  "codex_final_audit": "pending_controlled_acceptance",
   "independent_audit": {
     "status": "conditional_pass",
     "p0_fixed": [
@@ -208,13 +212,13 @@
     "p1_fixed": [
       "the readiness record now declares the verified commit and the exact paths changed after verification",
       "the gate checker rejects an undeclared post-verification delta",
-      "the real-model protocol imports one merged research patch and prepares pins once"
+      "the real-model protocol imports one merged research patch and prepares pins once",
+      "source topics can no longer mark a commercial decision ready",
+      "GitHub and Hacker News signals keep their source class and semantic status throughout exports"
     ],
     "p2_open": [
       "A local operator can fabricate a web capture record; shape checks do not prove the excerpt came from the hashed page.",
-      "The exported package lists mapped claims under external_evidence even when the source is a community or repository signal.",
-      "cost-report attempts count receipts, so multi-artifact stages report more attempts than model calls.",
-      "Real-model A/B was not executed; no token, latency or cost data exists."
+      "cost-report attempts count receipts, so multi-artifact stages report more attempts than model calls."
     ]
   },
   "release_actions": {
