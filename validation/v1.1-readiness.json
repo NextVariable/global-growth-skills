@@ -6,14 +6,14 @@
   "repository": "https://github.com/NextVariable/global-growth-skills",
   "branch": "feat/v1.1-gtm-intelligence",
   "base_commit": "2c4a108854ebfc1eb55c305c84667340df32fe1b",
-  "head_commit": "ae8f919ee5aa40a24ccb8a331b2bfe40f021d48d",
+  "head_commit": "569911cedc5829b5e15a8d78ad1a2b71ce7c5ac8",
   "head_relation": {
-    "verified_head": "ae8f919ee5aa40a24ccb8a331b2bfe40f021d48d",
-    "verified_head_role": "final P1 code candidate with the released V1.0 main merged",
+    "verified_head": "569911cedc5829b5e15a8d78ad1a2b71ce7c5ac8",
+    "verified_head_role": "host output compatibility fix and five-stage mocked adapter regression",
     "post_verification_paths": [
       "validation/v1.1-readiness.json"
     ],
-    "post_verification_note": "Only this readiness record changes after the P1 code and regression tests."
+    "post_verification_note": "Only this readiness record changes after the host output compatibility fix."
   },
   "prepared_at": "2026-11-23",
   "release_gate": "DRAFT",
@@ -35,7 +35,7 @@
     "note": "No sixth skill, new provider, runtime rewrite, schema rewrite or SaaS surface is in scope."
   },
   "verification": {
-    "harness_tests": 174,
+    "harness_tests": 176,
     "installer_tests": 10,
     "tracked_files": 136,
     "checker": "python3 scripts/check_release_gate.py"
@@ -45,7 +45,14 @@
     "arms": ["official V1.0 at 2c4a108", "V1.1 final P1 candidate"],
     "status": "NOT TESTED",
     "calls": 0,
-    "reason": "The final P1 candidate awaits a controlled model acceptance run. The earlier Strategy and Acquisition pair completed at f234f25 and exposed the two P1 export defects.",
+    "reason": "The host compatibility candidate awaits a controlled model resume from Content. A simulated Codex host retried Content using a copy of the existing Strategy checkpoint and preserved prior evidence and receipts.",
+    "prior_candidate_attempt": {
+      "v1_1_head": "f07b62017865293762d57c658fa41a12a000adfb",
+      "strategy": "succeeded",
+      "content": "content-result validation failed at actions (type)",
+      "later_stages": "not_run",
+      "calls": 2
+    },
     "prior_pair": {
       "v1_1_head": "f234f259d63af2552d9dee8299402ed8317ec090",
       "stages": ["strategy", "launch"],
@@ -85,7 +92,7 @@
     {
       "id": "harness-tests",
       "result": "pass",
-      "detail": "172/172 tests, python3 scripts/validate_harness.py"
+      "detail": "176/176 tests, python3 scripts/validate_harness.py"
     },
     {
       "id": "installer-tests",
