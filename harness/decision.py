@@ -134,25 +134,6 @@ def _value(name, raw):
     return out
 
 
-def normalize_host_draft(result):
-    """Translate required-but-nullable host slots to the existing storage format."""
-    if not isinstance(result, dict):
-        return result
-
-    def without_nulls(value):
-        if isinstance(value, dict):
-            return {key: without_nulls(item) for key, item in value.items() if item is not None}
-        if isinstance(value, list):
-            return [without_nulls(item) for item in value]
-        return value
-
-    return {
-        key: without_nulls(value) if key in {"contract", "constraint_refs"} else value
-        for key, value in result.items()
-        if key != "constraint_refs" or value is not None
-    }
-
-
 def build(raw, decision_id, values, claims=(), assumptions=()):
     """Build revision 1 from operator inputs plus an optional model proposal.
 

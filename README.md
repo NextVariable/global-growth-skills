@@ -107,6 +107,18 @@ python -m harness --db "$db" export demo > "$work/gtm-package.md"
 
 [Codex、手工交接与状态迁移](docs/harness.md) · [数据与 Skill 契约](docs/harness-contract.md) · [V1.0 发布验收](V1_RELEASE_READINESS.md) · [Release Notes](RELEASE_NOTES.md) · [Release Gate](validation/release-gate-v1.0.0.json)
 
+### GTM Harness 1.1（开发中）
+
+V1.1 增加 Hacker News 公开讨论来源、九领域可追溯决策 brief、包含 Executive Summary 与 Action Register 的导出包、宿主任务契约，以及证据打包与成本汇总。结构基准覆盖 AI SaaS、Developer Tools、Smart Hardware 三个公开案例；真实模型与商业效果尚未测量。详见 [V1.1 说明](docs/v1.1-gtm-intelligence.md)。
+
+```sh
+python -m harness --db "$db" research-community market "AI meeting notes" --limit 3
+python -m harness --db "$db" cost-report demo
+python -m harness --db "$db" host-contract
+python3 scripts/benchmark_v11.py --report /tmp/v11-benchmark.json
+```
+
+
 
 ### 用公开资料和真实 Codex 跑一次
 

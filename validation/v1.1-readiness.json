@@ -1,0 +1,237 @@
+{
+  "schema_version": 1,
+  "product": "Global Growth Skills / GTM Harness",
+  "version": "1.1.0",
+  "codename": "GTM Intelligence",
+  "repository": "https://github.com/NextVariable/global-growth-skills",
+  "branch": "feat/v1.1-gtm-intelligence",
+  "base_commit": "2c4a108854ebfc1eb55c305c84667340df32fe1b",
+  "head_commit": "569911cedc5829b5e15a8d78ad1a2b71ce7c5ac8",
+  "head_relation": {
+    "verified_head": "569911cedc5829b5e15a8d78ad1a2b71ce7c5ac8",
+    "verified_head_role": "host output compatibility fix and five-stage mocked adapter regression",
+    "post_verification_paths": [
+      "validation/v1.1-readiness.json"
+    ],
+    "post_verification_note": "Only this readiness record changes after the host output compatibility fix."
+  },
+  "prepared_at": "2026-11-23",
+  "release_gate": "DRAFT",
+  "feature_freeze": {
+    "status": "frozen",
+    "frozen_at": "2026-11-23",
+    "code_baseline": "b7b71e9d56b41f9b46707a7d4b0ea9915636f628",
+    "scope_document": "docs/product-scope.md",
+    "kept_capabilities": [
+      "multi-source research: GitHub, Hacker News and operator-captured public web",
+      "evidence versus signal grading",
+      "nine-area GTM decision brief",
+      "GTM package enhancements",
+      "host contract",
+      "cost telemetry",
+      "benchmark framework"
+    ],
+    "allowed_changes": "P0 security or data-integrity fixes and P1 fixes that unblock a core GTM task only",
+    "note": "No sixth skill, new provider, runtime rewrite, schema rewrite or SaaS surface is in scope."
+  },
+  "verification": {
+    "harness_tests": 176,
+    "installer_tests": 10,
+    "tracked_files": 136,
+    "checker": "python3 scripts/check_release_gate.py"
+  },
+  "real_model_evaluation": {
+    "protocol": "evals/v1.1/real-model-protocol.md",
+    "arms": ["official V1.0 at 2c4a108", "V1.1 final P1 candidate"],
+    "status": "NOT TESTED",
+    "calls": 0,
+    "reason": "The host compatibility candidate awaits a controlled model resume from Content. A simulated Codex host retried Content using a copy of the existing Strategy checkpoint and preserved prior evidence and receipts.",
+    "prior_candidate_attempt": {
+      "v1_1_head": "f07b62017865293762d57c658fa41a12a000adfb",
+      "strategy": "succeeded",
+      "content": "content-result validation failed at actions (type)",
+      "later_stages": "not_run",
+      "calls": 2
+    },
+    "prior_pair": {
+      "v1_1_head": "f234f259d63af2552d9dee8299402ed8317ec090",
+      "stages": ["strategy", "launch"],
+      "calls": 4,
+      "status": "completed_before_p1_fixes"
+    }
+  },
+  "ci": {
+    "head": "b7b71e9d56b41f9b46707a7d4b0ea9915636f628",
+    "note": "Historical pre-fix CI. Final candidate checks are reported on Draft PR #3.",
+    "total": 18,
+    "success": 18,
+    "failure": 0,
+    "runs": [
+      {
+        "workflow": "Validate",
+        "url": "https://github.com/NextVariable/global-growth-skills/actions/runs/45056603608"
+      },
+      {
+        "workflow": "Harness fixture tests",
+        "url": "https://github.com/NextVariable/global-growth-skills/actions/runs/45056603622"
+      }
+    ]
+  },
+  "catalog": {
+    "entries": 5,
+    "pinned": true,
+    "revisions": {
+      "global-gtm-strategy-skill": "b9a3f9d46e68e6959211ac5ebccb4a5bd35ead12",
+      "global-growth-content": "d3d8aa367ace0e9ff27ce7a8a21e3ebd5e28140e",
+      "global-launch-acquisition": "a5bfa7c3d5a64b61bcb17491ad96a9b34269b96e",
+      "global-sales-retention": "7c201004d3aba3896808660e56ba4a74b64322b6",
+      "global-growth-experiments": "fb1060e4ff5c80dcfb00b2c68099a511b1e5eed4"
+    }
+  },
+  "checks": [
+    {
+      "id": "harness-tests",
+      "result": "pass",
+      "detail": "176/176 tests, python3 scripts/validate_harness.py"
+    },
+    {
+      "id": "installer-tests",
+      "result": "pass",
+      "detail": "10/10 tests, python3 scripts/validate.py"
+    },
+    {
+      "id": "catalog-schema",
+      "result": "pass",
+      "detail": "5 separate repositories; JSON schemas and documentation links valid"
+    },
+    {
+      "id": "privacy-scan-current",
+      "result": "pass",
+      "detail": "136 tracked files, 0 current findings"
+    },
+    {
+      "id": "privacy-scan-history",
+      "result": "pass",
+      "detail": "historical blobs and commit metadata scanned; 0 findings. The scanner ignores reserved, non-routable domains such as host.local and skips its own synthetic fixture during the history scan."
+    },
+    {
+      "id": "static-analysis",
+      "result": "pass",
+      "detail": "ruff check --isolated --select E4,E7,E9,F harness scripts tests"
+    },
+    {
+      "id": "offline-workflow-export",
+      "result": "pass",
+      "detail": "both arms: init, start, resume, change, export exit 0; fixture export 7619 bytes (V1.0) and 16763 bytes (V1.1)"
+    },
+    {
+      "id": "cost-report",
+      "result": "pass",
+      "detail": "aggregates host receipts; fixture run reports 0 calls, cost status not_estimated"
+    },
+    {
+      "id": "real-model-preflight",
+      "result": "pass",
+      "detail": "protocol rehearsal: two databases, 5/5 pinned checkouts at exact revisions, shared research patch import, fixture execution, export and cost-report all exit 0; 0 model calls"
+    },
+    {
+      "id": "clean-directory-install",
+      "result": "pass",
+      "detail": "prepare-pins installed all five pinned Skill revisions (b9a3f9d, d3d8aa3, a5bfa7c, 7c20100, fb1060e) into a fresh directory; one GitHub git timeout occurred and succeeded on retry"
+    },
+    {
+      "id": "structural-benchmark",
+      "result": "pass",
+      "detail": "ai-saas 38/43/47, developer-tools 32/37/41, smart-hardware 35/43/47 (A/B/C quality); complete actions 0 in A, 4 in C; consistency failures 0"
+    },
+    {
+      "id": "live-community-source",
+      "result": "pass",
+      "detail": "research market \"AI meeting notes\" --limit 2 returned 2 public snapshots; prior pass returned Hacker News captures with observation and validity dates"
+    },
+    {
+      "id": "decision-grade-evidence",
+      "result": "pass",
+      "detail": "Topic matches surface candidate sources for internal review. The saved Fireflies package re-export changes pricing_packaging from decision_ready to needs_internal_review; the competitor feature excerpt cannot support pricing."
+    },
+    {
+      "id": "signal-task-contract",
+      "result": "pass",
+      "detail": "GitHub and Hacker News claims remain external_signal across persisted claim audits, the brief, and JSON and Markdown exports. The regression covers provider and semantic status, re-export of legacy audits, and refusal to count signals as evidence for paying-customer claims."
+    },
+    {
+      "id": "release-gate-consistency",
+      "result": "pass",
+      "detail": "scripts/check_release_gate.py verifies declared commits are ancestors of HEAD, requires head_relation when head_commit differs from HEAD, checks that the declared post-verification paths exactly match the diff, and compares catalog revisions plus tracked-file and test counts; wired into validate.yml and harness.yml"
+    }
+  ],
+  "benchmark": {
+    "mode": "structural_fixture",
+    "evidence_mode": "offline_no_sources",
+    "cases": [
+      {
+        "id": "ai-saas",
+        "segment": "AI SaaS",
+        "quality": {"generic_single_agent": 38, "manual_five_skills": 43, "harness_orchestrated": 47},
+        "complete_actions": {"generic_single_agent": 0, "manual_five_skills": 4, "harness_orchestrated": 4},
+        "consistency_failures": 0
+      },
+      {
+        "id": "developer-tools",
+        "segment": "Developer Tools",
+        "quality": {"generic_single_agent": 32, "manual_five_skills": 37, "harness_orchestrated": 41},
+        "complete_actions": {"generic_single_agent": 0, "manual_five_skills": 4, "harness_orchestrated": 4},
+        "consistency_failures": 0
+      },
+      {
+        "id": "smart-hardware",
+        "segment": "Smart Hardware",
+        "quality": {"generic_single_agent": 35, "manual_five_skills": 43, "harness_orchestrated": 47},
+        "complete_actions": {"generic_single_agent": 0, "manual_five_skills": 4, "harness_orchestrated": 4},
+        "consistency_failures": 0
+      }
+    ],
+    "note": "Quality is the deterministic rubric score out of 100. It checks structure, traceability and completeness only; it is not a model-quality or business-quality score."
+  },
+  "evidence_boundaries": {
+    "engineering_validation": "pass",
+    "live_public_research_source": "pass_public_snapshot",
+    "real_model_execution": "NOT TESTED",
+    "model_token_cost": "not_measured",
+    "business_outcome": "not_measured"
+  },
+  "known_limitations": [
+    "The final P1 candidate has not been run with a real model.",
+    "Structural benchmark scores do not measure commercial quality.",
+    "Hacker News points and comments are public discussion activity, not demand, adoption, paying customers or market size.",
+    "Competitive and market sections in the exported package only use captured sources; when none exist the package says so instead of inventing numbers.",
+    "There is no independent semantic reviewer; verbatim quote matches stay unverified.",
+    "Real publishing, outreach, CRM writes, ad spend and customer outcomes are not executed or measured.",
+    "Capture verification is structural: a fabricated local web capture with a plausible hash is not detected without re-fetching the page.",
+    "Business recommendations remain subject to internal review."
+  ],
+  "codex_final_audit": "pending_controlled_acceptance",
+  "independent_audit": {
+    "status": "conditional_pass",
+    "p0_fixed": [
+      "task-input rejected external_signal basis rows emitted by the decision brief, so any workflow with community or repository research failed before its first stage"
+    ],
+    "p1_fixed": [
+      "the readiness record now declares the verified commit and the exact paths changed after verification",
+      "the gate checker rejects an undeclared post-verification delta",
+      "the real-model protocol imports one merged research patch and prepares pins once",
+      "source topics can no longer mark a commercial decision ready",
+      "GitHub and Hacker News signals keep their source class and semantic status throughout exports"
+    ],
+    "p2_open": [
+      "A local operator can fabricate a web capture record; shape checks do not prove the excerpt came from the hashed page.",
+      "cost-report attempts count receipts, so multi-artifact stages report more attempts than model calls."
+    ]
+  },
+  "release_actions": {
+    "draft_pull_request": "https://github.com/NextVariable/global-growth-skills/pull/3",
+    "merge_main": "not_performed_pending_product_owner_authorization",
+    "github_release": "not_performed_pending_product_owner_authorization",
+    "new_tag": "not_performed"
+  }
+}

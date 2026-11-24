@@ -126,3 +126,21 @@ def excerpt(facts):
         f"GitHub public repository {repo} is listed with {facts['stargazers_count']} stars, "
         f"{facts['forks_count']} forks and {facts['open_issues_count']} open issues or pull requests."
     )
+
+
+def verify_capture(row):
+    capture = row.get("capture") or {}
+    facts = capture.get("facts") or {}
+    repo = facts.get("full_name")
+    if not isinstance(repo, str):
+        raise HarnessError("capture does not match the normalized GitHub evidence")
+    expected_id = "gh-" + digest(repo.casefold())[:20]
+    if (
+        capture.get("provider") != PROVIDER
+        or row.get("excerpt") != excerpt(facts)
+        or row.get("url") != "https://github.com/" + repo
+        or row.get("id") != expected_id
+        or row.get("claim_key") != expected_id
+    ):
+        raise HarnessError("capture does not match the normalized GitHub evidence")
+

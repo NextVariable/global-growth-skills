@@ -11,7 +11,7 @@ import re
 
 from . import provenance
 from .contracts import HarnessError, digest
-from .research import PROSE_PATTERNS, freshness, prose_review
+from .research import PROSE_PATTERNS, freshness, prose_review, source_kind
 
 REVIEWERS = {"model", "human"}
 VERDICTS = {"supported", "rejected", "uncertain"}
@@ -131,6 +131,29 @@ def build_claim_map(market, claims, citations=(), today=None, *, trust_reviews=T
     }
 
 
+def claim_provenance(sources, claims):
+    """Preserve source class and claim review as separate facts."""
+    by_id = {row["id"]: row for row in sources}
+    groups = {"external_evidence": [], "external_signal": []}
+    for claim in claims:
+        if not claim.get("source_id") or not claim.get("claim_id"):
+            continue
+        source = by_id.get(claim["source_id"])
+        category = source_kind(source)
+        groups[category].append(
+            {
+                "category": category,
+                "label": (claim.get("text") or claim["quote"])[:500],
+                "field": claim["claim_key"],
+                "source_id": claim["source_id"],
+                "claim_id": claim["claim_id"],
+                "source_provider": ((source or {}).get("capture") or {}).get("provider"),
+                "semantic_support": claim["semantic_support"],
+            }
+        )
+    return groups
+
+
 def audit_evidence(
     market,
     claims,
@@ -165,8 +188,9 @@ def audit_evidence(
         }
     )
     mapped_claims = mapped["claims"]
+    external_provenance = claim_provenance(market["sources"], mapped_claims)
     semantic = [item["semantic_support"] for item in mapped_claims]
-    missing_claims = not mapped_claims and bool(external_flags) and (
+    missing_claims = not external_provenance["external_evidence"] and bool(external_flags) and (
         bool(eligible) or execution in {"model", "handoff"}
     )
     if contradictions:
@@ -192,7 +216,8 @@ def audit_evidence(
     operator_fields = sorted({item["field"] for item in classified["operator_input"]})
     if missing_claims:
         diagnostics.append(
-            "No structured claim maps the external-fact statements in this output to an eligible source. Check whether the flagged statements are project inputs or proposed targets."
+            "No structured claim maps the flagged facts to eligible external evidence. "
+            "Check whether the statements are project inputs or proposed targets."
         )
     elif eligible and not mapped_claims and not operator_fields:
         diagnostics.append(
@@ -203,6 +228,11 @@ def audit_evidence(
     if external_flags:
         diagnostics.append(
             "Unmapped external-fact patterns in prose: " + ", ".join(external_flags)
+        )
+    if external_provenance["external_signal"]:
+        diagnostics.append(
+            "Repository and discussion signals describe public activity only. They do not "
+            "establish market demand, customer adoption or commercial outcomes."
         )
     if operator_fields:
         diagnostics.append(
@@ -233,16 +263,7 @@ def audit_evidence(
 
     provenance_record = {
         "operator_input": classified["operator_input"],
-        "external_evidence": [
-            {
-                "category": "external_evidence",
-                "label": (item.get("text") or item["quote"])[:500],
-                "field": item["claim_key"],
-                "source_id": item["source_id"],
-                "claim_id": item["claim_id"],
-            }
-            for item in mapped_claims
-        ],
+        **external_provenance,
         "inference": [
             {"category": "inference", "label": normalize(str(item))[:500]}
             for item in assumptions

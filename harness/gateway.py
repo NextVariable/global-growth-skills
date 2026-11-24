@@ -8,6 +8,7 @@ import time
 from .contracts import HarnessError, digest, encode, validate
 from .research import review
 from .github_research import PROVIDER, fetch
+from .hn_research import PROVIDER as HN_PROVIDER, fetch as fetch_hn
 from .web_research import PROVIDER as WEB_PROVIDER, fetch as fetch_web
 
 
@@ -37,7 +38,12 @@ class Gateway:
 
     def __init__(self, harness, *, readers=None, clock=time.time):
         self.harness = harness
-        self.readers = {PROVIDER: fetch, WEB_PROVIDER: fetch_web, **(readers or {})}
+        self.readers = {
+            PROVIDER: fetch,
+            WEB_PROVIDER: fetch_web,
+            HN_PROVIDER: fetch_hn,
+            **(readers or {}),
+        }
         self.clock = clock
         self.mock = MockExecutor()
 

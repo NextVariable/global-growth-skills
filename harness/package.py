@@ -4,9 +4,11 @@ from html import escape
 import re
 
 from .decision import markdown_lines as contract_lines
+from .evidence import claim_provenance
+from .intelligence import build_brief
 from .provenance import format_money
 from .quality import assess, markdown_lines
-from .research import prose_review, review, source_dependencies
+from .research import prose_review, review, source_dependencies, source_kind
 
 
 HEADING = {
@@ -48,7 +50,10 @@ def _dedupe(items):
     seen = set()
     unique = []
     for item in items:
-        key = (item["category"], item.get("field"), item["label"])
+        key = (
+            item["category"], item.get("field"), item["label"],
+            item.get("claim_id"), item.get("semantic_support"),
+        )
         if key in seen:
             continue
         seen.add(key)
@@ -59,6 +64,7 @@ def _dedupe(items):
 def _provenance(state, decision, active):
     operator = []
     external = []
+    signals = []
     inference = []
     proposals = []
     values = state["context"]["values"]
@@ -116,19 +122,9 @@ def _provenance(state, decision, active):
             inference.append(
                 {"category": "inference", "label": str(assumption)[:500]}
             )
-        # Stored result claims are raw model data. Link the validated claim map.
-        for claim in (item.get("evidence_audit") or {}).get("claims", []):
-            if not claim.get("source_id") or not claim.get("claim_id"):
-                continue
-            external.append(
-                {
-                    "category": "external_evidence",
-                    "label": str(claim.get("text") or claim.get("quote") or "")[:500],
-                    "field": str(claim.get("claim_key") or "claim"),
-                    "source_id": claim["source_id"],
-                    "claim_id": claim["claim_id"],
-                }
-            )
+        provenance = (item.get("evidence_audit") or {}).get("provenance", {})
+        external.extend(provenance.get("external_evidence", []))
+        signals.extend(provenance.get("external_signal", []))
         check = item.get("constraint_check") or {}
         for proposal in check.get("proposals") or []:
             if isinstance(proposal, dict) and proposal.get("field"):
@@ -145,16 +141,34 @@ def _provenance(state, decision, active):
     return {
         "operator_input": _dedupe(operator),
         "external_evidence": _dedupe(external),
+        "external_signal": _dedupe(signals),
         "inference": _dedupe(inference),
         "proposal": _dedupe(proposals),
     }
+
+
+def _render_record(record, sources):
+    """Normalize old persisted provenance for export without rewriting history."""
+    audit = record.get("evidence_audit")
+    if not audit:
+        return record
+    provenance = {
+        **audit.get("provenance", {}),
+        **claim_provenance(sources, audit.get("claims", [])),
+    }
+    return {**record, "evidence_audit": {**audit, "provenance": provenance}}
 
 
 def snapshot(state, receipts):
     sources = review(state["context"]["values"].get("market_sources", []))
     decisions = state["decisions"]
     decision = next((item for item in decisions if item["id"] == state["active_decision_id"]), None)
-    active = [item for item in state["artifacts"] if item["status"] == "draft"]
+    if decision:
+        decision = _render_record(decision, sources["sources"])
+    active = [
+        _render_record(item, sources["sources"])
+        for item in state["artifacts"] if item["status"] == "draft"
+    ]
     records = ([("strategy", decision)] if decision else []) + [(a["kind"], a) for a in active]
     audits = [item.get("evidence_audit") or {} for _, item in records]
     quality = assess(state)
@@ -198,6 +212,9 @@ def snapshot(state, receipts):
             },
         },
         "decision": decision,
+        "decision_brief": build_brief(
+            state["context"]["values"], sources, (decision or {}).get("contract")
+        ),
         "artifacts": active,
         "quality": quality,
         "decision_review": decision_review,
@@ -250,12 +267,18 @@ def _field_value(value):
     return value
 
 
-def _claim_lines(item):
+def _claim_lines(item, sources):
     lines = []
-    for claim in item.get("claims", []):
+    claims = (item.get("evidence_audit") or {}).get("claims", []) or item.get("claims", [])
+    for claim in claims:
+        source_id = claim["source_id"]
+        category = source_kind(sources.get(source_id))
+        label = "External signal" if category == "external_signal" else "External evidence"
+        semantic = claim.get("semantic_support", "unverified")
         text = f" · {_text(claim['text'])}" if claim.get("text") else ""
         lines.append(
-            f"- Evidence `{_text(claim['source_id'])}` · {_text(claim['quote'])}{text}"
+            f"- {label} `{_text(source_id)}` · semantic support: {_text(semantic)} · "
+            f"{_text(claim['quote'])}{text}"
         )
     return lines
 
@@ -269,8 +292,179 @@ def _note_lines(item):
     return lines
 
 
+def _all_actions(package):
+    rows = []
+    decision = package.get("decision")
+    if decision and decision.get("actions"):
+        rows.extend(("strategy", item) for item in decision["actions"])
+    for artifact in package["artifacts"]:
+        for item in artifact.get("actions") or []:
+            rows.append((artifact["kind"], item))
+    return rows
+
+
+def _executive_lines(package):
+    context = package["context"]["values"]
+    review = package["evidence_review"]
+    decision = package.get("decision") or {}
+    actions = _all_actions(package)
+    lines = [
+        "## Executive summary",
+        "",
+        f"- **Product** · {_text(context.get('product', 'not supplied'))}",
+        f"- **Goal** · {_text(context.get('goal', 'not supplied'))}",
+        f"- **ICP** · {_text(context.get('audience', 'not supplied'))}",
+    ]
+    if "budget" in context:
+        lines.append(f"- **Budget** · {_text(_field_value(context['budget']))}")
+    lines += [
+        f"- **Market sources** · {len(review['sources'])} source(s), "
+        f"{len(review['citation_ids'])} citable, {len(review['contradictions'])} contradiction(s)",
+        f"- **Package status** · `{package['status']}` · quality `{package['quality']['status']}` "
+        f"({package['quality']['score']}/100)",
+        f"- **Structured actions** · {len(actions)}",
+    ]
+    if decision.get("recommendation"):
+        lines.append(f"- **Strategy snapshot** · {_text(decision['recommendation'])[:600]}")
+    blockers = [
+        task["stage"] for task in package["tasks"] if task["status"] != "succeeded"
+    ]
+    if blockers:
+        lines.append(f"- **Open stages** · {', '.join(blockers)}")
+    if package["decision_review"]["status"] == "required":
+        lines.append("- **Next gate** · independent decision review is required before external use")
+    elif not actions:
+        lines.append("- **Next step** · convert the prose into owned actions before execution")
+    else:
+        lines.append(f"- **Next step** · {_text(actions[0][1]['next_step'])}")
+    return [*lines, ""]
+
+
+def _market_lines(package):
+    review = package["evidence_review"]
+    values = package["context"]["values"]
+    freshness = review.get("freshness") or {}
+    lines = [
+        "## Market and ICP research",
+        "",
+        f"- **ICP hypothesis** · {_text(values.get('audience', 'not supplied'))}",
+        f"- **Source review** · `{review['status']}` · citable {len(review['citation_ids'])}",
+        f"- **Freshness** · fresh {freshness.get('fresh', 0)} · "
+        f"expiring {freshness.get('expiring', 0)} · expired {freshness.get('expired', 0)}",
+        f"- **Contradictions** · {len(review['contradictions'])}",
+    ]
+    for row in review["sources"][:10]:
+        topic = (row.get("capture") or {}).get("topic", "unclassified")
+        lines.append(
+            f"- `{row['id']}` · {source_kind(row)} · {topic} · {row['status']} · "
+            f"observed {row['observed_on']}"
+        )
+    if not review["sources"]:
+        lines.append("- No public source was captured; ICP and market claims stay hypotheses.")
+    lines.append("")
+    return lines
+
+
+def _competitive_lines(package):
+    topic_of = {
+        row["id"]: (row.get("capture") or {}).get("topic")
+        for row in package["evidence_review"]["sources"]
+    }
+    locator = {row["id"]: row["url"] for row in package["evidence_review"]["sources"]}
+    rows = [
+        item
+        for item in package["provenance"]["external_evidence"]
+        if topic_of.get(item.get("source_id")) == "competitor"
+    ]
+    lines = ["## Competitive landscape", ""]
+    if not rows:
+        lines += [
+            "- No mapped competitor evidence is available. Treat named comparisons as hypotheses.",
+            "",
+        ]
+    for item in rows[:10]:
+        url = _text(locator.get(item["source_id"], "unavailable"))
+        lines.append(f"- {_text(item['label'])[:500]} · semantic support: {_text(item['semantic_support'])}")
+        lines.append(f"  - Source `{_text(item.get('source_id', 'unknown'))}` · {url}")
+    lines.append("")
+    return lines
+
+
+def _kpi_lines(package):
+    contract = (package.get("decision") or {}).get("contract") or {}
+    lines = ["## KPI and measurement framework", ""]
+    approved = []
+    for field in ("target_value", "sample_size", "observation_window", "budget_constraints"):
+        slot = contract.get(field)
+        if isinstance(slot, dict) and slot.get("state") == "decided":
+            approved.append(_slot_label(field, slot))
+    if approved:
+        lines += [f"- Approved · {_text(item)}" for item in approved]
+    else:
+        lines.append(
+            "- No measurement slot is approved yet; do not present an experiment result as validated."
+        )
+    metrics = []
+    for _, action in _all_actions(package):
+        if action.get("metric") not in metrics:
+            metrics.append(action["metric"])
+    if metrics:
+        lines += [f"- Action metric · {_text(metric)}" for metric in metrics[:10]]
+    lines.append("")
+    return lines
+
+
+def _action_lines(package):
+    rows = _all_actions(package)
+    lines = ["## Action register", ""]
+    if not rows:
+        lines += [
+            "- No structured actions were returned. Convert the prose into owned actions with "
+            "prerequisites, resources, metrics and a next step before execution.",
+            "",
+        ]
+        return lines
+    for kind, action in rows[:20]:
+        prerequisites = ", ".join(_text(item) for item in action.get("prerequisites") or []) or "none"
+        resources = ", ".join(_text(item) for item in action.get("resources") or []) or "none"
+        lines += [
+            f"### {_text(action['title'])} · {kind}",
+            "",
+            f"- Owner role · {_text(action['owner_role'])}",
+            f"- Prerequisites · {prerequisites}",
+            f"- Resources · {resources}",
+            f"- Metric · {_text(action['metric'])}",
+            f"- Next step · {_text(action['next_step'])}",
+            "",
+        ]
+    return lines
+
+
+def _brief_lines(package):
+    brief = package.get("decision_brief") or {}
+    lines = ["## GTM decision register", ""]
+    summary = brief.get("summary") or {}
+    lines.append(
+        f"- Areas {summary.get('areas', 0)} · needs internal review {summary.get('needs_internal_review', 0)} · "
+        f"needs evidence {summary.get('needs_evidence', 0)}"
+    )
+    lines.append(_text(brief.get("policy", "")))
+    for area in brief.get("areas") or []:
+        basis = ", ".join(
+            f"{item['kind']}:{item['ref']}" for item in area.get("basis") or []
+        ) or "none"
+        lines.append(f"- **{area['area']}** · `{area['status']}` · basis {basis}")
+        lines.append(f"  - {_text(area['question'])}")
+        lines.append(f"  - Guardrail · {_text(area['guardrail'])}")
+        for item in area.get("unresolved") or []:
+            lines.append(f"  - Open · {_text(item)}")
+    lines.append("")
+    return lines
+
+
 def markdown(package):
     context = package["context"]
+    sources = {row["id"]: row for row in package["evidence_review"]["sources"]}
     lines = [
         "# GTM Package",
         "",
@@ -279,6 +473,7 @@ def markdown(package):
         "",
         "Internal review. Validate any proposed action and any factual assertion outside the evidence log before reuse.",
         "",
+        *_executive_lines(package),
         "## Project and workflow",
         "",
     ]
@@ -286,6 +481,8 @@ def markdown(package):
         if field in context["values"]:
             lines.append(f"- **{field}** · {_text(_field_value(context['values'][field]))}")
     lines += ["", *[f"- `{t['stage']}` · {t['status']}" for t in package["tasks"]], ""]
+    lines += _market_lines(package)
+    lines += _competitive_lines(package)
     if package["decision_review"]["status"] == "required":
         lines += [
             "**Independent decision review required.** The declaration check covers structured "
@@ -317,10 +514,11 @@ def markdown(package):
                     "",
                 ]
         lines += [
-            *_claim_lines(decision),
+            *_claim_lines(decision, sources),
             *_note_lines(decision),
             "",
         ]
+    lines += _brief_lines(package)
     for a in package["artifacts"]:
         lines += [
             f"## {HEADING[a['kind']]}",
@@ -343,31 +541,38 @@ def markdown(package):
         lines += [
             _text(a["markdown"]),
             "",
-            *_claim_lines(a),
+            *_claim_lines(a, sources),
             *_note_lines(a),
             "",
         ]
+    lines += _kpi_lines(package)
+    lines += _action_lines(package)
     lines += markdown_lines(package["quality"], format_text=_text) + [""]
     provenance = package.get("provenance") or {}
     if any(
         provenance.get(key)
-        for key in ("operator_input", "external_evidence", "inference", "proposal")
+        for key in ("operator_input", "external_evidence", "external_signal", "inference", "proposal")
     ):
         lines += ["## Provenance and source classes", ""]
         for key, label in (
             ("operator_input", "Operator input"),
             ("external_evidence", "External evidence"),
+            ("external_signal", "External signal (discussion or repository activity)"),
             ("inference", "Inference (unverified)"),
             ("proposal", "Proposal (unapproved)"),
         ):
             items = provenance.get(key) or []
             lines.append(f"- {label} · {len(items)}")
             for entry in items[:5]:
-                lines.append(f"  - {_text(entry['label'])}")
+                detail = ""
+                if "semantic_support" in entry:
+                    provider = entry.get("source_provider") or "unspecified provider"
+                    detail = f" · {_text(provider)} · semantic support: {_text(entry['semantic_support'])}"
+                lines.append(f"  - {_text(entry['label'])}{detail}")
             if len(items) > 5:
                 lines.append(f"  - … {len(items) - 5} more")
         lines.append("")
-    lines += ["## Evidence and decision log", ""]
+    lines += ["## Evidence and decision register", ""]
     for item in package["claim_audit"]:
         flags = ", ".join(item["prose_flags"]) or "none detected"
         lines.append(
@@ -378,7 +583,8 @@ def markdown(package):
         lines += ["No market source was supplied.", ""]
     for row in package["evidence_review"]["sources"]:
         lines += [
-            f"- `{row['id']}` · {row['status']} · observed {row['observed_on']} · valid through {row['valid_until']}",
+            f"- `{row['id']}` · {source_kind(row)} · {row['status']} · "
+            f"observed {row['observed_on']} · valid through {row['valid_until']}",
             f"  - Locator `{_text(row['url']).replace(chr(96), '&#96;')}`",
             f"  - Observation {_text(row['excerpt'])}",
         ]

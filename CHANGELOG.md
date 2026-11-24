@@ -1,5 +1,18 @@
 # Changes
 
+## 1.1.0 — GTM Intelligence (in development)
+
+- 统一只读研究 Provider，并接入 Hacker News 公共讨论快照；保留来源、时间、URL、摘要、捕获校验与冲突/时效/去重检查。
+- 九领域 GTM Brief 将主题相关的资料列为候选。领域仍需证据或内部复核，引文匹配和商业验证分别处理。GitHub 仓库和 Hacker News 讨论在 Brief、JSON 与 Markdown 中均归为 `external_signal`。
+- 导出包新增 Executive Summary、Market & ICP、Competitive Landscape、Decision Register、KPI Framework 和 Action Register。
+- 草稿支持结构化 actions：owner、前置条件、资源、指标与下一步。
+- 新增 `TaskInput` / `TaskResult` 与可替换 `HostAdapter`，声明不同宿主的工具与上下文能力。
+- 证据按预算打包进 prompt；新增 `cost-report` 聚合真实 host receipt。
+- 新增 AI SaaS / Developer Tools / Smart Hardware 的确定性 A/B/C 结构基准。
+- 新增 `scripts/check_release_gate.py`，校验发布记录声明的提交、catalog 版本和文件/测试统计是否与当前候选提交一致。
+- 新增真实模型评测协议 `evals/v1.1/real-model-protocol.md`（本次未执行，状态 NOT TESTED）。
+- 边界：修复前的两阶段真实模型对比已完成。当前候选仅完成确定性回归，等待最终真实模型验收。真实商业效果未测量。
+
 ## 1.0.0
 
 - 将已验收 RC3（HEAD `251a52f`）整理为 V1.0 发布候选，不新增运行时功能。

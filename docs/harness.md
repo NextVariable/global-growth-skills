@@ -83,6 +83,15 @@ python3 -m harness --db "$db" revise-decision RUN patch.json \
 
 `research-web URL --topic ...` 只读取操作者显式给出的一个公开 HTTPS 页面。拒绝私网/保留地址、非 443 端口、凭证、重定向、非 HTML/纯文本和超过 1 MB 的响应；记录 HTTP 状态、内容 SHA256、采集时间、有效期和可见文本摘录。DNS 只解析一次，所有答案都必须是全局单播地址；TCP 连接固定到已验证 IP，TLS 仍用原主机名做证书与 SNI 校验，因此解析结果变化不能把连接改写到其他地址。实现只建立直连 socket，不支持代理配置或环境代理变量；需要代理的环境不适用此 Provider。`--quote` 可把摘录收窄为页面中真实存在的逐字片段。它不执行搜索、登录、JavaScript、点击或任何外部写操作。页面内容视为不可信数据；检测到指令式文本的 provider 来源标记为 `blocked_injection`，不进入引用，也不进入模型提示。
 
+### 公共讨论 Provider 与宿主契约（V1.1）
+
+`research-community TOPIC TERM --limit 1..5` 通过 Hacker News 公共 Algolia API 获取公开讨论快照，记录讨论 URL、观察/失效日期、标题、分数、评论数和发帖日期。分数与评论只代表公开讨论活动，不是需求、采用、付费客户或市场规模；不抓取外链文章。捕获可离线重新校验，篡改 ID、URL、摘要或计数会被拒绝。统一注册表位于 `harness/providers.py`；新增 Provider 必须保持只读、声明能力并沿用捕获校验。
+
+`cost-report RUN` 汇总真实 host receipt 的 token、字节、调用与耗时；无批准价格表时成本为 `not_estimated`。`host-contract` 列出 `TaskInput`/`TaskResult` 契约与各宿主声明的工具、上下文和 Skill 能力。工作流状态、证据与审批不交给宿主。
+
+`python3 scripts/benchmark_v11.py --report FILE` 运行 AI SaaS、Developer Tools、Smart Hardware 三个案例的确定性 A/B/C 结构基准；`--live` 会附加公开 Hacker News 快照。基准只比较结构、可追溯字段与交付完整性，不测量模型质量或商业效果。
+
+
 ### 审计与质量
 
 `audit RUN` 输出 claim 映射、来源时效、注入标记、证据缺口和质量评分卡；包为 `incomplete_evidence` 或 `needs_decision_review` 时退出码为 2。评分卡检查交付物结构、指标公式/分母/护栏/判定规则、假设分离和跨阶段受众/价格/预算一致性。它是确定性结构检查，不判断语义真伪，也不代表真实客户效果。`doctor` 检查 Python、jsonschema、数据库路径和 Codex CLI。

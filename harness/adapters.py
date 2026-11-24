@@ -21,7 +21,17 @@ class FixtureAdapter:
         context = request["context"]
         if request["stage"] == "strategy":
             return {
-                "recommendation": f"Focus on {context['audience']} for {context['goal']}."
+                "recommendation": f"Focus on {context['audience']} for {context['goal']}.",
+                "actions": [
+                    {
+                        "title": "Confirm the ICP with five problem interviews",
+                        "owner_role": "Founder",
+                        "prerequisites": ["A consenting interview list"],
+                        "resources": ["5 hours of interview time"],
+                        "metric": "Qualified problem confirmations",
+                        "next_step": "Book the first two interviews this week.",
+                    }
+                ],
             }
         kind = request["artifact_kind"]
         if kind == "positioning":
@@ -47,7 +57,19 @@ class FixtureAdapter:
                 markdown += "\n\nInputs: " + ", ".join(
                     h["kind"] for h in request["handoffs"]
                 )
-        return {"kind": kind, "markdown": markdown}
+        result = {"kind": kind, "markdown": markdown}
+        if kind in {"launch-plan", "sales-plan", "experiment-plan"}:
+            result["actions"] = [
+                {
+                    "title": f"Run the first {kind.replace('-plan', '')} step",
+                    "owner_role": "Founder",
+                    "prerequisites": ["Approved budget and target"],
+                    "resources": ["Existing product access"],
+                    "metric": "Qualified responses",
+                    "next_step": "Record the baseline before contacting anyone.",
+                }
+            ]
+        return result
 
 
 class HandoffAdapter:
