@@ -59,10 +59,21 @@ class DecisionBriefTests(unittest.TestCase):
         self.assertFalse(any(item["kind"] == "external_evidence" for item in basis))
         self.assertTrue(all(row["status"] == "needs_evidence" for row in brief["areas"]))
 
-    def test_competitor_source_grounds_positioning_only(self):
+    def test_fireflies_competitor_feature_does_not_substantiate_pricing(self):
+        competitor = source("web-jamie", "competitor", "jamie-no-bot")
+        competitor["url"] = "https://www.meetjamie.ai/"
+        competitor["excerpt"] = "Jamie runs directly on your device and does not require a meeting bot to join your calls."
+        brief = build_brief({**INPUTS, "product": "Fireflies.ai"}, market([competitor]))
+        by_area = {row["area"]: row for row in brief["areas"]}
+        pricing = by_area["pricing_packaging"]
+        self.assertEqual(pricing["status"], "needs_internal_review")
+        self.assertTrue(any("cannot substantiate a price" in item for item in pricing["unresolved"]))
+        self.assertEqual(brief["summary"]["decision_ready"], 0)
+
+    def test_topic_match_only_surfaces_candidate_sources_for_review(self):
         brief = build_brief(INPUTS, market([source("web-a", "competitor")]))
         by_area = {row["area"]: row for row in brief["areas"]}
-        self.assertEqual(by_area["competitive_positioning"]["status"], "decision_ready")
+        self.assertEqual(by_area["competitive_positioning"]["status"], "needs_internal_review")
         self.assertIn("web-a", [item["ref"] for item in by_area["competitive_positioning"]["basis"]])
         self.assertEqual(by_area["channel_prioritization"]["status"], "needs_evidence")
 
@@ -107,7 +118,7 @@ class DecisionBriefTests(unittest.TestCase):
         }
         brief = build_brief(INPUTS, market([source("web-c", "channel")]), contract)
         by_area = {row["area"]: row for row in brief["areas"]}
-        self.assertEqual(by_area["acquisition_experiment"]["status"], "decision_ready")
+        self.assertEqual(by_area["acquisition_experiment"]["status"], "needs_internal_review")
         refs = [item["ref"] for item in by_area["acquisition_experiment"]["basis"]]
         self.assertIn("decision.observation_window", refs)
         self.assertIn("decision.budget_constraints", refs)

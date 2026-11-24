@@ -7,6 +7,7 @@ unmet question into a verified fact, and it cannot rewrite approved limits.
 """
 
 from .contracts import HarnessError
+from .research import source_kind
 
 AREAS = (
     ("market_prioritization", "Which market segment should be entered first, and why?"),
@@ -44,17 +45,6 @@ GUARDRAILS = {
     "activation_retention": "Do not promise retention lift before a measured baseline exists.",
 }
 
-# Only an explicitly snapshotted public page can ground a commercial decision.
-# Repository metadata and public discussion are context signals: stars, points and
-# comments do not establish demand, adoption, market size or willingness to pay.
-DECISION_GRADE_PROVIDERS = {"web-public"}
-
-
-def _evidence_kind(row):
-    provider = (row.get("capture") or {}).get("provider")
-    return "external_evidence" if provider in DECISION_GRADE_PROVIDERS else "external_signal"
-
-
 def _operator_refs(inputs, contract):
     refs = []
     for field in ("product", "audience", "goal", "market", "budget", "price", "capabilities"):
@@ -81,7 +71,7 @@ def build_brief(inputs, market, contract=None):
         topics = TOPIC_HINTS[area]
         evidence = [
             {
-                "kind": _evidence_kind(row),
+                "kind": source_kind(row),
                 "ref": row["id"],
                 "topic": (row.get("capture") or {}).get("topic"),
             }
@@ -89,11 +79,11 @@ def build_brief(inputs, market, contract=None):
             if (row.get("capture") or {}).get("topic") in topics
             and row.get("claim_key") not in contradictions
         ]
-        decision_grade = [item for item in evidence if item["kind"] == "external_evidence"]
+        candidates = [item for item in evidence if item["kind"] == "external_evidence"]
         signals = [item for item in evidence if item["kind"] == "external_signal"]
         basis = [*operator, *evidence]
         unresolved = []
-        if not decision_grade:
+        if not candidates:
             if signals:
                 unresolved.append(
                     "Only community or repository signals match this area; they do not "
@@ -101,8 +91,6 @@ def build_brief(inputs, market, contract=None):
                 )
             else:
                 unresolved.append("No captured public source matches this area yet.")
-        if area in {"pricing_packaging", "competitive_positioning"} and not decision_grade:
-            unresolved.append("Competitor pricing or positioning must not be asserted without a source.")
         if area in {"acquisition_experiment", "activation_retention"}:
             for field, label in (
                 ("target_value", "target value"),
@@ -112,7 +100,17 @@ def build_brief(inputs, market, contract=None):
                 slot = (contract or {}).get(field)
                 if not isinstance(slot, dict) or slot.get("state") != "decided":
                     unresolved.append(f"Approve the {label} before planning a measured result.")
-        status = "needs_evidence" if unresolved else "decision_ready"
+        status = "needs_evidence" if unresolved else "needs_internal_review"
+        if candidates:
+            unresolved.append(
+                "Check that the source excerpt supports each specific claim and that the "
+                "resulting recommendation is appropriate for this project."
+            )
+        if area == "pricing_packaging":
+            unresolved.append(
+                "Verify the actual price, plan and billing terms. A feature description "
+                "cannot substantiate a price or willingness to pay."
+            )
         areas.append(
             {
                 "area": area,
@@ -127,12 +125,14 @@ def build_brief(inputs, market, contract=None):
         "areas": areas,
         "summary": {
             "areas": len(areas),
-            "decision_ready": sum(row["status"] == "decision_ready" for row in areas),
+            "decision_ready": 0,
+            "needs_internal_review": sum(row["status"] == "needs_internal_review" for row in areas),
             "needs_evidence": sum(row["status"] == "needs_evidence" for row in areas),
             "eligible_sources": len(sources),
         },
         "policy": (
-            "Basis entries are the only allowed support for a recommendation. "
-            "A missing source or approval stays an explicit hypothesis."
+            "Topic matches locate candidate sources. Claim support requires checking the "
+            "specific excerpt. Recommendations remain unverified and may be submitted "
+            "for internal review only."
         ),
     }

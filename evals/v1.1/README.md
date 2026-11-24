@@ -33,9 +33,9 @@ python3 scripts/benchmark_v11.py --live --report /tmp/v11-benchmark-live.json
 
 `complete_actions` counts action items that carry an owner role, preconditions, resources, metric and next step.
 
-`decision_ready` and `external_basis_refs` stay at zero in offline mode because no sources are captured. They rise only when sources are supplied, which is the intended behaviour: missing evidence stays `needs_evidence` rather than being filled with invented numbers.
+`external_basis_refs` stays at zero in offline mode because no sources are captured. A topic match can supply a candidate reference for `needs_internal_review`. The `decision_ready` counter remains at zero for compatibility.
 
-Repository metadata and Hacker News discussions are recorded as `external_signal`. They never make an area `decision_ready` on their own; only an explicitly captured public web page counts as `external_evidence`.
+Repository metadata and Hacker News discussions are recorded as `external_signal` in the brief and both export formats. Reviewers check the specific quote and claim before using a candidate source to support a recommendation.
 
 ## Boundaries
 

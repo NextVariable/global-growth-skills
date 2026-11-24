@@ -54,6 +54,14 @@ def _canonical_url(row):
     )
 
 
+def source_kind(row):
+    """Classify a source without making a claim-support or verification judgment."""
+    if row is None:
+        return "external_signal"
+    provider = (row.get("capture") or {}).get("provider")
+    return "external_evidence" if provider in (None, "web-public") else "external_signal"
+
+
 def review(sources, today=None):
     validate("source-list", sources)
     today = today or datetime.now(timezone.utc).date()

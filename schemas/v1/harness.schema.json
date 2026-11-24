@@ -1053,6 +1053,7 @@
                   "status": {
                     "enum": [
                       "decision_ready",
+                      "needs_internal_review",
                       "needs_evidence"
                     ]
                   },
@@ -1845,6 +1846,7 @@
           "enum": [
             "operator_input",
             "external_evidence",
+            "external_signal",
             "inference",
             "proposal"
           ]
@@ -1871,6 +1873,12 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 200
+        },
+        "source_provider": {
+          "type": ["string", "null"]
+        },
+        "semantic_support": {
+          "enum": ["unverified", "supported", "rejected", "uncertain"]
         }
       }
     },
@@ -1892,6 +1900,12 @@
           }
         },
         "external_evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/provenance-item"
+          }
+        },
+        "external_signal": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/provenance-item"
