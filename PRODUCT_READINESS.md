@@ -1,8 +1,10 @@
 # GTM Harness 1.0.0 产品验收
 
+**历史验收记录。** 下文保留 RC2、RC3 和 V1.0 发布前的证据。V1.0.0 已正式发布。V1.1 的真实模型验收为 FAIL，PR #3 保留 Draft / Blocked。当前处于维护模式，真实商业效果未测量。 [当前维护状态](docs/maintenance.md)
+
 **V1.0 已通过产品验收。** RC2 已完成真实检索、五阶段 Codex 调用、来源审查和导出，但模型没有选用结构化引用。RC3 把这条缺口变成门禁，并补充公开网页证据、包质量评分和上下文预算；独立验收在零模型成本阶段发现发布阻塞后已修复。RC3 真实模型验收已在 `faa29ad` 执行（请求模型 `gpt-6.2-sol`，完整五阶段 10/10 次调用，含一次内容重试）。最后一处来源分类修复 `251a52f` 由确定性回归覆盖，未重复调用模型。发布结论见 [Release Gate](validation/release-gate-v1.0.0.json) 与 [Release Notes](RELEASE_NOTES.md)。
 
-## RC3 迭代（本次）
+## RC3 迭代（历史快照）
 
 ### 已实现
 
@@ -22,7 +24,7 @@
 ### 未验证或受限
 
 - 真实模型验收已在 `faa29ad` 执行：三阶段 3/3、完整五阶段 10/10 次宿主调用；token、耗时与失败见下表。宿主未提供可核对账单，成本记为 `not_measured`，未伪造结果或费用。`251a52f` 的来源分类修复由 `tests/harness/test_provenance.py` 的 19 个用例覆盖，未重复执行五阶段模型评测。[验收命令与记录要求](evals/rc3/README.md#真实模型验收)
-- 开发分支已通过 PR [#1](https://github.com/NextVariable/global-growth-skills/pull/1) 以 merge commit `7112a7d` 合并到 `main`，合并提交上的 CI 检查通过；尚未创建 GitHub Release。
+- 开发分支通过 PR [#1](https://github.com/NextVariable/global-growth-skills/pull/1) 以 merge commit `7112a7d` 合并到 `main`，该提交上的 CI 检查通过。当时尚未发版，后续正式版见 [v1.0.0 Release](https://github.com/NextVariable/global-growth-skills/releases/tag/v1.0.0)。
 - 质量评分是确定性结构检查，不判断语义真伪；没有评审器时 claim 始终为 `needs_review`，不会被标为 `verified`。
 - 浏览器 DOM、JavaScript 渲染、登录页和代理传输不在 `research-web` 支持范围。
 - 决策契约的一致性判定只读取结构化声明；自由文本中的矛盾不会自动拦截，仍需人工审阅。单次真实运行中，下游逐字复制了已批准约束；样本有限，稳定性仍需更多运行验证。
@@ -88,8 +90,8 @@ Fixture 与 Reference 只验证流程和评分卡区分度，不能当作模型�
 
 GitHub Provider 仅允许固定 HTTPS GET，拒绝重定向，不发送凭证，限制返回大小、时间和记录数。第三方仓库描述不进入模型。通用人工来源文本保留在人审数据里。Codex 保持只读，关闭 shell、MCP 和网页工具。测试覆盖外部来源指令注入、提交未知状态、价格与来源变化、恢复和权限。JSON 导出保留未经人工批准的草稿文本，分享前需检查内容。源记录是快照，缺少独立签名，通用文字与语义冲突仍需人工复核。
 
-正式版仍需扩大真实业务样本、接入独立市场资料和行为证据、对完整工作流做盲评与人工时间测量，并准备真实模型费用对账和生产环境身份治理。本次没有执行真实发布、触达、CRM 写入或付费操作。
+该次验收未覆盖更广泛的真实业务样本、独立市场和行为证据、完整工作流盲评、人工时间测量、模型费用对账及生产环境身份治理。该次没有执行真实发布、触达、CRM 写入或付费操作。
 
 本地 Harness 40/40，安装器 10/10，离线代表任务 10/10。原安装器另完成五个固定版本的实际下载与安装。静态检查及版本历史敏感模式扫描通过。Windows 的 POSIX 模拟身份测试按兼容规则跳过。[三平台 Harness 及归档](https://github.com/NextVariable/global-growth-skills/actions/runs/44987367829) · [六项兼容与仓库检查](https://github.com/NextVariable/global-growth-skills/actions/runs/44987367836)
 
-代码路径包括 `harness/github_research.py`、`research.py`、`orchestrator.py`、`gateway.py`、`package.py`、`pins.py`、`__main__.py` 与兼容扩展的 v1 Schema。迁移与恢复沿用 SQLite v3。[当前快速开始](README.md#gtm-harness-100-rc3) · [故障说明](docs/harness.md#常见故障) · [Unit log](evals/rc2/offline-unittest.txt)
+代码路径包括 `harness/github_research.py`、`research.py`、`orchestrator.py`、`gateway.py`、`package.py`、`pins.py`、`__main__.py` 与兼容扩展的 v1 Schema。迁移与恢复沿用 SQLite v3。[当前快速开始](README.md#run-the-harness-offline) · [故障说明](docs/harness.md#常见故障) · [Unit log](evals/rc2/offline-unittest.txt)

@@ -1,6 +1,8 @@
 # Contributing
 
-合集只维护五个独立仓库的目录、版本安装和交接方式。修改具体方法或计算器，请到对应仓库；不要在这里复制五套源码或增加一个必须先安装的路由 Skill。
+本仓库维护五个独立 Skill 的固定版本目录、安装器，以及 GTM Harness 的运行时、数据契约、交接和评测文档。具体 Skill 的方法和脚本由各自仓库维护。 [文档索引](docs/README.md)
+
+项目处于维护模式。文档整理使用独立分支和文档专用 PR。V1.1 开发只有在 Product Owner 基于真实使用需求明确重新授权后才恢复。 [维护状态](docs/maintenance.md)
 
 ```sh
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/validate.py

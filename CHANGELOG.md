@@ -1,12 +1,14 @@
 # Changes
 
+**Current status:** [V1.0.0 is stable](https://github.com/NextVariable/global-growth-skills/releases/tag/v1.0.0). V1.1 real-model acceptance ended in FAIL and PR #3 remains Draft / Blocked. Active development is frozen. See the [maintenance record](docs/maintenance.md).
+
 ## 1.0.0
 
 - 将已验收 RC3（HEAD `251a52f`）整理为 V1.0 发布候选，不新增运行时功能。
 - 新增 [Release Notes](RELEASE_NOTES.md)、[中英文发布指南](docs/v1.0.0-release.md) 与 [Release Gate](validation/release-gate-v1.0.0.json)。
 - 修正发布文档中的证据表述：RC3 真实模型五阶段验收已于 `faa29ad` 完成（请求模型 `gpt-6.2-sol`，10/10 次调用，含一次内容重试）；`251a52f` 的来源分类修复由 19 个确定性用例覆盖，未重复执行五阶段模型评测。
 - 明确三层证据边界：工程验证通过、真实模型执行已记录、真实商业效果 `not_measured`。
-- 文档修复经原 PR 审查后以 merge commit `7112a7d` 合并到 `main`；`main` 上的 CI 检查通过。未创建 GitHub Release，Release 仍需 Product Owner 单独授权。
+- 文档修复经原 PR 审查后以 merge commit `7112a7d` 合并到 `main`，该提交的 CI 检查通过。随后通过 PR #2 整理正式版发布文档，并在 `2c4a108` 发布 [v1.0.0](https://github.com/NextVariable/global-growth-skills/releases/tag/v1.0.0)。
 - 运行时版本号从 `1.0.0-rc.3` 对齐为 `1.0.0`；不改变任何运行时行为。
 
 ## 1.0.0-rc.3
@@ -23,7 +25,7 @@
 - GTM Package 增加质量评分卡、事实/假设分离、指标公式/分母/护栏/判定规则和跨阶段一致性检查。
 - Codex 上下文按阶段选择 Skill 文档并设 60 KB 预算，回执记录 prompt 与文档字节数。
 - 新增 `research-web`、`audit`、`doctor` 命令和 RC3 四行业评测集。真实模型五阶段验收已在 `faa29ad` 完成（请求模型 `gpt-6.2-sol`，10/10 次调用，含一次内容重试）；确定性评测覆盖 fixture/reference。
-- 本轮未创建正式 Release；`feat/rc3-research-quality` 需审查后合并。
+- RC3 验收记录来自发布前阶段。该分支随后通过 PR #1 合并，正式发布见上方 V1.0 条目。
 
 ## 2026-10-28 · 维护修订
 

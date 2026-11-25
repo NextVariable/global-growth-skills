@@ -26,6 +26,28 @@ python -m harness --db "$db" resume model-demo --model YOUR_AVAILABLE_CODEX_MODE
 
 Codex CLI 必须已经认证。Harness 从固定 Git 对象读取 `SKILL.md`、Markdown 参考和模板。每个阶段固定发送 `SKILL.md`，再按阶段关键词选择参考和模板，默认上限 60 KB；完整包仍须低于 180 KB。提示词会列出被省略的文件，回执记录 `prompt_bytes`、`skill_document_bytes` 和 `skill_package_bytes`。调用发起前关闭 shell、统一执行、插件、MCP 和 Web Search，宿主只读，无审批升级。代码检查宿主是否报告被禁用的工具活动。回执保留文档摘要、请求模型、宿主完成事件、收到的 token 计数和耗时。缺失 token 与实际货币费用按未知处理。
 
+### 公开资料示例
+
+从仓库根目录运行。先完成依赖安装，再将 `GTM_MODEL` 设为已登录账户可用的模型。检索查询会发往 GitHub，请使用可公开的关键词。
+
+```sh
+work="$(mktemp -d)"
+db="$work/project.sqlite"
+python -m harness --db "$db" init evals/rc2/public-project.json
+python -m harness --db "$db" prepare-pins "$work/pins"
+python -m harness --db "$db" research market "Global Growth Skills" \
+  --repository NextVariable/global-growth-skills > "$work/research-product.json"
+python -m harness --db "$db" research competitor "agent skills marketing in:name,description" \
+  --limit 3 > "$work/research-competitors.json"
+python -m harness --db "$db" start public --execution model --goal "full workflow"
+python -m harness --db "$db" step public --model "$GTM_MODEL" --checkouts-dir "$work/pins"
+python -m harness --db "$db" resume public --model "$GTM_MODEL" --checkouts-dir "$work/pins"
+python -m harness --db "$db" export public > "$work/gtm-package.md"
+python -m harness --db "$db" export public --format json > "$work/gtm-package.json"
+```
+
+用 `status public` 查看进度和回执，用 `audit public` 检查来源和质量缺口。输入变化使用 `change`，再用 `resume` 更新受影响的草稿。用 `doctor` 检查本地运行环境。
+
 若 Codex 不可用，用 `start manual --execution handoff --stages strategy launch` 创建手工运行。请将下列输出与结果文件放到仓库外已有的工作目录。
 
 ```sh

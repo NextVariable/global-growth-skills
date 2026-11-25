@@ -1,6 +1,8 @@
 # Product Scope — Global Growth Skills / Global GTM Harness
 
-Status: **frozen** for the V1.0 / V1.1 release closure · 2026-11-23
+Status: **Development frozen · maintenance mode.** V1.0.0 is the stable
+release. V1.1 real-model acceptance ended in **FAIL** and PR #3 remains
+**Draft / Blocked**. [Current release status and evidence](maintenance.md)
 
 ## Product position
 
@@ -24,16 +26,16 @@ Retention → Growth Experiments → GTM Package
 2. Business decisions that stay consistent across Skills.
 3. An executable international growth plan.
 4. A persistent, resumable run record.
-5. Lower manual handoff and repeated-research cost.
+5. Shared context that can be reused across handoffs.
 
 The product does **not** claim automated customer acquisition, automated deal
 closing or automatic revenue lift.
 
 ## In scope (frozen)
 
-- V1.0: versioned catalog, installer, harness fixture/reference execution,
-  schemas, evidence discipline, five pinned Skill revisions, release gate.
-- V1.1: multi-source research (GitHub, Hacker News, operator-captured public
+- Stable V1.0.0: versioned catalog, installer, local Harness, schemas, evidence
+  review, five pinned Skill revisions and a release gate.
+- Unreleased V1.1 draft: multi-source research (GitHub, Hacker News, operator-captured public
   web), evidence versus signal grading, nine-area GTM decision brief, GTM
   package enhancements, host contract, cost telemetry, benchmark framework.
 
@@ -53,9 +55,10 @@ closing or automatic revenue lift.
   different claims and are reported separately.
 - Structural benchmark scores are deterministic delivery-shape checks; they are
   not commercial-quality scores.
-- Real-model comparison remains **NOT TESTED** until an authorized model runs on
-  the fixed protocol. A missing model, login or budget is reported as NOT TESTED,
-  never fabricated.
+- V1.1 underwent real-model acceptance. The final candidate completed Content
+  from a saved Strategy checkpoint. Acquisition was rejected and later stages
+  did not run. Earlier runs and deterministic checks retain their recorded scope.
+- Real commercial outcomes remain unmeasured.
 - Public Hacker News or GitHub activity is a signal, not demand, adoption,
   paying customers or market size.
 
@@ -75,11 +78,9 @@ A version may be released only when all of the following hold:
 
 ## Freeze rules
 
-- V1.0.0 and V1.1.0 are frozen. Only P0 and P1 fixes are allowed.
-- P2 and Future items go to the backlog; they never reopen development on their
-  own.
-- The next major version requires real user feedback, a concrete business need
-  or a measurable product benefit. Invested effort is not a reason to ship.
+- V1.0.0 remains the stable release. V1.1 stays frozen as a draft.
+- Record outstanding issues in the maintenance backlog. Resuming V1.1
+  requires explicit Product Owner authorization based on a real usage need.
 
 ## Maintenance mode
 
