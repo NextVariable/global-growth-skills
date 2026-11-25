@@ -1,52 +1,78 @@
-![Global Growth Skills — market, content, acquisition, customers and learning](docs/assets/cover.svg)
+# Global Growth Skills & GTM Harness
 
-# Global Growth Skills
+An open-source, domain-specific Agent Harness for Global Go-to-Market Research and Planning.
 
-**海外增长的五个独立 Skill：从选市场，到讲清价值、获得客户、促成购买，再用实验决定下一步。**
+Turn a product brief into research-backed decisions, channel plans and draft materials for human review. Pick one Skill for a focused question or run several stages with shared context and evidence.
 
-[![Validate](https://github.com/NextVariable/global-growth-skills/actions/workflows/validate.yml/badge.svg)](https://github.com/NextVariable/global-growth-skills/actions/workflows/validate.yml) [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent_Skills-compatible-6e56cf.svg)](https://agentskills.io/specification)
+- **Global Growth Skills** are five independently installable Agent Skills.
+- **Global GTM Harness** is the optional local system for running and coordinating GTM workflows across those Skills.
 
-[选一个 Skill](#choose-a-skill) · [整套安装](#quick-start) · [能力范围](docs/capabilities.md) · [交接示例](handoff-example.md) · [验证](validation/README.md)
+[Quick start](#quick-start) · [Skill map](#skill-map) · [Example outputs](#example-outputs) · [Documentation](docs/README.md)
 
-给出产品背景、当前问题和资源限制，拿到一个能使用的判断、成稿、操作包或复盘决定。可以只用一个，也可以接续工作；每个 Skill 都有自己的仓库、安装单元和版本。
+## Release and maintenance status
 
-## Choose a skill
+**Stable: [v1.0.0](https://github.com/NextVariable/global-growth-skills/releases/tag/v1.0.0).** Active development is frozen and the project is in maintenance mode. V1.1 underwent real-model acceptance and received **FAIL**. [PR #3](https://github.com/NextVariable/global-growth-skills/pull/3) remains Draft / Blocked. Real commercial outcomes were not measured. [Release status and maintenance record](docs/maintenance.md)
 
-| 现在要解决什么 | 独立 Skill | 一次任务的产物 |
+## Skill map
+
+| Decision | Independent Skill | Typical output |
 |---|---|---|
-| 进入哪个海外市场，先服务谁 | [01 · 市场研究与 GTM 战略](https://github.com/NextVariable/global-gtm-strategy-skill) | 客户选择、竞争取舍、进入路径、下一验证 |
-| 怎样让客户理解产品价值 | [02 · 产品定位与增长内容](https://github.com/NextVariable/global-growth-content-skill) | 定位、页面、文章、README、社媒与视频脚本 |
-| 怎样把合适的用户带来 | [03 · 产品发布与渠道获客](https://github.com/NextVariable/global-launch-acquisition-skill) | 渠道选择、发布包、合作、排期与执行核验 |
-| 怎样推动购买、首次价值和续费 | [04 · 销售转化与客户增长](https://github.com/NextVariable/global-sales-retention-skill) | 客户行动、试点、跟进、激活、续费与扩展 |
-| 下一步做什么，结果值不值得继续 | [05 · 增长实验执行与复盘](https://github.com/NextVariable/global-growth-experiments-skill) | 验证设计、测量、护栏、结果与投入决定 |
+| Which market and customers should we pursue first? | [GTM Strategy](https://github.com/NextVariable/global-gtm-strategy-skill) | Market and customer selection, competitive trade-offs, entry path |
+| How should we explain the product’s value? | [Growth Content](https://github.com/NextVariable/global-growth-content-skill) | Positioning, landing page copy, articles and social drafts |
+| How do we reach the right audience? | [Launch & Acquisition](https://github.com/NextVariable/global-launch-acquisition-skill) | Channel choice, launch plan, partnerships and execution checklist |
+| How do we support purchase, activation and renewal? | [Sales & Retention](https://github.com/NextVariable/global-sales-retention-skill) | Discovery, pilots, follow-up, activation and expansion plans |
+| What should we test next? | [Growth Experiments](https://github.com/NextVariable/global-growth-experiments-skill) | Experiment design, metrics, safeguards and continue/stop criteria |
 
-每个仓库都有可直接阅读的任务示例。没有其他四个也能使用其中一个；本合集维护目录与安装入口，不新增第六个包办一切的 Skill。
+Skill instructions are primarily in Chinese. Drafts can be produced in the audience’s language.
+
+## Harness architecture
+
+```mermaid
+flowchart LR
+  Context["Product brief and evidence"] --> CLI["Harness CLI"]
+  Catalog["Catalog: five pinned Skill versions"] --> Plan["Stage selection and dependencies"]
+  CLI --> Plan
+  Plan --> Host["Fixture, Codex or manual handoff"]
+  Host --> Checks["Evidence and decision checks"]
+  Checks --> State[("Local SQLite checkpoints")]
+  State --> Plan
+  State --> Export["Markdown and JSON for review"]
+```
+
+- **Scope the work.** Select stages by goal or explicitly. Run only acquisition, for example, or coordinate all five stages.
+- **Trace evidence.** Track quotes, freshness and conflicts from public GitHub or an explicitly supplied public HTTPS page. Check whether each quote supports the claim before relying on it.
+- **Preserve decisions.** A versioned decision contract carries approved constraints across stages and keeps proposals visible for approval.
+- **Resume and revise.** Checkpoints save completed work. Changes to context or evidence invalidate affected drafts so they can be regenerated.
+- **Review the output.** Export drafts and use `audit` to inspect evidence coverage and structural gaps.
+
+## Two ways to use it
+
+| Mode | Use it when |
+|---|---|
+| **Independent Skill** | You need one specialist task in an Agent Skills client. Install from its own repository or use the pinned catalog. For manual coordination, share a [product brief](templates/product-brief.md) and use the [handoff example](handoff-example.md). |
+| **Complete Harness** | You want shared state, stage coordination and resumable runs. Use the local Python CLI with an offline fixture, an authenticated Codex host or manual handoff. |
 
 ## Quick start
 
-单独安装时，进入相应仓库使用标准 `npx skills add` 命令。整套或选择多个安装，用本合集的指定版本工具，需要 Git 和 Python 3.10+：
+### Install Skills
+
+Use the standard `npx skills add` path documented in each independent repository, or use the catalog installer with Git and Python 3.10+. The first installer command previews the selection. The second installs all five fixed versions, preserving licenses and existing installations.
 
 ```sh
 git clone https://github.com/NextVariable/global-growth-skills.git
 cd global-growth-skills
+git switch --detach v1.0.0
 python3 scripts/install.py --dest ~/.agents/skills
-```
-
-上一步只预览，确认后安装：
-
-```sh
 python3 scripts/install.py --dest ~/.agents/skills --install
 ```
 
-只安装获客和客户增长：
+To install only Acquisition and Sales & Retention in a fresh destination:
 
 ```sh
 python3 scripts/install.py --dest ~/.agents/skills --only global-launch-acquisition global-sales-retention --install
 ```
 
-已有同名目录会停止，不覆盖你的版本。工具先下载全部选定版本，再复制完整技能单元并保留许可；不执行下载内容中的脚本。具体仓库和固定提交见 [catalog.json](catalog.json)，不自动跟随各仓库最新分支。更新前保存旧版及修改，再在空目录试装。
-
-重新加载客户端后，从当前任务调用：
+Reload the client, then invoke a Skill with your product and constraints:
 
 ```text
 使用 $global-launch-acquisition。
@@ -56,40 +82,12 @@ python3 scripts/install.py --dest ~/.agents/skills --only global-launch-acquisit
 本次只准备，不对外发送或发布。
 ```
 
-## One context, five responsibilities
+### Run the Harness offline
 
-一份[产品背景](templates/product-brief.md)就能开始：产品做什么、这次决定什么、服务谁、已有证据、限制与授权。它可以是一段文字，不需要另建数据库。
-
-市场判断交给内容制作；内容与条件交给渠道；用户主动需求交给客户增长；实际动作与结果交给实验。新证据再回到受影响的判断。可使用[普通文字交接示例](handoff-example.md)，保留事实、未知、版本和下一任务。
-
-完整覆盖与专项边界见[能力范围](docs/capabilities.md)。方法指令以中文为主，对客产物按目标语言生成。模型、搜索、浏览、CRM或发布工具由客户端提供；实际外部动作需要相应权限和可核验结果。
-
-## Quality
-
-用任务是否完成、事实是否准确、动作能否执行、变化是否正确传播来评价；框架多和文字长都不能证明质量。设计和贡献标准见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+From the cloned repository, run the fixture workflow. It uses a temporary local database and makes zero model calls.
 
 ```sh
-PYTHONDONTWRITEBYTECODE=1 python3 scripts/validate.py
-```
-
-合集验证目录与安装保护，各技能单独维护方法和测试。[验证说明](validation/README.md)区分自动检查、模型试用和真实业务效果；[质量边界](docs/quality.md)说明哪些结论目前可以成立。现有检查不证明真实获客、成交或留存收益。
-
-## English
-
-Five independent Agent Skills for international GTM: strategy, positioning and content, launch and acquisition, sales and retention, and growth experiments. Start with one product context and use the skill that matches the current decision. This repository provides a versioned catalog and installer; each skill remains independently maintained.
-
-[MIT License](LICENSE). Each installed unit retains its bundled license and applicable notices.
-
-维护与更新：[变更记录](CHANGELOG.md) · [升级与回退](docs/upgrading.md) · [安全问题反馈](SECURITY.md)。
-
-## GTM Harness 1.0.0
-
-五种 Skill 可按目标选择，也可用 `--stages` 显式组合。项目上下文、证据、任务状态和草稿存入仓库外的 SQLite。需要 Python 3.10+，以下命令从合集仓库根目录运行，先用离线示例验证安装，再切换到公开资料和真实模型。
-
-RC3 新增：Claim–Evidence 映射与逐字片段引用、来源时效/冲突/去重、provider 指令注入阻断、只读公开网页证据、包质量评分卡、`audit`/`doctor` 命令，以及按阶段裁剪 Skill 上下文的 60 KB 预算。RC3 已完成真实模型五阶段验收（请求模型 `gpt-6.2-sol`）；V1.0 不新增运行时功能，只修正发布文档并记录验收边界。详见 [Release Notes](RELEASE_NOTES.md) 与 [中英文发布指南](docs/v1.0.0-release.md)。
-
-```sh
-python -m venv .venv
+python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install -r requirements-harness.txt
 work="$(mktemp -d)"
@@ -103,50 +101,26 @@ python -m harness --db "$db" resume demo
 python -m harness --db "$db" export demo > "$work/gtm-package.md"
 ```
 
-只处理渠道时用 `start channel --stages launch`。中断后的 `resume` 读取已提交结果。确认原进程已退出后，仍处于运行状态的任务可以加 `--recover` 恢复，适配器失败可以加 `--retry`。
+For a single channel task, use `start channel --stages launch`. The guide includes a reproducible public-research example, authenticated Codex execution and recovery commands. [Harness guide](docs/harness.md)
 
-[Codex、手工交接与状态迁移](docs/harness.md) · [数据与 Skill 契约](docs/harness-contract.md) · [V1.0 发布验收](V1_RELEASE_READINESS.md) · [Release Notes](RELEASE_NOTES.md) · [Release Gate](validation/release-gate-v1.0.0.json)
+## Example outputs
 
+- [RC3 GTM package](evals/rc3/example-package.md) — deterministic reference output showing positioning, channel planning and experiment design.
+- [RC2 model-generated package](evals/rc2/example-package.md) and [JSON](evals/rc2/example-package.json) — historical draft from a public-product evaluation, with its evidence review state.
+- [Manual handoff](handoff-example.md) — pass the product context, decisions and open questions between Skills.
 
-### 用公开资料和真实 Codex 跑一次
+## Validation and limits
 
-先确认 Codex CLI 已登录，并设置终端变量 `GTM_MODEL` 为该账户可用的型号。复制示例 JSON 可更换产品、市场、目标客户、目标与预算。价格与产品能力用于完整内容和销售流程，未知时可以先单独运行战略。搜索查询会发往 GitHub，请使用可公开的关键词。
-
-```sh
-work="$(mktemp -d)"
-db="$work/project.sqlite"
-python -m harness --db "$db" init evals/rc2/public-project.json
-python -m harness --db "$db" prepare-pins "$work/pins"
-python -m harness --db "$db" research market "Global Growth Skills" \
-  --repository NextVariable/global-growth-skills > "$work/research-product.json"
-python -m harness --db "$db" research competitor "agent skills marketing in:name,description" \
-  --limit 3 > "$work/research-competitors.json"
-python -m harness --db "$db" start public --execution model --goal "full workflow"
-python -m harness --db "$db" step public --model "$GTM_MODEL" --checkouts-dir "$work/pins"
-python -m harness --db "$db" resume public --model "$GTM_MODEL" --checkouts-dir "$work/pins"
-python -m harness --db "$db" export public > "$work/gtm-package.md"
-python -m harness --db "$db" export public --format json > "$work/gtm-package.json"
-```
-
-也可在创建运行时用 `--stages strategy launch` 做简版。用 `status public` 看进度、证据和模型回执。检索失败仍可继续，证据缺口会保留在草稿。每次修改项目事实后用 `change` 提交补丁，再用 `resume` 更新受影响的产物。
-
-### RC3：公开网页证据、审计与评测
+The stable release has deterministic regression and installer checks, with Linux, macOS and Windows CI. Historical model runs are tied to the commits documented in the release notes. Fixture scores describe output structure. Claims and free-text decision consistency still require human review. The Harness produces internal drafts and plans. Real customer acquisition, conversion and revenue effects remain unmeasured.
 
 ```sh
-# 只读抓取一个公开定价页；拒绝私网、重定向和登录态
-python -m harness --db "$db" research-web "https://example.com/pricing" \
-  --topic competitor --quote "$49 per month" --valid-days 30
-
-# 检查某次运行的证据覆盖、来源时效和质量缺口；证据缺口时退出码为 2
-python -m harness --db "$db" audit public
-
-# 本机运行时与 Codex 可用性检查
-python -m harness --db "$db" doctor
-
-# 四行业确定性评测（不发模型请求，不代表模型质量）
-python3 scripts/evaluate_rc3.py --mode all --report /tmp/rc3-eval.json
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/validate.py
 ```
 
-`research-web` 只抓取操作者显式给出的单个 HTTPS 页面，不做搜索、登录或跳转；摘要是采集时点快照，不能证明需求、采用或市场规模。质量评分卡是确定性结构检查，不是语义真伪判断。
+[Validation records](validation/README.md) · [V1.0 release notes](RELEASE_NOTES.md) · [Quality boundaries](docs/quality.md)
 
-[命令、恢复与故障处理](docs/harness.md) · [RC3 评测口径](evals/rc3/README.md) · [RC3 示例包](evals/rc3/example-package.md) · [RC2 真实导出示例](evals/rc2/example-package.md) · [RC2 验收](PRODUCT_READINESS.md)
+## Documentation and project policies
+
+[Documentation index](docs/README.md) · [Product scope](docs/product-scope.md) · [Architecture and recovery](docs/harness.md) · [Technical contracts](docs/harness-contract.md)
+
+[MIT License](LICENSE) · [Contributing](CONTRIBUTING.md) · [Security reporting](SECURITY.md) · [Changelog](CHANGELOG.md) · [Upgrade and rollback](docs/upgrading.md)

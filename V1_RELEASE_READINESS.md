@@ -1,5 +1,7 @@
 # GTM Harness V1.0 Release Readiness
 
+**历史发布门禁。** 下文的测试与模型数据对应当时记录的提交和范围。正式 [v1.0.0](https://github.com/NextVariable/global-growth-skills/releases/tag/v1.0.0) 发布于 `2c4a108854ebfc1eb55c305c84667340df32fe1b`。V1.1 真实模型验收 FAIL，PR #3 保持 Draft / Blocked。项目处于维护模式，真实商业效果未测量。 [当前维护状态](docs/maintenance.md)
+
 版本 **1.0.0**。已验收 HEAD `251a52f0382c34b23392470ed1fd61b842cf4c0e`，PR [#1](https://github.com/NextVariable/global-growth-skills/pull/1)，Release Gate **PASS**。完整五阶段已通过离线 Fixture 与真实 Codex 运行；V1.0 不新增运行时功能，只修正发布文档并记录验收边界。机器可读记录见 [release-gate-v1.0.0.json](validation/release-gate-v1.0.0.json)，产品说明见 [docs/v1.0.0-release.md](docs/v1.0.0-release.md)。
 
 ## 基线和交付文件
@@ -74,10 +76,10 @@ RC1 的另一组真实模型配对数据（直接调用与自动编排各 2/2 �
 
 已测试：宿主工具关闭、固定 Git 内容装载、输出拒绝动作字段、SQLite 项目隔离、当前上下文版本和载荷绑定、批准消费与未知结果停止。审批信任本机 POSIX 用户和数据库所有权，没有远程认证、多人 RBAC 或真实写工具。所有公开运行均使用合成或公开产品资料。
 
-正式版仍需扩大真实业务样本、接入独立语义评审与真实行为证据、对完整工作流做盲评与人工时间测量，并准备真实模型费用对账和生产环境身份治理。来源分类依赖结构化数值匹配，非常规写法需人工复核。Claude Code 目前可以用手工交接，自动适配器未验收。新接入的外部写操作需独立进行身份、确认回执和幂等验收。
+该次验收未覆盖更广泛的真实业务样本、独立语义评审、真实行为证据、完整工作流盲评、人工时间测量、模型费用对账及生产环境身份治理。来源分类依赖结构化数值匹配，非常规写法需人工复核。Claude Code 可以用手工交接，自动适配器未验收。任何未来外部写工具均需独立进行身份、确认回执和幂等验收。
 
 ## 发布动作
 
 - PR [#1](https://github.com/NextVariable/global-growth-skills/pull/1) 已以 merge commit `7112a7df48d59419594619d51d279e6d0f20fb00` 合并到 `main`；`Harness fixture tests` 与 `Validate` 在该提交上均通过。
 - 运行时版本号已从 `1.0.0-rc.3` 对齐为 `1.0.0`，未改变运行时行为。
-- 尚未创建 GitHub Release 或 git tag；该动作需 Product Owner 单独授权。
+- Product Owner 随后授权发布，GitHub 正式 Release 与 Tag `v1.0.0` 均指向 `2c4a108854ebfc1eb55c305c84667340df32fe1b`。
